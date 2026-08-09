@@ -45,3 +45,9 @@ middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --sta
 middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
 middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
 middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
+crumble-basic|basic.txt|crumble
+crumble-custom|paragraph.txt|crumble --final-gradient-stops ff0000 00ff00 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
+crumble-dynamic|colored.txt|--existing-color-handling dynamic crumble
+crumble-always-xterm|colored.txt|--existing-color-handling always --xterm-colors crumble
+crumble-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c crumble
+crumble-single|single.txt|crumble
