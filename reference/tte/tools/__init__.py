@@ -1,1 +1,0 @@
-"""Development tooling for TerminalTextEffects."""

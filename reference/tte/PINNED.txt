@@ -1,1 +1,0 @@
-Pinned reference: TTE v0.15.0, commit 7a91dd9ca6ee0c4f4b1484efee0ecac1bb84104e (docs/ and non-essential files stripped; see plan.md §2)

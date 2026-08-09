@@ -1,9 +1,6 @@
 # ttfx
 
-Terminal text effects: a single-binary Rust reimplementation of
-[terminaltexteffects](https://github.com/ChrisBuilds/terminaltexteffects) (TTE).
-
-Pipe text in, pick an effect, watch it render:
+Terminal text effects as a single static binary. Pipe text in, pick an effect:
 
 ```sh
 ls -la | ttfx decrypt
@@ -12,23 +9,39 @@ fortune | ttfx --random-effect
 git log --oneline -10 | ttfx matrix
 ```
 
-## Why
+## Credit where it's due
 
-TTE is a terrific effects engine, but it's a Python package — a full interpreter
-plus install step for a shell toy that wants to live in your prompt pipeline.
-ttfx is the same engine as one static binary with no runtime dependencies and
-instant startup. Linux only, built for [Omarchy](https://omarchy.org).
+**This is a port of [TerminalTextEffects](https://github.com/ChrisBuilds/terminaltexteffects)
+(TTE) by [ChrisBuilds](https://github.com/ChrisBuilds).** Every effect, the animation engine,
+and the command-line interface are their design — this project translates that work to Rust
+and adds nothing of its own to the art. If you like what you see here, star the original.
+
+TTE is MIT licensed and so is this port; the original copyright is preserved in
+[LICENSE](LICENSE). Please file *effect* ideas upstream, where they belong.
+
+## Why a port
+
+TTE is a Python package. That's the right call for a library, but for a shell toy that lives in
+your prompt pipeline it means an interpreter, an install step, and ~90 ms of import before the
+first frame. ttfx is one dependency-free binary that starts in ~1 ms.
+
+That difference is the whole reason this exists. On a fullscreen canvas the heavier effects
+can't hold a high frame rate under Python:
+
+| At 200×50 cells | ttfx | Python TTE |
+|---|---|---|
+| beams | 564 fps | 71 fps |
+| slide | 5,113 fps | 264 fps |
+| waves | 4,118 fps | 491 fps |
+| startup | 1.2 ms | 107 ms |
+
+Across all 37 effects the median speedup is **9.6×** (range 4.5×–21.6×).
 
 ## Fidelity
 
-This is a *parity port*, not an approximation. Given the same input, config, and
-random decisions, ttfx produces byte-identical frames to the Python reference —
-verified mechanically in CI against a pinned TTE checkout (v0.15.0) with a shared
-deterministic RNG on both sides. All 37 effects and all 15 terminal options are
-supported with the same names and defaults; existing `tte` invocations work with
-the binary name swapped.
-
-The suites that back that claim:
+This is a *parity port*, not a reimplementation-in-spirit. Given the same input, config, and
+random draws, ttfx produces **byte-identical frames** to the Python original — verified
+mechanically in CI against a pinned upstream checkout (v0.15.0), not by eyeballing.
 
 | Suite | Checks | What it proves |
 |---|---|---|
@@ -37,39 +50,56 @@ The suites that back that claim:
 | `tools/tests/cli_corpus.sh` | 19 | exit codes and stdout/stderr routing |
 | `cargo test` | goldens + traces | easing/geometry/gradient values and engine state machines |
 
-See `plan.md` for the fidelity contract (including the upstream quirks
-reproduced deliberately) and `docs/ordering-inventory.md` for how Python's
-unordered iteration is pinned down.
+Making that possible meant reproducing upstream's quirks deliberately, not "fixing" them:
+Python's banker's rounding, gradients built from integer floor division rather than float
+interpolation, a bezier arc-length approximation that drops its final segment, and looping
+scenes that report themselves complete on every tick. They're catalogued in
+[`plan.md`](plan.md); the places where Python's unordered iteration had to be pinned down are
+in [`docs/ordering-inventory.md`](docs/ordering-inventory.md).
 
-Randomness itself is not bit-compatible with Python (ttfx uses xoshiro256++;
-`--seed` is deterministic within ttfx). Python plugin effects are not supported.
+**Two deliberate differences.** Random number generation is not bit-compatible with CPython —
+ttfx uses xoshiro256++, so `--seed` is reproducible within ttfx but won't match Python's
+Mersenne Twister. (The parity harness swaps a shared PRNG into both sides, which is what makes
+frame comparison possible at all.) And Python plugin effects aren't supported, since there's
+no interpreter to load them.
 
 ## Usage
 
 ```
 <producer> | ttfx [terminal options] <effect> [effect options]
-ttfx --help                 # all effects and terminal options
+
+ttfx --help                 # all 37 effects and the terminal options
 ttfx <effect> --help        # options for one effect
 ttfx --random-effect        # surprise me (--include-effects / --exclude-effects to filter)
 ttfx --print-completion bash|zsh
 ```
 
-Terminal options (canvas size/anchoring, color handling, frame rate, text wrap,
-…) go before the effect name; effect options after it.
+Terminal options (canvas size and anchoring, color handling, frame rate, text wrapping) go
+before the effect name; effect options after it. Option names and defaults match `tte`, so
+existing invocations work with the binary name swapped.
 
 ## Building
 
 ```sh
-cargo build --release           # dev build
-cargo build --release --target x86_64-unknown-linux-musl   # static release
+cargo build --release
+cargo build --release --target x86_64-unknown-linux-musl   # static, ~3.3 MB
 ```
 
-Tests: `cargo test` (engine goldens + state traces), `tools/parity/run_suite.sh`
-(frame parity vs the pinned reference — needs python3), `tools/parity/tty_compare.sh`
-(full byte-stream parity), `tools/tests/cli_corpus.sh` (CLI contract).
+Running the parity suites needs python3 and a copy of upstream:
+
+```sh
+./tools/parity/fetch_reference.sh   # clones TTE at the pinned commit
+./tools/parity/run_suite.sh
+```
+
+Upstream is not vendored here — the harness fetches it, because it's their code.
+
+## Scope
+
+Linux only, built for [Omarchy](https://omarchy.org). The engine is portable and nothing
+targets a specific libc, but nothing else is tested.
 
 ## License
 
-MIT. The vendored reference under `reference/tte/` is upstream TTE (MIT,
-© ChrisBuilds) and is used only by the parity test harness — none of it ships
-in the binary.
+MIT — see [LICENSE](LICENSE), which carries both this project's notice and the original
+TerminalTextEffects copyright.
