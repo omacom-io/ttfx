@@ -12,17 +12,20 @@ wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
 wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
 wipe-dynamic|colored.txt|--existing-color-handling dynamic wipe
 wipe-xterm|basic.txt|--xterm-colors wipe --wipe-direction column_right_to_left
-expand-basic|basic.txt|expand
-expand-fast-easing|paragraph.txt|expand --movement-speed 0.8 --expand-easing out_bounce --final-gradient-stops ff0000 0000ff --final-gradient-direction horizontal
-expand-dynamic|colored.txt|--existing-color-handling dynamic expand
-expand-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c expand
-slice-basic|basic.txt|slice
-slice-horizontal|paragraph.txt|slice --slice-direction horizontal --movement-speed 0.5 --movement-easing out_bounce
-slice-diagonal|paragraph.txt|slice --slice-direction diagonal --final-gradient-stops ff0000 0000ff --final-gradient-direction radial
-slice-dynamic|colored.txt|--existing-color-handling dynamic slice
-slice-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 70 --canvas-height 22 --anchor-canvas c --anchor-text c slice --slice-direction horizontal
-scattered-basic|basic.txt|scattered
-scattered-slow-gradient|paragraph.txt|scattered --movement-speed 0.3 --movement-easing out_elastic --final-gradient-frames 4 --final-gradient-stops ff0000 0000ff --final-gradient-direction horizontal
-scattered-dynamic|colored.txt|--existing-color-handling dynamic scattered
-scattered-single|single.txt|scattered
-scattered-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c scattered
+pour-basic|basic.txt|pour
+pour-up-fast|paragraph.txt|pour --pour-direction up --pour-speed 4 --gap 0 --movement-speed-range 0.3-0.9 --movement-easing out_bounce
+pour-left|paragraph.txt|pour --pour-direction left --starting-color ff0000 --final-gradient-frames 3
+pour-dynamic|colored.txt|--existing-color-handling dynamic pour
+pour-always-xterm|colored.txt|--existing-color-handling always --xterm-colors pour --pour-direction right
+pour-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c pour
+slide-basic|basic.txt|slide
+slide-column-merge|paragraph.txt|slide --grouping column --merge --gap 0 --movement-speed 0.5
+slide-diagonal-reverse|paragraph.txt|slide --grouping diagonal --reverse-direction --movement-easing out_bounce --final-gradient-frames 3
+slide-dynamic|colored.txt|--existing-color-handling dynamic slide
+slide-always-xterm|colored.txt|--existing-color-handling always --xterm-colors slide --grouping column
+slide-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c slide --grouping diagonal --merge
+middleout-basic|basic.txt|middleout
+middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --starting-color 00ff00 --center-movement-speed 0.3 --full-movement-speed 0.9 --center-easing out_bounce --full-easing in_quad
+middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
+middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
+middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal

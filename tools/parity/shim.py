@@ -168,3 +168,22 @@ def install(seed: int) -> None:
 
     BreadthFirst.step = bfs_step
     del _orig_bfs_step
+
+    # middleout: __next__ iterates the rebuilt active_characters set to
+    # activate the "full" path/scene — canonical ascending character_id
+    # (docs/ordering-inventory.md, effect_middleout.py:229).
+    from terminaltexteffects.effects.effect_middleout import MiddleOutIterator
+
+    def middleout_next(self) -> str:
+        if self.phase == "center" and not self.active_characters:
+            self.phase = "full"
+            self.active_characters = set(self.terminal.get_characters())
+            for character in sorted(self.active_characters, key=lambda c: c.character_id):
+                character.motion.activate_path("full")
+                character.animation.activate_scene("full")
+        if self.active_characters:
+            self.update()
+            return self.frame
+        raise StopIteration
+
+    MiddleOutIterator.__next__ = middleout_next

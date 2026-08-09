@@ -13,6 +13,12 @@ sites — the parity harness surfaces them as first-divergence failures.
 | `Terminal._update_terminal_state` (terminal.py:1376) layer ties | `_visible_characters` set | `(layer, character_id)` | sort at render | sort key patched |
 | `EffectCharacter.links` iteration in `BreadthFirst.step` (breadthfirst.py:90) | `links` set | ascending `character_id` | id-sorted `Vec` | `sorted(links, key=id)` |
 
+## Effects (sets → canonical order)
+
+| Upstream site | Container | Canonical order | ttfx | shim patch |
+|---|---|---|---|---|
+| `MiddleOutIterator.__next__` full-phase activation loop (effect_middleout.py:229) | rebuilt `active_characters` set | ascending `character_id` | iterate `BTreeSet<CharId>` | `MiddleOutIterator.__next__` sorts by id |
+
 ## Engine (dict insertion order = behavior)
 
 | Upstream site | ttfx |
@@ -30,7 +36,7 @@ sites — the parity harness surfaces them as first-divergence failures.
 Known from the plan review; each gets its canonical order + shim patch when its
 effect is ported:
 
-- middleout (effect_middleout.py:229) — set iteration
+- middleout (effect_middleout.py:229) — set iteration — DONE (see Effects table above)
 - unstable (effect_unstable.py:332) — set iteration
 - (audit each effect at port time; add rows here)
 
