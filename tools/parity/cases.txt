@@ -63,3 +63,9 @@ swarm-dynamic|colored.txt|--existing-color-handling dynamic swarm
 swarm-always-xterm|colored.txt|--existing-color-handling always --xterm-colors swarm
 swarm-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c swarm
 swarm-single|single.txt|swarm
+spotlights-basic|basic.txt|spotlights --search-duration 60
+spotlights-custom|paragraph.txt|spotlights --beam-width-ratio 1.5 --beam-falloff 0.5 --search-duration 40 --search-speed-range 0.5-1.0 --spotlight-count 5 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+spotlights-dynamic|colored.txt|--existing-color-handling dynamic spotlights --search-duration 50
+spotlights-always-xterm|colored.txt|--existing-color-handling always --xterm-colors spotlights --search-duration 50
+spotlights-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spotlights --search-duration 60
+spotlights-single|single.txt|spotlights --search-duration 30 --spotlight-count 1

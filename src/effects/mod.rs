@@ -13,6 +13,7 @@ pub mod random_sequence;
 pub mod scattered;
 pub mod slice;
 pub mod slide;
+pub mod spotlights;
 pub mod spray;
 pub mod swarm;
 pub mod wipe;
@@ -47,6 +48,8 @@ pub enum EffectCommand {
     Slice(slice::SliceConfig),
     /// Slide characters into view from outside the terminal.
     Slide(slide::SlideConfig),
+    /// Spotlights search the text area, illuminating characters, before converging in the center and expanding.
+    Spotlights(spotlights::SpotlightsConfig),
     /// Draws the characters spawning at varying rates from a single point.
     Spray(spray::SprayConfig),
     /// Characters are grouped into swarms and move around the terminal before settling into position.
@@ -72,6 +75,7 @@ impl EffectCommand {
             EffectCommand::Scattered(config) => Box::new(scattered::Scattered::new(config.clone())),
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
+            EffectCommand::Spotlights(config) => Box::new(spotlights::Spotlights::new(config.clone())),
             EffectCommand::Spray(config) => Box::new(spray::Spray::new(config.clone())),
             EffectCommand::Swarm(config) => Box::new(swarm::Swarm::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
@@ -92,6 +96,7 @@ impl EffectCommand {
             EffectCommand::Scattered(_) => "scattered",
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
+            EffectCommand::Spotlights(_) => "spotlights",
             EffectCommand::Spray(_) => "spray",
             EffectCommand::Swarm(_) => "swarm",
             EffectCommand::Wipe(_) => "wipe",
