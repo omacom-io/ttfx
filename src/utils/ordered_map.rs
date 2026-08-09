@@ -58,6 +58,13 @@ impl<V> OrderedMap<V> {
         self.entries.iter().map(|(k, v)| (k, v))
     }
 
+    /// Python dict.pop(key, None): removes the entry, preserving the order of
+    /// the remaining entries.
+    pub fn remove(&mut self, key: &str) -> Option<V> {
+        let pos = self.entries.iter().position(|(k, _)| k == key)?;
+        Some(self.entries.remove(pos).1)
+    }
+
     pub fn clear(&mut self) {
         self.entries.clear();
     }

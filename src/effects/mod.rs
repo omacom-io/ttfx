@@ -8,6 +8,7 @@ pub mod middleout;
 pub mod pour;
 pub mod rain;
 pub mod random_sequence;
+pub mod rings;
 pub mod scattered;
 pub mod slice;
 pub mod slide;
@@ -34,6 +35,8 @@ pub enum EffectCommand {
     Rain(rain::RainConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
+    /// Characters are dispersed and form into spinning rings.
+    Rings(rings::RingsConfig),
     /// Text is scattered across the canvas and moves into position.
     Scattered(scattered::ScatteredConfig),
     /// Slices the input in half and slides it into place from opposite directions.
@@ -58,6 +61,7 @@ impl EffectCommand {
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
+            EffectCommand::Rings(config) => Box::new(rings::Rings::new(config.clone())),
             EffectCommand::Scattered(config) => Box::new(scattered::Scattered::new(config.clone())),
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
@@ -75,6 +79,7 @@ impl EffectCommand {
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Randomsequence(_) => "randomsequence",
+            EffectCommand::Rings(_) => "rings",
             EffectCommand::Scattered(_) => "scattered",
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
