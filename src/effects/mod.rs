@@ -2,6 +2,7 @@
 
 pub mod bouncyballs;
 pub mod common;
+pub mod decrypt;
 pub mod errorcorrect;
 pub mod expand;
 pub mod middleout;
@@ -22,6 +23,8 @@ use crate::engine::effect::Effect;
 pub enum EffectCommand {
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
+    /// Display a movie style decryption effect.
+    Decrypt(decrypt::DecryptConfig),
     /// Some characters start in the wrong position and are corrected in sequence.
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
@@ -50,6 +53,7 @@ impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
+            EffectCommand::Decrypt(config) => Box::new(decrypt::Decrypt::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
@@ -69,6 +73,7 @@ impl EffectCommand {
     pub fn name(&self) -> &'static str {
         match self {
             EffectCommand::Bouncyballs(_) => "bouncyballs",
+            EffectCommand::Decrypt(_) => "decrypt",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Middleout(_) => "middleout",

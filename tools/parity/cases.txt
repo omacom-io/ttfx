@@ -45,3 +45,9 @@ middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --sta
 middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
 middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
 middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
+decrypt-basic|basic.txt|decrypt
+decrypt-custom|paragraph.txt|decrypt --typing-speed 3 --ciphertext-colors ff0000 00ff00 0000ff --final-gradient-stops eda000 00d1ff --final-gradient-direction horizontal
+decrypt-single|single.txt|decrypt --typing-speed 1
+decrypt-dynamic|colored.txt|--existing-color-handling dynamic decrypt
+decrypt-always-xterm|colored.txt|--existing-color-handling always --xterm-colors decrypt
+decrypt-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c decrypt

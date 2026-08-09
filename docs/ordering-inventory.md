@@ -45,4 +45,5 @@ Audited, no patch needed (set iteration present but order-unobservable):
 | Effect | Site | Why order-unobservable |
 |---|---|---|
 | slice | `for character in self.active_characters` at end of `build` (effect_slice.py) | only calls `set_character_visibility(True)`, a commutative per-character flag; render order is already canonicalized by the `_update_terminal_state` patch. ttfx iterates its `BTreeSet` (ascending id). |
+| decrypt | `for char in self.active_characters` at the typing→decrypting transition (effect_decrypt.py:263) | only calls `activate_scene("fast_decrypt")`, which mutates each character alone; no SCENE_ACTIVATED handlers registered, so order is unobservable. ttfx iterates its `BTreeSet` (ascending id). |
 | expand, scattered | none beyond `active_characters` membership | build loops iterate `get_characters()` lists; `active_characters` ticking covered by the `BaseEffectIterator.update` patch. |
