@@ -7,6 +7,7 @@ license = "MIT"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+clap_complete = "4.6.9"
 terminal_size = "0.4"
 
 [profile.release]

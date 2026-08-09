@@ -114,6 +114,10 @@ pub struct Cli {
     #[arg(long = "seed")]
     pub seed: Option<u64>,
 
+    /// Print a shell completion script and exit
+    #[arg(long = "print-completion", value_name = "SHELL", value_parser = ["bash", "zsh"])]
+    pub print_completion: Option<String>,
+
     /// Run a random effect
     #[arg(short = 'R', long = "random-effect", default_value_t = false)]
     pub random_effect: bool,

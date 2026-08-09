@@ -26,7 +26,20 @@ fn get_piped_input() -> String {
 }
 
 fn main() -> ExitCode {
+    ttfx::restore_sigpipe();
     let cli = cli::Cli::parse();
+
+    // upstream prints the completion script and returns before any input handling
+    if let Some(shell) = &cli.print_completion {
+        use clap::CommandFactory;
+        let generator = match shell.as_str() {
+            "bash" => clap_complete::Shell::Bash,
+            _ => clap_complete::Shell::Zsh,
+        };
+        let mut command = cli::Cli::command();
+        clap_complete::generate(generator, &mut command, "ttfx", &mut std::io::stdout());
+        return ExitCode::SUCCESS;
+    }
 
     let input_data = match &cli.input_file {
         Some(path) => match std::fs::read(path) {

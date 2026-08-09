@@ -25,6 +25,14 @@ pub fn interrupted() -> bool {
     INTERRUPTED.load(Ordering::SeqCst)
 }
 
+/// Restore default SIGPIPE so `ttfx ... | head` dies quietly like any Unix
+/// tool instead of panicking on a broken pipe (Rust ignores SIGPIPE by default).
+pub fn restore_sigpipe() {
+    unsafe {
+        libc_signal(13 /* SIGPIPE */, 0 /* SIG_DFL */);
+    }
+}
+
 unsafe fn libc_signal(signum: i32, handler: usize) {
     unsafe extern "C" {
         fn signal(signum: i32, handler: usize) -> usize;
