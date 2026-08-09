@@ -18,3 +18,9 @@ pour-left|paragraph.txt|pour --pour-direction left --starting-color ff0000 --fin
 pour-dynamic|colored.txt|--existing-color-handling dynamic pour
 pour-always-xterm|colored.txt|--existing-color-handling always --xterm-colors pour --pour-direction right
 pour-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c pour
+slide-basic|basic.txt|slide
+slide-column-merge|paragraph.txt|slide --grouping column --merge --gap 0 --movement-speed 0.5
+slide-diagonal-reverse|paragraph.txt|slide --grouping diagonal --reverse-direction --movement-easing out_bounce --final-gradient-frames 3
+slide-dynamic|colored.txt|--existing-color-handling dynamic slide
+slide-always-xterm|colored.txt|--existing-color-handling always --xterm-colors slide --grouping column
+slide-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c slide --grouping diagonal --merge

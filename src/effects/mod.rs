@@ -3,6 +3,7 @@
 pub mod common;
 pub mod pour;
 pub mod random_sequence;
+pub mod slide;
 pub mod wipe;
 
 use clap::Subcommand;
@@ -15,6 +16,8 @@ pub enum EffectCommand {
     Pour(pour::PourConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
+    /// Slide characters into view from outside the terminal.
+    Slide(slide::SlideConfig),
     /// Wipes the text across the terminal to reveal characters.
     Wipe(wipe::WipeConfig),
 }
@@ -26,6 +29,7 @@ impl EffectCommand {
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
+            EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
         }
     }
@@ -34,6 +38,7 @@ impl EffectCommand {
         match self {
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Randomsequence(_) => "randomsequence",
+            EffectCommand::Slide(_) => "slide",
             EffectCommand::Wipe(_) => "wipe",
         }
     }
