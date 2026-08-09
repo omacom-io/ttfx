@@ -140,3 +140,8 @@ binarypath-custom|paragraph.txt|binarypath --binary-colors ff0000 00ff00 0000ff 
 binarypath-dynamic|colored.txt|--existing-color-handling dynamic binarypath
 binarypath-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c binarypath --active-binary-groups 0.15
 binarypath-single|single.txt|binarypath
+burn-basic|basic.txt|burn
+burn-custom|paragraph.txt|burn --starting-color 404040 --burn-colors ff0000 ffa500 ffff00 --smoke-chance 1.0 --final-gradient-stops 00ff00 0000ff --final-gradient-steps 8 --final-gradient-direction horizontal
+burn-nosmoke|basic.txt|burn --smoke-chance 0.0
+burn-dynamic|colored.txt|--existing-color-handling dynamic burn
+burn-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c burn
