@@ -46,3 +46,20 @@ Audited, no patch needed (set iteration present but order-unobservable):
 |---|---|---|
 | slice | `for character in self.active_characters` at end of `build` (effect_slice.py) | only calls `set_character_visibility(True)`, a commutative per-character flag; render order is already canonicalized by the `_update_terminal_state` patch. ttfx iterates its `BTreeSet` (ascending id). |
 | expand, scattered | none beyond `active_characters` membership | build loops iterate `get_characters()` lists; `active_characters` ticking covered by the `BaseEffectIterator.update` patch. |
+| crumble | none beyond `active_characters` membership | falling/vacuuming pop from lists (`pending_chars`, `unvacuumed_chars`); resetting iterates `get_characters()`. |
+| blackhole | `all(character in self.blackhole_chars for ...)` over `active_characters` (effect_blackhole.py:372) | pure membership test (commutative); all activation loops iterate lists. |
+| swarm | `swarm_area_coordinate_map` is a dict (effect_swarm.py:218) | insertion-ordered dict with key-overwrite-in-place; ttfx uses an ordered `Vec<(Coord, Vec<Coord>)>` with identical semantics. No set iteration. |
+| spotlights | `chars_in_range` / `illuminated_chars` set iteration in `illuminate_chars` (effect_spotlights.py:272,283) | per-character `set_appearance` only, disjoint targets, no RNG inside the loops — commutative. ttfx iterates `BTreeSet` (ascending id). |
+
+## lru_cache mutation quirk (plan §5 addendum)
+
+Plan.md's "Deliberate divergences" claims the geometry `lru_cache` layers are
+value-transparent. **False for swarm**: `SwarmIterator.build` calls
+`random.shuffle(...)` directly on the list returned by the cached
+`find_coords_on_circle`, mutating the cache entry in place. Later calls with
+the same focus coord return the *previously shuffled* list. ttfx reproduces
+this with an effect-local cache in `src/effects/swarm.rs` whose entries
+persist the shuffle mutation. Other ported call sites (blackhole, spotlights)
+only read the returned lists, so dropping the cache stays value-transparent
+there. Audit any future effect that mutates a geometry function's return
+value.
