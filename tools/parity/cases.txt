@@ -66,3 +66,27 @@ middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --sta
 middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
 middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
 middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
+decrypt-basic|basic.txt|decrypt
+decrypt-custom|paragraph.txt|decrypt --typing-speed 3 --ciphertext-colors ff0000 00ff00 0000ff --final-gradient-stops eda000 00d1ff --final-gradient-direction horizontal
+decrypt-single|single.txt|decrypt --typing-speed 1
+decrypt-dynamic|colored.txt|--existing-color-handling dynamic decrypt
+decrypt-always-xterm|colored.txt|--existing-color-handling always --xterm-colors decrypt
+decrypt-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c decrypt
+print-basic|basic.txt|print
+print-fast|paragraph.txt|print --print-speed 4 --print-head-return-speed 3 --print-head-easing out_quad --final-gradient-direction vertical
+print-single|single.txt|print --print-speed 1 --print-head-return-speed 0.5
+print-dynamic|colored.txt|--existing-color-handling dynamic print
+print-always-xterm|colored.txt|--existing-color-handling always --xterm-colors print
+print-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c print
+overflow-basic|basic.txt|overflow
+overflow-fast|paragraph.txt|overflow --overflow-cycles-range 1-2 --overflow-speed 5 --overflow-gradient-stops ff0000 00ff00 --final-gradient-direction horizontal
+overflow-single|single.txt|overflow --overflow-speed 1
+overflow-dynamic|colored.txt|--existing-color-handling dynamic overflow
+overflow-always-xterm|colored.txt|--existing-color-handling always --xterm-colors overflow
+overflow-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c overflow
+unstable-basic|basic.txt|unstable
+unstable-custom|paragraph.txt|unstable --unstable-color 00ffff --explosion-ease in_out_quad --explosion-speed 2 --reassembly-ease out_bounce --reassembly-speed 0.5 --final-gradient-direction horizontal
+unstable-single|single.txt|unstable --explosion-speed 0.4
+unstable-dynamic|colored.txt|--existing-color-handling dynamic unstable
+unstable-always-xterm|colored.txt|--existing-color-handling always --xterm-colors unstable
+unstable-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c unstable

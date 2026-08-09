@@ -187,3 +187,81 @@ def install(seed: int) -> None:
         raise StopIteration
 
     MiddleOutIterator.__next__ = middleout_next
+
+    # unstable: __next__ ticks the active_characters set directly in the
+    # explosion (effect_unstable.py:332) and reassembly (effect_unstable.py:354)
+    # phases — canonical ascending character_id (docs/ordering-inventory.md).
+    from terminaltexteffects import Coord
+    from terminaltexteffects.effects.effect_unstable import UnstableIterator
+
+    def unstable_next(self) -> str:
+        next_frame = None
+        if self.phase == "rumble":
+            if self._current_rumble_steps < self._max_rumble_steps:
+                if self._current_rumble_steps > 30 and self._current_rumble_steps % self._rumble_mod_delay == 0:
+                    row_offset = random.choice([-1, 0, 1])
+                    column_offset = random.choice([-1, 0, 1])
+                    for character in self.terminal.get_characters():
+                        character.motion.set_coordinate(
+                            Coord(
+                                character.motion.current_coord.column + column_offset,
+                                character.motion.current_coord.row + row_offset,
+                            ),
+                        )
+                        character.animation.step_animation()
+                    next_frame = self.frame
+                    for character in self.terminal.get_characters():
+                        character.motion.set_coordinate(self.jumbled_coords[character])
+                    self._rumble_mod_delay -= 1
+                    self._rumble_mod_delay = max(self._rumble_mod_delay, 1)
+                else:
+                    for character in self.terminal.get_characters():
+                        character.animation.step_animation()
+                    next_frame = self.frame
+
+                self._current_rumble_steps += 1
+            else:
+                self.phase = "explosion"
+                for character in self.terminal.get_characters():
+                    character.motion.activate_path(character.motion.query_path("explosion"))
+                self.active_characters = set(self.terminal.get_characters())
+
+        if self.phase == "explosion":
+            if self.active_characters:
+                for character in sorted(self.active_characters, key=lambda c: c.character_id):
+                    character.tick()
+                self.active_characters = {
+                    character
+                    for character in self.active_characters
+                    if character.motion.current_coord != character.motion.query_path("explosion").waypoints[0].coord
+                }
+                next_frame = self.frame
+
+            elif self._explosion_hold_time:
+                for character in sorted(self.active_characters, key=lambda c: c.character_id):
+                    character.tick()
+                self._explosion_hold_time -= 1
+                next_frame = self.frame
+            else:
+                self.phase = "reassembly"
+                for character in self.terminal.get_characters():
+                    character.animation.activate_scene(character.animation.query_scene("final"))
+                    self.active_characters.add(character)
+                    character.motion.activate_path(character.motion.query_path("reassembly"))
+
+        if self.phase == "reassembly" and self.active_characters:
+            for character in sorted(self.active_characters, key=lambda c: c.character_id):
+                character.tick()
+            self.active_characters = {
+                character
+                for character in self.active_characters
+                if character.motion.current_coord != character.motion.query_path("reassembly").waypoints[0].coord
+                or not character.animation.active_scene_is_complete()
+            }
+            next_frame = self.frame
+
+        if next_frame is not None:
+            return next_frame
+        raise StopIteration
+
+    UnstableIterator.__next__ = unstable_next
