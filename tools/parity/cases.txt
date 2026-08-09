@@ -57,3 +57,9 @@ print-single|single.txt|print --print-speed 1 --print-head-return-speed 0.5
 print-dynamic|colored.txt|--existing-color-handling dynamic print
 print-always-xterm|colored.txt|--existing-color-handling always --xterm-colors print
 print-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c print
+overflow-basic|basic.txt|overflow
+overflow-fast|paragraph.txt|overflow --overflow-cycles-range 1-2 --overflow-speed 5 --overflow-gradient-stops ff0000 00ff00 --final-gradient-direction horizontal
+overflow-single|single.txt|overflow --overflow-speed 1
+overflow-dynamic|colored.txt|--existing-color-handling dynamic overflow
+overflow-always-xterm|colored.txt|--existing-color-handling always --xterm-colors overflow
+overflow-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c overflow

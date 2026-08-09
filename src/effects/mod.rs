@@ -6,6 +6,7 @@ pub mod decrypt;
 pub mod errorcorrect;
 pub mod expand;
 pub mod middleout;
+pub mod overflow;
 pub mod pour;
 pub mod print_effect;
 pub mod rain;
@@ -32,6 +33,8 @@ pub enum EffectCommand {
     Expand(expand::ExpandConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
+    /// Input text overflows and scrolls the terminal in a random order until eventually appearing ordered.
+    Overflow(overflow::OverflowConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
     /// Lines are printed one at a time following a print head. Print head performs line feed, carriage return.
@@ -61,6 +64,7 @@ impl EffectCommand {
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
+            EffectCommand::Overflow(config) => Box::new(overflow::Overflow::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Print(config) => Box::new(print_effect::Print::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
@@ -82,6 +86,7 @@ impl EffectCommand {
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Middleout(_) => "middleout",
+            EffectCommand::Overflow(_) => "overflow",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Print(_) => "print",
             EffectCommand::Rain(_) => "rain",
