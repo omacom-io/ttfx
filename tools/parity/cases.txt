@@ -90,3 +90,27 @@ unstable-single|single.txt|unstable --explosion-speed 0.4
 unstable-dynamic|colored.txt|--existing-color-handling dynamic unstable
 unstable-always-xterm|colored.txt|--existing-color-handling always --xterm-colors unstable
 unstable-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c unstable
+crumble-basic|basic.txt|crumble
+crumble-custom|paragraph.txt|crumble --final-gradient-stops ff0000 00ff00 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
+crumble-dynamic|colored.txt|--existing-color-handling dynamic crumble
+crumble-always-xterm|colored.txt|--existing-color-handling always --xterm-colors crumble
+crumble-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c crumble
+crumble-single|single.txt|crumble
+blackhole-basic|basic.txt|blackhole
+blackhole-custom|paragraph.txt|blackhole --blackhole-color 00ffff --star-colors ff0000 00ff00 0000ff --final-gradient-stops ff0000 ffffff --final-gradient-steps 6 --final-gradient-direction horizontal
+blackhole-dynamic|colored.txt|--existing-color-handling dynamic blackhole
+blackhole-always-xterm|colored.txt|--existing-color-handling always --xterm-colors blackhole
+blackhole-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c blackhole
+blackhole-single|single.txt|blackhole
+swarm-basic|basic.txt|swarm
+swarm-custom|paragraph.txt|swarm --base-color ff0000 00ff00 --flash-color ffffff --swarm-size 0.2 --swarm-coordination 0.5 --swarm-area-count-range 3-6 --final-gradient-stops ff00ff 00ffff --final-gradient-steps 6 --final-gradient-direction vertical
+swarm-dynamic|colored.txt|--existing-color-handling dynamic swarm
+swarm-always-xterm|colored.txt|--existing-color-handling always --xterm-colors swarm
+swarm-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c swarm
+swarm-single|single.txt|swarm
+spotlights-basic|basic.txt|spotlights --search-duration 60
+spotlights-custom|paragraph.txt|spotlights --beam-width-ratio 1.5 --beam-falloff 0.5 --search-duration 40 --search-speed-range 0.5-1.0 --spotlight-count 5 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+spotlights-dynamic|colored.txt|--existing-color-handling dynamic spotlights --search-duration 50
+spotlights-always-xterm|colored.txt|--existing-color-handling always --xterm-colors spotlights --search-duration 50
+spotlights-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spotlights --search-duration 60
+spotlights-single|single.txt|spotlights --search-duration 30 --spotlight-count 1
