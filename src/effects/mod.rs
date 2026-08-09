@@ -1,6 +1,7 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
 pub mod bouncyballs;
+pub mod bubbles;
 pub mod common;
 pub mod errorcorrect;
 pub mod expand;
@@ -23,6 +24,8 @@ use crate::engine::effect::Effect;
 pub enum EffectCommand {
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
+    /// Characters are formed into bubbles that float down and pop.
+    Bubbles(bubbles::BubblesConfig),
     /// Some characters start in the wrong position and are corrected in sequence.
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
@@ -53,6 +56,7 @@ impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
+            EffectCommand::Bubbles(config) => Box::new(bubbles::Bubbles::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
@@ -73,6 +77,7 @@ impl EffectCommand {
     pub fn name(&self) -> &'static str {
         match self {
             EffectCommand::Bouncyballs(_) => "bouncyballs",
+            EffectCommand::Bubbles(_) => "bubbles",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Fireworks(_) => "fireworks",
