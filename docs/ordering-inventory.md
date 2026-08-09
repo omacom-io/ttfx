@@ -32,14 +32,13 @@ sites — the parity harness surfaces them as first-divergence failures.
 | `PrimsWeighted._pending_weighted_links` (defaultdict; `min` over keys) | `BTreeMap` (order-independent result) |
 | distance buckets in `get_characters_grouped` CENTER/OUTSIDE | insertion-ordered vec of buckets |
 
-## Effect-level sets (to be patched per effect during M3-M5 ports)
+## Effect-level sets
 
-Known from the plan review; each gets its canonical order + shim patch when its
-effect is ported:
+**Audit complete: all 37 effects reviewed.** Two needed canonical ordering and
+carry shim patches; the rest are documented below as order-unobservable.
 
-- middleout (effect_middleout.py:229) — set iteration — DONE (see Effects table above)
-- unstable (effect_unstable.py:332, :354) — set iteration — DONE (see Effects table above)
-- (audit each effect at port time; add rows here)
+- middleout (effect_middleout.py:229) — set iteration — patched
+- unstable (effect_unstable.py:332, :354) — set iteration — patched
 
 Audited, no patch needed (set iteration present but order-unobservable):
 
@@ -54,6 +53,9 @@ Audited, no patch needed (set iteration present but order-unobservable):
 | blackhole | `all(character in self.blackhole_chars for ...)` over `active_characters` (effect_blackhole.py:372) | pure membership test (commutative); all activation loops iterate lists. |
 | swarm | `swarm_area_coordinate_map` is a dict (effect_swarm.py:218) | insertion-ordered dict with key-overwrite-in-place; ttfx uses an ordered `Vec<(Coord, Vec<Coord>)>` with identical semantics. No set iteration. |
 | spotlights | `chars_in_range` / `illuminated_chars` set iteration in `illuminate_chars` (effect_spotlights.py:272,283) | per-character `set_appearance` only, disjoint targets, no RNG inside the loops — commutative. ttfx iterates `BTreeSet` (ascending id). |
+| burn, smoke, vhstape, synthgrid, matrix | none | no set iteration; ignition/flood/line/column/rain state is held in Python lists and dicts whose order ttfx mirrors. burn's ignition order comes from `PrimsSimple.char_link_order` (a list); smoke's flood order from `BreadthFirst.explored_last_step` (list, and its `links` iteration is already shimmed). |
+| laseretch | `color_shifted_chars: set[...]` declared at effect_laseretch.py:336 | dead code upstream — the set is never read, written, or iterated. `beam_chars` is a list. |
+| thunderstorm | none | `pending_strike_chars` / `active_strike_chars` / `pending_glow_chars` are all lists (effect_thunderstorm.py:194-198); particle pools iterate their own deques. |
 
 ## lru_cache mutation quirk (plan §5 addendum)
 

@@ -24,10 +24,22 @@ instant startup. Linux only, built for [Omarchy](https://omarchy.org).
 This is a *parity port*, not an approximation. Given the same input, config, and
 random decisions, ttfx produces byte-identical frames to the Python reference —
 verified mechanically in CI against a pinned TTE checkout (v0.15.0) with a shared
-deterministic RNG on both sides. All effects and terminal options are supported
-with the same names and defaults; existing `tte` invocations work with the
-binary name swapped. See `plan.md` for the full fidelity contract and
-`tools/parity/` for the harness.
+deterministic RNG on both sides. All 37 effects and all 15 terminal options are
+supported with the same names and defaults; existing `tte` invocations work with
+the binary name swapped.
+
+The suites that back that claim:
+
+| Suite | Checks | What it proves |
+|---|---|---|
+| `tools/parity/run_suite.sh` | 354 | every effect's frame stream, byte for byte, across configs and seeds |
+| `tools/parity/tty_compare.sh` | 41 | the full terminal byte stream — canvas prep, cursor moves, teardown |
+| `tools/tests/cli_corpus.sh` | 19 | exit codes and stdout/stderr routing |
+| `cargo test` | goldens + traces | easing/geometry/gradient values and engine state machines |
+
+See `plan.md` for the fidelity contract (including the upstream quirks
+reproduced deliberately) and `docs/ordering-inventory.md` for how Python's
+unordered iteration is pinned down.
 
 Randomness itself is not bit-compatible with Python (ttfx uses xoshiro256++;
 `--seed` is deterministic within ttfx). Python plugin effects are not supported.

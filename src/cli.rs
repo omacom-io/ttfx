@@ -59,8 +59,18 @@ fn parse_existing_color_handling(s: &str) -> Result<ExistingColorHandling, Strin
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "ttfx", version, about = "Terminal text effects (Rust port of terminaltexteffects)")]
+#[command(
+    name = "ttfx",
+    version,
+    about = "Terminal text effects (Rust port of terminaltexteffects)",
+    // upstream tte exposes --version/-v, so replace clap's default -V flag
+    disable_version_flag = true
+)]
 pub struct Cli {
+    /// Print the version and exit
+    #[arg(short = 'v', long = "version", action = clap::ArgAction::Version)]
+    pub version: Option<bool>,
+
     /// File to read input from
     #[arg(short = 'i', long = "input-file")]
     pub input_file: Option<std::path::PathBuf>,
