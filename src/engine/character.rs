@@ -7,6 +7,7 @@
 //! characters have id gaps. All canonical orderings sort by `character_id`.
 
 use crate::engine::animation::Animation;
+use crate::engine::events::EventHandler;
 use crate::engine::motion::Motion;
 use crate::utils::geometry::Coord;
 
@@ -35,6 +36,7 @@ pub struct EffectCharacter {
     pub is_visible: bool,
     pub animation: Animation,
     pub motion: Motion,
+    pub event_handler: EventHandler,
     pub layer: i64,
     pub is_fill_character: bool,
     pub uses_input_preexisting_colors: bool,
@@ -56,11 +58,19 @@ impl EffectCharacter {
             is_visible: false,
             animation: Animation::new(symbol),
             motion: Motion::new(input_coord),
+            event_handler: EventHandler::default(),
             layer: 0,
             is_fill_character: false,
             uses_input_preexisting_colors: false,
             links: Vec::new(),
             neighbors: Neighbors::default(),
         }
+    }
+
+    /// EffectCharacter.is_active: active while the animation's active scene is
+    /// incomplete OR motion has an active path. Note looping scenes report
+    /// complete, so loop-only characters read as inactive (faithful quirk).
+    pub fn is_active(&self) -> bool {
+        !self.animation.active_scene_is_complete() || !self.motion.movement_is_complete()
     }
 }

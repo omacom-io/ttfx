@@ -4,4 +4,6 @@ pub mod geometry;
 pub mod graphics;
 pub mod hexterm;
 pub mod pycompat;
+pub mod ordered_map;
 pub mod rng;
+pub mod spanning_tree;

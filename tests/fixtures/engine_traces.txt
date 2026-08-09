@@ -1,0 +1,343 @@
+=== scenario_motion_basic ===
+EVENT char=0 PATH_ACTIVATED caller=path:pa
+EVENT char=1 PATH_ACTIVATED caller=path:pb
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:0
+tick=0 char=0 coord=2,2 layer=0 path=pa scene=- vis=a active=True
+tick=0 char=1 coord=2,5 layer=0 path=pb scene=- vis=b active=True
+tick=1 char=0 coord=2,2 layer=0 path=pa scene=- vis=a active=True
+tick=1 char=1 coord=3,7 layer=0 path=pb scene=- vis=b active=True
+tick=2 char=0 coord=3,3 layer=0 path=pa scene=- vis=a active=True
+tick=2 char=1 coord=3,8 layer=0 path=pb scene=- vis=b active=True
+tick=3 char=0 coord=3,3 layer=0 path=pa scene=- vis=a active=True
+tick=3 char=1 coord=3,9 layer=0 path=pb scene=- vis=b active=True
+EVENT char=1 SEGMENT_EXITED caller=wp:0
+tick=4 char=0 coord=4,3 layer=0 path=pa scene=- vis=a active=True
+tick=4 char=1 coord=3,9 layer=0 path=pb scene=- vis=b active=True
+tick=5 char=0 coord=4,3 layer=0 path=pa scene=- vis=a active=True
+tick=5 char=1 coord=3,10 layer=0 path=pb scene=- vis=b active=True
+tick=6 char=0 coord=5,4 layer=0 path=pa scene=- vis=a active=True
+tick=6 char=1 coord=3,10 layer=0 path=pb scene=- vis=b active=True
+tick=7 char=0 coord=5,4 layer=0 path=pa scene=- vis=a active=True
+tick=7 char=1 coord=3,10 layer=0 path=pb scene=- vis=b active=True
+tick=8 char=0 coord=6,4 layer=0 path=pa scene=- vis=a active=True
+tick=8 char=1 coord=3,9 layer=0 path=pb scene=- vis=b active=True
+tick=9 char=0 coord=6,4 layer=0 path=pa scene=- vis=a active=True
+tick=9 char=1 coord=3,9 layer=0 path=pb scene=- vis=b active=True
+EVENT char=1 PATH_COMPLETE caller=path:pb
+tick=10 char=0 coord=7,4 layer=0 path=pa scene=- vis=a active=True
+tick=10 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=11 char=0 coord=7,5 layer=0 path=pa scene=- vis=a active=True
+tick=11 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=12 char=0 coord=8,5 layer=0 path=pa scene=- vis=a active=True
+tick=12 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=13 char=0 coord=8,5 layer=0 path=pa scene=- vis=a active=True
+tick=13 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=14 char=0 coord=9,5 layer=0 path=pa scene=- vis=a active=True
+tick=14 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=15 char=0 coord=9,6 layer=0 path=pa scene=- vis=a active=True
+tick=15 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=16 char=0 coord=10,6 layer=0 path=pa scene=- vis=a active=True
+tick=16 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=17 char=0 coord=10,6 layer=0 path=pa scene=- vis=a active=True
+tick=17 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=18 char=0 coord=11,6 layer=0 path=pa scene=- vis=a active=True
+tick=18 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=19 char=0 coord=12,7 layer=0 path=pa scene=- vis=a active=True
+tick=19 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=20 char=0 coord=12,7 layer=0 path=pa scene=- vis=a active=True
+tick=20 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=21 char=0 coord=13,7 layer=0 path=pa scene=- vis=a active=True
+tick=21 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=22 char=0 coord=13,7 layer=0 path=pa scene=- vis=a active=True
+tick=22 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=23 char=0 coord=14,7 layer=0 path=pa scene=- vis=a active=True
+tick=23 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=24 char=0 coord=14,8 layer=0 path=pa scene=- vis=a active=True
+tick=24 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=25 char=0 coord=15,8 layer=0 path=pa scene=- vis=a active=True
+tick=25 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+EVENT char=0 SEGMENT_EXITED caller=wp:0
+EVENT char=0 SEGMENT_ENTERED caller=wp:1
+tick=26 char=0 coord=15,8 layer=0 path=pa scene=- vis=a active=True
+tick=26 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=27 char=0 coord=14,7 layer=0 path=pa scene=- vis=a active=True
+tick=27 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=28 char=0 coord=13,7 layer=0 path=pa scene=- vis=a active=True
+tick=28 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+tick=29 char=0 coord=12,6 layer=0 path=pa scene=- vis=a active=True
+tick=29 char=1 coord=3,9 layer=0 path=- scene=- vis=b active=False
+=== scenario_hold_and_loop ===
+EVENT char=0 PATH_ACTIVATED caller=path:hold
+EVENT char=1 PATH_ACTIVATED caller=path:looper
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:0
+tick=0 char=0 coord=3,3 layer=0 path=hold scene=- vis=a active=True
+tick=0 char=1 coord=4,2 layer=0 path=looper scene=- vis=b active=True
+tick=1 char=0 coord=5,3 layer=0 path=hold scene=- vis=a active=True
+tick=1 char=1 coord=5,3 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 SEGMENT_EXITED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:1
+tick=2 char=0 coord=6,4 layer=0 path=hold scene=- vis=a active=True
+tick=2 char=1 coord=6,4 layer=0 path=looper scene=- vis=b active=True
+tick=3 char=0 coord=8,4 layer=0 path=hold scene=- vis=a active=True
+tick=3 char=1 coord=7,4 layer=0 path=looper scene=- vis=b active=True
+EVENT char=0 PATH_HOLDING caller=path:hold
+tick=4 char=0 coord=10,5 layer=0 path=hold scene=- vis=a active=True
+tick=4 char=1 coord=8,5 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 PATH_ACTIVATED caller=path:looper
+tick=5 char=0 coord=10,5 layer=0 path=hold scene=- vis=a active=True
+tick=5 char=1 coord=9,6 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 SEGMENT_ENTERED caller=wp:0
+tick=6 char=0 coord=10,5 layer=0 path=hold scene=- vis=a active=True
+tick=6 char=1 coord=8,5 layer=0 path=looper scene=- vis=b active=True
+EVENT char=0 PATH_COMPLETE caller=path:hold
+tick=7 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=7 char=1 coord=7,4 layer=0 path=looper scene=- vis=b active=True
+tick=8 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=8 char=1 coord=6,3 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 SEGMENT_EXITED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:1
+tick=9 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=9 char=1 coord=6,3 layer=0 path=looper scene=- vis=b active=True
+tick=10 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=10 char=1 coord=7,4 layer=0 path=looper scene=- vis=b active=True
+tick=11 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=11 char=1 coord=8,5 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 PATH_ACTIVATED caller=path:looper
+tick=12 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=12 char=1 coord=9,6 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 SEGMENT_ENTERED caller=wp:0
+tick=13 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=13 char=1 coord=8,5 layer=0 path=looper scene=- vis=b active=True
+tick=14 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=14 char=1 coord=7,4 layer=0 path=looper scene=- vis=b active=True
+tick=15 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=15 char=1 coord=6,3 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 SEGMENT_EXITED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:1
+tick=16 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=16 char=1 coord=6,3 layer=0 path=looper scene=- vis=b active=True
+tick=17 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=17 char=1 coord=7,4 layer=0 path=looper scene=- vis=b active=True
+tick=18 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=18 char=1 coord=8,5 layer=0 path=looper scene=- vis=b active=True
+EVENT char=1 PATH_ACTIVATED caller=path:looper
+tick=19 char=0 coord=10,5 layer=0 path=- scene=- vis=a active=False
+tick=19 char=1 coord=9,6 layer=0 path=looper scene=- vis=b active=True
+=== scenario_chained_paths_and_events ===
+EVENT char=0 PATH_ACTIVATED caller=path:p1
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+tick=0 char=0 coord=2,3 layer=0 path=p1 scene=- vis=a active=True
+tick=1 char=0 coord=3,3 layer=0 path=p1 scene=- vis=a active=True
+tick=2 char=0 coord=3,4 layer=0 path=p1 scene=- vis=a active=True
+tick=3 char=0 coord=4,4 layer=0 path=p1 scene=- vis=a active=True
+EVENT char=0 PATH_COMPLETE caller=path:p1
+EVENT char=0 PATH_ACTIVATED caller=path:p2
+tick=4 char=0 coord=5,5 layer=2 path=p2 scene=- vis=a active=True
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+tick=5 char=0 coord=6,4 layer=2 path=p2 scene=- vis=a active=True
+tick=6 char=0 coord=7,4 layer=2 path=p2 scene=- vis=a active=True
+tick=7 char=0 coord=8,3 layer=2 path=p2 scene=- vis=a active=True
+tick=8 char=0 coord=9,3 layer=2 path=p2 scene=- vis=a active=True
+EVENT char=0 PATH_COMPLETE caller=path:p2
+EVENT char=0 PATH_ACTIVATED caller=path:p3
+tick=9 char=0 coord=10,2 layer=2 path=p3 scene=- vis=a active=True
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+tick=10 char=0 coord=8,2 layer=2 path=p3 scene=- vis=a active=True
+tick=11 char=0 coord=7,2 layer=2 path=p3 scene=- vis=a active=True
+tick=12 char=0 coord=6,2 layer=2 path=p3 scene=- vis=a active=True
+tick=13 char=0 coord=4,1 layer=2 path=p3 scene=- vis=a active=True
+tick=14 char=0 coord=2,1 layer=2 path=p3 scene=- vis=a active=True
+EVENT char=0 PATH_COMPLETE caller=path:p3
+tick=15 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=16 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=17 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=18 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=19 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=20 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=21 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=22 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=23 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+tick=24 char=0 coord=19,9 layer=2 path=- scene=- vis=a active=False
+=== scenario_scenes ===
+EVENT char=0 SCENE_ACTIVATED caller=scene:plain
+EVENT char=1 SCENE_ACTIVATED caller=scene:looping
+EVENT char=2 SCENE_ACTIVATED caller=scene:eased
+EVENT char=1 SCENE_COMPLETE caller=scene:looping
+tick=0 char=0 coord=1,2 layer=0 path=- scene=plain vis=\e[38;2;255;0;0mX\e[0m active=True
+tick=0 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=0 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+tick=1 char=0 coord=1,2 layer=0 path=- scene=plain vis=\e[38;2;255;0;0mX\e[0m active=True
+tick=1 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=1 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+tick=2 char=0 coord=1,2 layer=0 path=- scene=plain vis=\e[38;2;0;255;0m\e[48;2;0;0;255mY\e[0m active=True
+tick=2 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=2 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+tick=3 char=0 coord=1,2 layer=0 path=- scene=plain vis=\e[38;2;0;255;0m\e[48;2;0;0;255mY\e[0m active=True
+tick=3 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=3 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+tick=4 char=0 coord=1,2 layer=0 path=- scene=plain vis=\e[38;2;0;255;0m\e[48;2;0;0;255mY\e[0m active=True
+tick=4 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=4 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+EVENT char=0 SCENE_COMPLETE caller=scene:plain
+tick=5 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=5 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=5 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;0;0;0m*\e[0m active=True
+tick=6 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=6 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=6 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;31;31;31m*\e[0m active=True
+tick=7 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=7 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=7 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;62;62;62m*\e[0m active=True
+tick=8 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=8 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=8 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;93;93;93m+\e[0m active=True
+tick=9 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=9 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=9 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;124;124;124m+\e[0m active=True
+tick=10 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=10 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=10 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;155;155;155m+\e[0m active=True
+tick=11 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=11 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=11 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;186;186;186mo\e[0m active=True
+tick=12 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=12 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=12 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;217;217;217mo\e[0m active=True
+tick=13 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=13 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=13 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;255;255;255mo\e[0m active=True
+tick=14 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=14 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=14 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;255;255;255mo\e[0m active=True
+tick=15 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=15 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=15 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;255;255;255mo\e[0m active=True
+tick=16 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=16 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=16 char=2 coord=3,2 layer=0 path=- scene=eased vis=\e[38;2;255;255;255mo\e[0m active=True
+EVENT char=2 SCENE_COMPLETE caller=scene:eased
+tick=17 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=17 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=17 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=18 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=18 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=18 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=19 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=19 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=19 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=20 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=20 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=20 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=21 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=21 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=21 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=22 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=22 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=22 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+tick=23 char=0 coord=1,2 layer=0 path=- scene=- vis=\e[1mZ\e[0m active=False
+tick=23 char=1 coord=2,2 layer=0 path=- scene=looping vis=1 active=False
+tick=23 char=2 coord=3,2 layer=0 path=- scene=- vis=\e[38;2;255;255;255mo\e[0m active=False
+=== scenario_synced_scene ===
+EVENT char=0 PATH_ACTIVATED caller=path:sp
+EVENT char=0 SCENE_ACTIVATED caller=scene:sync_sp
+EVENT char=1 PATH_ACTIVATED caller=path:dp
+EVENT char=1 SCENE_ACTIVATED caller=scene:sync_dp
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:0
+tick=0 char=0 coord=2,2 layer=0 path=sp scene=sync_sp vis=a active=True
+tick=0 char=1 coord=3,2 layer=0 path=dp scene=sync_dp vis=a active=True
+tick=1 char=0 coord=2,3 layer=0 path=sp scene=sync_sp vis=a active=True
+tick=1 char=1 coord=3,3 layer=0 path=dp scene=sync_dp vis=a active=True
+tick=2 char=0 coord=3,3 layer=0 path=sp scene=sync_sp vis=a active=True
+tick=2 char=1 coord=4,3 layer=0 path=dp scene=sync_dp vis=a active=True
+tick=3 char=0 coord=4,3 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=3 char=1 coord=5,3 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=4 char=0 coord=4,4 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=4 char=1 coord=5,4 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=5 char=0 coord=5,4 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=5 char=1 coord=6,4 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=6 char=0 coord=6,4 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=6 char=1 coord=6,4 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=7 char=0 coord=6,4 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=7 char=1 coord=7,5 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=8 char=0 coord=7,5 layer=0 path=sp scene=sync_sp vis=b active=True
+tick=8 char=1 coord=8,5 layer=0 path=dp scene=sync_dp vis=b active=True
+tick=9 char=0 coord=8,5 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=9 char=1 coord=8,5 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=10 char=0 coord=8,5 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=10 char=1 coord=9,6 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=11 char=0 coord=9,6 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=11 char=1 coord=10,6 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=12 char=0 coord=10,6 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=12 char=1 coord=10,6 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=13 char=0 coord=10,6 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=13 char=1 coord=11,6 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=14 char=0 coord=11,7 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=14 char=1 coord=12,7 layer=0 path=dp scene=sync_dp vis=c active=True
+tick=15 char=0 coord=11,7 layer=0 path=sp scene=sync_sp vis=c active=True
+tick=15 char=1 coord=12,7 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=16 char=0 coord=12,7 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=16 char=1 coord=13,7 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=17 char=0 coord=13,8 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=17 char=1 coord=13,8 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=18 char=0 coord=13,8 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=18 char=1 coord=14,8 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=19 char=0 coord=14,8 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=19 char=1 coord=15,8 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=20 char=0 coord=15,8 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=20 char=1 coord=15,9 layer=0 path=dp scene=sync_dp vis=d active=True
+tick=21 char=0 coord=15,9 layer=0 path=sp scene=sync_sp vis=d active=True
+tick=21 char=1 coord=16,9 layer=0 path=dp scene=sync_dp vis=e active=True
+EVENT char=0 SEGMENT_EXITED caller=wp:0
+EVENT char=0 SEGMENT_ENTERED caller=wp:1
+EVENT char=1 SEGMENT_EXITED caller=wp:0
+EVENT char=1 SEGMENT_ENTERED caller=wp:1
+tick=22 char=0 coord=16,9 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=22 char=1 coord=15,9 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=23 char=0 coord=15,9 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=23 char=1 coord=15,8 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=24 char=0 coord=15,8 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=24 char=1 coord=14,8 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=25 char=0 coord=14,8 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=25 char=1 coord=13,8 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=26 char=0 coord=13,8 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=26 char=1 coord=13,7 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=27 char=0 coord=13,7 layer=0 path=sp scene=sync_sp vis=e active=True
+tick=27 char=1 coord=12,7 layer=0 path=dp scene=sync_dp vis=e active=True
+tick=28 char=0 coord=12,7 layer=0 path=sp scene=sync_sp vis=f active=True
+tick=28 char=1 coord=12,7 layer=0 path=dp scene=sync_dp vis=f active=True
+tick=29 char=0 coord=12,7 layer=0 path=sp scene=sync_sp vis=f active=True
+tick=29 char=1 coord=11,6 layer=0 path=dp scene=sync_dp vis=f active=True
+=== scenario_scene_events_and_resume ===
+EVENT char=0 SCENE_ACTIVATED caller=scene:s1
+tick=0 char=0 coord=1,2 layer=0 path=- scene=s1 vis=A active=True
+tick=1 char=0 coord=1,2 layer=0 path=- scene=s1 vis=A active=True
+EVENT char=0 SCENE_ACTIVATED caller=scene:s1
+tick=2 char=0 coord=1,2 layer=0 path=- scene=s1 vis=A active=True
+tick=3 char=0 coord=1,2 layer=0 path=- scene=s1 vis=B active=True
+tick=4 char=0 coord=1,2 layer=0 path=- scene=s1 vis=B active=True
+EVENT char=0 SCENE_COMPLETE caller=scene:s1
+EVENT char=0 SCENE_ACTIVATED caller=scene:s2
+tick=5 char=0 coord=1,2 layer=0 path=- scene=s2 vis=C active=True
+tick=6 char=0 coord=1,2 layer=0 path=- scene=s2 vis=C active=True
+EVENT char=0 SCENE_COMPLETE caller=scene:s2
+EVENT char=0 PATH_ACTIVATED caller=path:mover
+tick=7 char=0 coord=1,2 layer=0 path=mover scene=- vis=C active=True
+EVENT char=0 SEGMENT_ENTERED caller=wp:0
+tick=8 char=0 coord=2,2 layer=0 path=mover scene=- vis=C active=True
+tick=9 char=0 coord=2,3 layer=0 path=mover scene=- vis=C active=True
+tick=10 char=0 coord=2,3 layer=0 path=mover scene=- vis=C active=True
+tick=11 char=0 coord=3,4 layer=0 path=mover scene=- vis=C active=True
+tick=12 char=0 coord=4,4 layer=0 path=mover scene=- vis=C active=True
+tick=13 char=0 coord=4,5 layer=0 path=mover scene=- vis=C active=True
+tick=14 char=0 coord=4,5 layer=0 path=mover scene=- vis=C active=True
+tick=15 char=0 coord=5,5 layer=0 path=mover scene=- vis=C active=True
+tick=16 char=0 coord=6,6 layer=0 path=mover scene=- vis=C active=True
+tick=17 char=0 coord=6,6 layer=0 path=mover scene=- vis=C active=True
+tick=18 char=0 coord=6,7 layer=0 path=mover scene=- vis=C active=True
+tick=19 char=0 coord=7,7 layer=0 path=mover scene=- vis=C active=True
+tick=20 char=0 coord=8,8 layer=0 path=mover scene=- vis=C active=True
+EVENT char=0 PATH_COMPLETE caller=path:mover
+tick=21 char=0 coord=8,8 layer=0 path=- scene=- vis=C active=False

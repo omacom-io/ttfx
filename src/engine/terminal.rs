@@ -304,7 +304,7 @@ impl Terminal {
         colors.into_iter().map(|(c, _)| c).collect()
     }
 
-    fn collect_characters(&self, filter: CharacterFilter) -> Vec<CharId> {
+    pub fn collect_characters(&self, filter: CharacterFilter) -> Vec<CharId> {
         let mut all: Vec<CharId> = Vec::new();
         if filter.input_chars {
             all.extend(&self.input_characters);

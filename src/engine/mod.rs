@@ -1,7 +1,10 @@
 pub mod animation;
 pub mod canvas;
 pub mod character;
+pub mod ctx;
 pub mod error;
+pub mod events;
 pub mod input;
 pub mod motion;
+pub mod particles;
 pub mod terminal;
