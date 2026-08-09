@@ -24,3 +24,8 @@ slide-diagonal-reverse|paragraph.txt|slide --grouping diagonal --reverse-directi
 slide-dynamic|colored.txt|--existing-color-handling dynamic slide
 slide-always-xterm|colored.txt|--existing-color-handling always --xterm-colors slide --grouping column
 slide-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c slide --grouping diagonal --merge
+middleout-basic|basic.txt|middleout
+middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --starting-color 00ff00 --center-movement-speed 0.3 --full-movement-speed 0.9 --center-easing out_bounce --full-easing in_quad
+middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
+middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
+middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal

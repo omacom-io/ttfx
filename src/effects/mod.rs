@@ -1,6 +1,7 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
 pub mod common;
+pub mod middleout;
 pub mod pour;
 pub mod random_sequence;
 pub mod slide;
@@ -12,6 +13,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Text expands in a single row or column in the middle of the canvas then out.
+    Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
     /// Prints the input data in a random sequence.
@@ -25,6 +28,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
@@ -36,6 +40,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Randomsequence(_) => "randomsequence",
             EffectCommand::Slide(_) => "slide",
