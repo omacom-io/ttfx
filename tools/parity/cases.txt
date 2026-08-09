@@ -51,3 +51,9 @@ decrypt-single|single.txt|decrypt --typing-speed 1
 decrypt-dynamic|colored.txt|--existing-color-handling dynamic decrypt
 decrypt-always-xterm|colored.txt|--existing-color-handling always --xterm-colors decrypt
 decrypt-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c decrypt
+print-basic|basic.txt|print
+print-fast|paragraph.txt|print --print-speed 4 --print-head-return-speed 3 --print-head-easing out_quad --final-gradient-direction vertical
+print-single|single.txt|print --print-speed 1 --print-head-return-speed 0.5
+print-dynamic|colored.txt|--existing-color-handling dynamic print
+print-always-xterm|colored.txt|--existing-color-handling always --xterm-colors print
+print-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c print

@@ -7,6 +7,7 @@ pub mod errorcorrect;
 pub mod expand;
 pub mod middleout;
 pub mod pour;
+pub mod print_effect;
 pub mod rain;
 pub mod random_sequence;
 pub mod scattered;
@@ -33,6 +34,9 @@ pub enum EffectCommand {
     Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
+    /// Lines are printed one at a time following a print head. Print head performs line feed, carriage return.
+    #[command(name = "print")]
+    Print(print_effect::PrintConfig),
     /// Rain characters onto the canvas until the input text is formed.
     Rain(rain::RainConfig),
     /// Prints the input data in a random sequence.
@@ -58,6 +62,7 @@ impl EffectCommand {
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
+            EffectCommand::Print(config) => Box::new(print_effect::Print::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
@@ -78,6 +83,7 @@ impl EffectCommand {
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Pour(_) => "pour",
+            EffectCommand::Print(_) => "print",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Randomsequence(_) => "randomsequence",
             EffectCommand::Scattered(_) => "scattered",
