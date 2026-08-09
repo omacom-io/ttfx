@@ -54,3 +54,7 @@ bubbles-rainbow-anywhere|paragraph.txt|bubbles --rainbow --pop-condition anywher
 bubbles-bottom|paragraph.txt|bubbles --pop-condition bottom --bubble-colors ff0000 00ff00 --pop-color 00ffff --movement-easing out_bounce
 bubbles-dynamic|colored.txt|--existing-color-handling dynamic bubbles --bubble-delay 5
 bubbles-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bubbles
+beams-basic|basic.txt|beams
+beams-custom|paragraph.txt|beams --beam-row-symbols - = --beam-column-symbols . : --beam-delay 2 --beam-row-speed-range 30-80 --beam-column-speed-range 12-20 --beam-gradient-stops ff0000 0000ff --beam-gradient-steps 4 --beam-gradient-frames 1 --final-gradient-direction horizontal --final-wipe-speed 5
+beams-dynamic|colored.txt|--existing-color-handling dynamic beams
+beams-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c beams

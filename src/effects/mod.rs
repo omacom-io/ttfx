@@ -1,5 +1,6 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
+pub mod beams;
 pub mod bouncyballs;
 pub mod bubbles;
 pub mod common;
@@ -22,6 +23,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Create beams which travel over the canvas illuminating the characters behind them.
+    Beams(beams::BeamsConfig),
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
     /// Characters are formed into bubbles that float down and pop.
@@ -55,6 +58,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Beams(config) => Box::new(beams::Beams::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Bubbles(config) => Box::new(bubbles::Bubbles::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
@@ -76,6 +80,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Beams(_) => "beams",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Bubbles(_) => "bubbles",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
