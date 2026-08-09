@@ -63,3 +63,9 @@ overflow-single|single.txt|overflow --overflow-speed 1
 overflow-dynamic|colored.txt|--existing-color-handling dynamic overflow
 overflow-always-xterm|colored.txt|--existing-color-handling always --xterm-colors overflow
 overflow-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c overflow
+unstable-basic|basic.txt|unstable
+unstable-custom|paragraph.txt|unstable --unstable-color 00ffff --explosion-ease in_out_quad --explosion-speed 2 --reassembly-ease out_bounce --reassembly-speed 0.5 --final-gradient-direction horizontal
+unstable-single|single.txt|unstable --explosion-speed 0.4
+unstable-dynamic|colored.txt|--existing-color-handling dynamic unstable
+unstable-always-xterm|colored.txt|--existing-color-handling always --xterm-colors unstable
+unstable-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c unstable

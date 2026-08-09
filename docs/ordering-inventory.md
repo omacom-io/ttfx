@@ -18,6 +18,7 @@ sites — the parity harness surfaces them as first-divergence failures.
 | Upstream site | Container | Canonical order | ttfx | shim patch |
 |---|---|---|---|---|
 | `MiddleOutIterator.__next__` full-phase activation loop (effect_middleout.py:229) | rebuilt `active_characters` set | ascending `character_id` | iterate `BTreeSet<CharId>` | `MiddleOutIterator.__next__` sorts by id |
+| `UnstableIterator.__next__` explosion/reassembly tick loops (effect_unstable.py:332, :354) | `active_characters` set | ascending `character_id` | iterate `BTreeSet<CharId>` snapshot | `UnstableIterator.__next__` sorts by id |
 
 ## Engine (dict insertion order = behavior)
 
@@ -37,7 +38,7 @@ Known from the plan review; each gets its canonical order + shim patch when its
 effect is ported:
 
 - middleout (effect_middleout.py:229) — set iteration — DONE (see Effects table above)
-- unstable (effect_unstable.py:332) — set iteration
+- unstable (effect_unstable.py:332, :354) — set iteration — DONE (see Effects table above)
 - (audit each effect at port time; add rows here)
 
 Audited, no patch needed (set iteration present but order-unobservable):
@@ -46,4 +47,5 @@ Audited, no patch needed (set iteration present but order-unobservable):
 |---|---|---|
 | slice | `for character in self.active_characters` at end of `build` (effect_slice.py) | only calls `set_character_visibility(True)`, a commutative per-character flag; render order is already canonicalized by the `_update_terminal_state` patch. ttfx iterates its `BTreeSet` (ascending id). |
 | decrypt | `for char in self.active_characters` at the typing→decrypting transition (effect_decrypt.py:263) | only calls `activate_scene("fast_decrypt")`, which mutates each character alone; no SCENE_ACTIVATED handlers registered, so order is unobservable. ttfx iterates its `BTreeSet` (ascending id). |
+| print, overflow | none | no set iteration or dict-order reliance beyond `active_characters` membership; ticking covered by the `BaseEffectIterator.update` patch, rows/lists are ordered Python lists. |
 | expand, scattered | none beyond `active_characters` membership | build loops iterate `get_characters()` lists; `active_characters` ticking covered by the `BaseEffectIterator.update` patch. |
