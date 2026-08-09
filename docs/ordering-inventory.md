@@ -67,3 +67,6 @@ persist the shuffle mutation. Other ported call sites (blackhole, spotlights)
 only read the returned lists, so dropping the cache stays value-transparent
 there. Audit any future effect that mutates a geometry function's return
 value.
+| fireworks | `active_characters.add` in `__next__` (effect_fireworks.py) | membership only; shells are lists popped from the end. Ticking covered by the `BaseEffectIterator.update` patch. |
+| bubbles | `active_characters.union(bubble.characters)` in `__next__` (effect_bubbles.py) | membership only; bubbles and their character groups are lists, and `Bubble.move` steps animations in list order. Ticking covered by the `BaseEffectIterator.update` patch. |
+| beams | `active_characters.add` / `not self.active_characters` in `__next__` (effect_beams.py) | membership and emptiness only; pending/active groups and wipe groups are lists. Ticking covered by the `BaseEffectIterator.update` patch. |

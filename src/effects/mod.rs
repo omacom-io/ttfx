@@ -1,11 +1,12 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
-pub mod blackhole;
+pub mod beams;
 pub mod bouncyballs;
+pub mod bubbles;
 pub mod common;
-pub mod crumble;
 pub mod errorcorrect;
 pub mod expand;
+pub mod fireworks;
 pub mod middleout;
 pub mod pour;
 pub mod rain;
@@ -13,9 +14,7 @@ pub mod random_sequence;
 pub mod scattered;
 pub mod slice;
 pub mod slide;
-pub mod spotlights;
 pub mod spray;
-pub mod swarm;
 pub mod wipe;
 
 use clap::Subcommand;
@@ -24,16 +23,18 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
-    /// Characters are consumed by a black hole and explode outwards.
-    Blackhole(blackhole::BlackholeConfig),
+    /// Create beams which travel over the canvas illuminating the characters behind them.
+    Beams(beams::BeamsConfig),
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
-    /// Characters lose color and crumble into dust, vacuumed up, and reformed.
-    Crumble(crumble::CrumbleConfig),
+    /// Characters are formed into bubbles that float down and pop.
+    Bubbles(bubbles::BubblesConfig),
     /// Some characters start in the wrong position and are corrected in sequence.
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
     Expand(expand::ExpandConfig),
+    /// Characters launch and explode like fireworks and fall into place.
+    Fireworks(fireworks::FireworksConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
@@ -48,12 +49,8 @@ pub enum EffectCommand {
     Slice(slice::SliceConfig),
     /// Slide characters into view from outside the terminal.
     Slide(slide::SlideConfig),
-    /// Spotlights search the text area, illuminating characters, before converging in the center and expanding.
-    Spotlights(spotlights::SpotlightsConfig),
     /// Draws the characters spawning at varying rates from a single point.
     Spray(spray::SprayConfig),
-    /// Characters are grouped into swarms and move around the terminal before settling into position.
-    Swarm(swarm::SwarmConfig),
     /// Wipes the text across the terminal to reveal characters.
     Wipe(wipe::WipeConfig),
 }
@@ -61,11 +58,12 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
-            EffectCommand::Blackhole(config) => Box::new(blackhole::Blackhole::new(config.clone())),
+            EffectCommand::Beams(config) => Box::new(beams::Beams::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
-            EffectCommand::Crumble(config) => Box::new(crumble::Crumble::new(config.clone())),
+            EffectCommand::Bubbles(config) => Box::new(bubbles::Bubbles::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
+            EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
@@ -75,20 +73,19 @@ impl EffectCommand {
             EffectCommand::Scattered(config) => Box::new(scattered::Scattered::new(config.clone())),
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
-            EffectCommand::Spotlights(config) => Box::new(spotlights::Spotlights::new(config.clone())),
             EffectCommand::Spray(config) => Box::new(spray::Spray::new(config.clone())),
-            EffectCommand::Swarm(config) => Box::new(swarm::Swarm::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
         }
     }
 
     pub fn name(&self) -> &'static str {
         match self {
-            EffectCommand::Blackhole(_) => "blackhole",
+            EffectCommand::Beams(_) => "beams",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
-            EffectCommand::Crumble(_) => "crumble",
+            EffectCommand::Bubbles(_) => "bubbles",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
+            EffectCommand::Fireworks(_) => "fireworks",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",
@@ -96,9 +93,7 @@ impl EffectCommand {
             EffectCommand::Scattered(_) => "scattered",
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
-            EffectCommand::Spotlights(_) => "spotlights",
             EffectCommand::Spray(_) => "spray",
-            EffectCommand::Swarm(_) => "swarm",
             EffectCommand::Wipe(_) => "wipe",
         }
     }
