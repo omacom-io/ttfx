@@ -21,3 +21,8 @@ slice-horizontal|paragraph.txt|slice --slice-direction horizontal --movement-spe
 slice-diagonal|paragraph.txt|slice --slice-direction diagonal --final-gradient-stops ff0000 0000ff --final-gradient-direction radial
 slice-dynamic|colored.txt|--existing-color-handling dynamic slice
 slice-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 70 --canvas-height 22 --anchor-canvas c --anchor-text c slice --slice-direction horizontal
+scattered-basic|basic.txt|scattered
+scattered-slow-gradient|paragraph.txt|scattered --movement-speed 0.3 --movement-easing out_elastic --final-gradient-frames 4 --final-gradient-stops ff0000 0000ff --final-gradient-direction horizontal
+scattered-dynamic|colored.txt|--existing-color-handling dynamic scattered
+scattered-single|single.txt|scattered
+scattered-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c scattered
