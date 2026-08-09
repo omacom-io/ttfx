@@ -70,3 +70,6 @@ value.
 | fireworks | `active_characters.add` in `__next__` (effect_fireworks.py) | membership only; shells are lists popped from the end. Ticking covered by the `BaseEffectIterator.update` patch. |
 | bubbles | `active_characters.union(bubble.characters)` in `__next__` (effect_bubbles.py) | membership only; bubbles and their character groups are lists, and `Bubble.move` steps animations in list order. Ticking covered by the `BaseEffectIterator.update` patch. |
 | beams | `active_characters.add` / `not self.active_characters` in `__next__` (effect_beams.py) | membership and emptiness only; pending/active groups and wipe groups are lists. Ticking covered by the `BaseEffectIterator.update` patch. |
+| rings | none beyond `active_characters` membership | `Ring.characters`, `pending_chars`, `non_ring_chars` are lists; `rings` dict iterated in insertion order (radius ascending, `Vec<Ring>` in ttfx); RNG order fixed by list order. |
+| orbittingvolley | `any(launcher.magazine ...)` / `len(self.active_characters) > 1` | membership/length checks only; `_launchers` and magazines are lists; effect consumes no RNG. |
+| binarypath | none beyond `active_characters` membership | `pending_binary_representations`, `active_binary_reps`, `binary_characters`, `final_wipe_chars` are lists; the travel-phase `randrange` pops from a list, order preserved. |

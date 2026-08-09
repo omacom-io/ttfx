@@ -127,3 +127,16 @@ beams-basic|basic.txt|beams
 beams-custom|paragraph.txt|beams --beam-row-symbols - = --beam-column-symbols . : --beam-delay 2 --beam-row-speed-range 30-80 --beam-column-speed-range 12-20 --beam-gradient-stops ff0000 0000ff --beam-gradient-steps 4 --beam-gradient-frames 1 --final-gradient-direction horizontal --final-wipe-speed 5
 beams-dynamic|colored.txt|--existing-color-handling dynamic beams
 beams-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c beams
+rings-basic|basic.txt|rings
+rings-custom|paragraph.txt|rings --ring-colors ff0000 00ff00 --ring-gap 0.2 --spin-duration 50 --spin-speed 0.5-2.0 --disperse-duration 50 --spin-disperse-cycles 2 --final-gradient-direction horizontal
+rings-dynamic|colored.txt|--existing-color-handling dynamic rings --spin-duration 60 --disperse-duration 60
+rings-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c rings --spin-duration 80 --disperse-duration 40
+orbittingvolley-basic|basic.txt|orbittingvolley
+orbittingvolley-custom|paragraph.txt|orbittingvolley --top-launcher-symbol T --right-launcher-symbol R --bottom-launcher-symbol B --left-launcher-symbol L --launcher-movement-speed 1.4 --character-movement-speed 0.8 --volley-size 0.1 --launch-delay 10 --character-easing in_out_quad --final-gradient-direction vertical
+orbittingvolley-dynamic|colored.txt|--existing-color-handling dynamic orbittingvolley --launch-delay 5
+orbittingvolley-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c orbittingvolley --volley-size 0.2
+binarypath-basic|basic.txt|binarypath
+binarypath-custom|paragraph.txt|binarypath --binary-colors ff0000 00ff00 0000ff --movement-speed 2 --active-binary-groups 0.3 --final-gradient-direction vertical
+binarypath-dynamic|colored.txt|--existing-color-handling dynamic binarypath
+binarypath-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c binarypath --active-binary-groups 0.15
+binarypath-single|single.txt|binarypath

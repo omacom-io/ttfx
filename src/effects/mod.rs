@@ -1,16 +1,16 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
-pub mod beams;
+pub mod binarypath;
 pub mod bouncyballs;
-pub mod bubbles;
 pub mod common;
 pub mod errorcorrect;
 pub mod expand;
-pub mod fireworks;
 pub mod middleout;
+pub mod orbittingvolley;
 pub mod pour;
 pub mod rain;
 pub mod random_sequence;
+pub mod rings;
 pub mod scattered;
 pub mod slice;
 pub mod slide;
@@ -23,26 +23,26 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
-    /// Create beams which travel over the canvas illuminating the characters behind them.
-    Beams(beams::BeamsConfig),
+    /// Binary representations of each character move towards the home coordinate of the character.
+    Binarypath(binarypath::BinaryPathConfig),
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
-    /// Characters are formed into bubbles that float down and pop.
-    Bubbles(bubbles::BubblesConfig),
     /// Some characters start in the wrong position and are corrected in sequence.
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
     Expand(expand::ExpandConfig),
-    /// Characters launch and explode like fireworks and fall into place.
-    Fireworks(fireworks::FireworksConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
+    /// Four launchers orbit the canvas firing volleys of characters inward to build the input text from the center out.
+    Orbittingvolley(orbittingvolley::OrbittingVolleyConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
     /// Rain characters onto the canvas until the input text is formed.
     Rain(rain::RainConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
+    /// Characters are dispersed and form into spinning rings.
+    Rings(rings::RingsConfig),
     /// Text is scattered across the canvas and moves into position.
     Scattered(scattered::ScatteredConfig),
     /// Slices the input in half and slides it into place from opposite directions.
@@ -58,18 +58,20 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
-            EffectCommand::Beams(config) => Box::new(beams::Beams::new(config.clone())),
+            EffectCommand::Binarypath(config) => Box::new(binarypath::BinaryPath::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
-            EffectCommand::Bubbles(config) => Box::new(bubbles::Bubbles::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
-            EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
+            EffectCommand::Orbittingvolley(config) => {
+                Box::new(orbittingvolley::OrbittingVolley::new(config.clone()))
+            }
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
+            EffectCommand::Rings(config) => Box::new(rings::Rings::new(config.clone())),
             EffectCommand::Scattered(config) => Box::new(scattered::Scattered::new(config.clone())),
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
@@ -80,16 +82,16 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
-            EffectCommand::Beams(_) => "beams",
+            EffectCommand::Binarypath(_) => "binarypath",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
-            EffectCommand::Bubbles(_) => "bubbles",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
-            EffectCommand::Fireworks(_) => "fireworks",
             EffectCommand::Middleout(_) => "middleout",
+            EffectCommand::Orbittingvolley(_) => "orbittingvolley",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Randomsequence(_) => "randomsequence",
+            EffectCommand::Rings(_) => "rings",
             EffectCommand::Scattered(_) => "scattered",
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
