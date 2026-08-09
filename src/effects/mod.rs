@@ -7,6 +7,7 @@ pub mod binarypath;
 pub mod blackhole;
 pub mod bouncyballs;
 pub mod bubbles;
+pub mod burn;
 pub mod colorshift;
 pub mod crumble;
 pub mod decrypt;
@@ -49,6 +50,8 @@ pub enum EffectCommand {
     Bouncyballs(bouncyballs::BouncyBallsConfig),
     /// Characters are formed into bubbles that float down and pop.
     Bubbles(bubbles::BubblesConfig),
+    /// Burns vertically in the canvas.
+    Burn(burn::BurnConfig),
     /// Display a gradient that shifts colors across the terminal.
     Colorshift(colorshift::ColorShiftConfig),
     /// Characters lose color and crumble into dust, vacuumed up, and reformed.
@@ -109,6 +112,7 @@ impl EffectCommand {
             EffectCommand::Blackhole(config) => Box::new(blackhole::Blackhole::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Bubbles(config) => Box::new(bubbles::Bubbles::new(config.clone())),
+            EffectCommand::Burn(config) => Box::new(burn::Burn::new(config.clone())),
             EffectCommand::Colorshift(config) => Box::new(colorshift::ColorShift::new(config.clone())),
             EffectCommand::Crumble(config) => Box::new(crumble::Crumble::new(config.clone())),
             EffectCommand::Decrypt(config) => Box::new(decrypt::Decrypt::new(config.clone())),
@@ -144,6 +148,7 @@ impl EffectCommand {
             EffectCommand::Blackhole(_) => "blackhole",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Bubbles(_) => "bubbles",
+            EffectCommand::Burn(_) => "burn",
             EffectCommand::Colorshift(_) => "colorshift",
             EffectCommand::Crumble(_) => "crumble",
             EffectCommand::Decrypt(_) => "decrypt",
