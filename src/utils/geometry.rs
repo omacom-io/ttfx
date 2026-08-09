@@ -1,5 +1,12 @@
-//! Coord and geometry math, ported from utils/geometry.py. M0 ships Coord;
-//! the full function set lands in M1.
+//! Coord and geometry math, ported from utils/geometry.py.
+//!
+//! Upstream wraps every function in lru_cache; behavior is identical without
+//! the caches, so they are omitted. All `round()` calls are banker's rounding
+//! (pycompat), all int() casts truncate.
+
+use std::collections::HashSet;
+
+use crate::utils::pycompat::round_half_even;
 
 /// 1-based canvas coordinate: column grows right, row grows UP (origin bottom-left).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -12,4 +19,196 @@ impl Coord {
     pub fn new(column: i64, row: i64) -> Self {
         Coord { column, row }
     }
+}
+
+/// Float-valued point for bezier intermediates: upstream builds Coord objects
+/// with float fields inside de_casteljau (violating its own annotation) and
+/// only rounds the final result.
+#[derive(Debug, Clone, Copy)]
+struct FloatPoint {
+    column: f64,
+    row: f64,
+}
+
+/// find_coords_on_circle: coords_limit 0 -> round(2*pi*r); x offset from the
+/// origin is doubled for cell aspect; every point rounded (banker's).
+pub fn find_coords_on_circle(origin: Coord, radius: i64, coords_limit: i64, unique: bool) -> Vec<Coord> {
+    let mut points: Vec<Coord> = Vec::new();
+    if radius == 0 {
+        return points;
+    }
+    let mut seen: HashSet<Coord> = HashSet::new();
+    let coords_limit = if coords_limit == 0 {
+        round_half_even(2.0 * std::f64::consts::PI * radius as f64)
+    } else {
+        coords_limit
+    };
+    let angle_step = 2.0 * std::f64::consts::PI / coords_limit as f64;
+    for i in 0..coords_limit {
+        let angle = angle_step * i as f64;
+        let mut x = origin.column as f64 + radius as f64 * angle.cos();
+        let x_diff = x - origin.column as f64;
+        x += x_diff;
+        let y = origin.row as f64 + radius as f64 * angle.sin();
+        let point = Coord::new(round_half_even(x), round_half_even(y));
+        if unique {
+            if !seen.contains(&point) {
+                points.push(point);
+            }
+        } else {
+            points.push(point);
+        }
+        seen.insert(point);
+    }
+    points
+}
+
+/// find_coords_in_circle: actually an ellipse (a = diameter, b = diameter/2);
+/// int() truncation on the y offset, faithfully.
+pub fn find_coords_in_circle(center: Coord, diameter: i64) -> Vec<Coord> {
+    let (h, k) = (center.column, center.row);
+    let mut coords: Vec<Coord> = Vec::new();
+    if diameter == 0 {
+        return coords;
+    }
+    let a_squared = (diameter as f64).powf(2.0);
+    let b_squared = (diameter as f64 / 2.0).powf(2.0);
+    for x in (h - diameter)..=(h + diameter) {
+        let x_component = ((x - h) as f64).powf(2.0) / a_squared;
+        let max_y_offset = (b_squared * (1.0 - x_component)).powf(0.5) as i64;
+        for y in (k - max_y_offset)..=(k + max_y_offset) {
+            coords.push(Coord::new(x, y));
+        }
+    }
+    coords
+}
+
+/// find_coords_in_rect: full (2d+1)^2 block, empty for distance 0.
+/// Iteration order is column-major like upstream.
+pub fn find_coords_in_rect(origin: Coord, distance: i64) -> Vec<Coord> {
+    let mut coords: Vec<Coord> = Vec::new();
+    if distance == 0 {
+        return coords;
+    }
+    for column in (origin.column - distance)..=(origin.column + distance) {
+        for row in (origin.row - distance)..=(origin.row + distance) {
+            coords.push(Coord::new(column, row));
+        }
+    }
+    coords
+}
+
+/// find_coords_on_rect: perimeter only; empty if either half-dimension is 0.
+pub fn find_coords_on_rect(origin: Coord, half_width: i64, half_height: i64) -> Vec<Coord> {
+    let mut coords: Vec<Coord> = Vec::new();
+    if half_width == 0 || half_height == 0 {
+        return coords;
+    }
+    for column in (origin.column - half_width)..=(origin.column + half_width) {
+        if column == origin.column - half_width || column == origin.column + half_width {
+            for row in (origin.row - half_height)..=(origin.row + half_height) {
+                coords.push(Coord::new(column, row));
+            }
+        } else {
+            coords.push(Coord::new(column, origin.row - half_height));
+            coords.push(Coord::new(column, origin.row + half_height));
+        }
+    }
+    coords
+}
+
+/// extrapolate_along_ray: NON-doubled line length, lerp past the target, round.
+pub fn extrapolate_along_ray(origin: Coord, target: Coord, offset_from_target: f64) -> Coord {
+    let base = find_length_of_line(origin, target, false);
+    let total_distance = base + offset_from_target;
+    if total_distance == 0.0 || origin == target {
+        return target;
+    }
+    let t = total_distance / base;
+    let next_column = (1.0 - t) * origin.column as f64 + t * target.column as f64;
+    let next_row = (1.0 - t) * origin.row as f64 + t * target.row as f64;
+    Coord::new(round_half_even(next_column), round_half_even(next_row))
+}
+
+/// find_coord_on_bezier_curve: recursive De Casteljau of arbitrary degree with
+/// float intermediates, rounded only at the end.
+pub fn find_coord_on_bezier_curve(start: Coord, control: &[Coord], end: Coord, t: f64) -> Coord {
+    let mut points: Vec<FloatPoint> = Vec::with_capacity(control.len() + 2);
+    points.push(FloatPoint { column: start.column as f64, row: start.row as f64 });
+    for c in control {
+        points.push(FloatPoint { column: c.column as f64, row: c.row as f64 });
+    }
+    points.push(FloatPoint { column: end.column as f64, row: end.row as f64 });
+    while points.len() > 1 {
+        let mut next: Vec<FloatPoint> = Vec::with_capacity(points.len() - 1);
+        for i in 0..points.len() - 1 {
+            next.push(FloatPoint {
+                column: (1.0 - t) * points[i].column + t * points[i + 1].column,
+                row: (1.0 - t) * points[i].row + t * points[i + 1].row,
+            });
+        }
+        points = next;
+    }
+    Coord::new(round_half_even(points[0].column), round_half_even(points[0].row))
+}
+
+/// find_coord_on_line: lerp + round.
+pub fn find_coord_on_line(start: Coord, end: Coord, t: f64) -> Coord {
+    let x = (1.0 - t) * start.column as f64 + t * end.column as f64;
+    let y = (1.0 - t) * start.row as f64 + t * end.row as f64;
+    Coord::new(round_half_even(x), round_half_even(y))
+}
+
+/// find_length_of_bezier_curve: 10-sample polyline that stops at t=0.9 — the
+/// final t=0.9..1.0 span is deliberately (faithfully) omitted, systematically
+/// underestimating lengths. Do not fix (plan.md §5.4).
+pub fn find_length_of_bezier_curve(start: Coord, control: &[Coord], end: Coord) -> f64 {
+    let mut length = 0.0;
+    let mut prev_coord = start;
+    for t in 1..10 {
+        let coord = find_coord_on_bezier_curve(start, control, end, t as f64 / 10.0);
+        length += find_length_of_line(prev_coord, coord, true);
+        prev_coord = coord;
+    }
+    length
+}
+
+/// find_length_of_line: hypot, with the row delta doubled when requested
+/// (terminal cell aspect convention).
+pub fn find_length_of_line(coord1: Coord, coord2: Coord, double_row_diff: bool) -> f64 {
+    let column_diff = (coord2.column - coord1.column) as f64;
+    let row_diff = (coord2.row - coord1.row) as f64;
+    if double_row_diff {
+        f64::hypot(column_diff, 2.0 * row_diff)
+    } else {
+        f64::hypot(column_diff, row_diff)
+    }
+}
+
+/// find_normalized_distance_from_center: rejects out-of-rectangle coords
+/// (upstream ValueError); stays within [0, 1] for accepted ones.
+pub fn find_normalized_distance_from_center(
+    bottom: i64,
+    top: i64,
+    left: i64,
+    right: i64,
+    other_coord: Coord,
+) -> Result<f64, String> {
+    let y_offset = bottom - 1;
+    let x_offset = left - 1;
+    let right = right - x_offset;
+    let top = top - y_offset;
+    let center_x = right as f64 / 2.0;
+    let center_y = top as f64 / 2.0;
+
+    // Python: `n not in range(a, b+1)` — integer membership
+    let col = other_coord.column - x_offset;
+    let row = other_coord.row - y_offset;
+    if !(left - x_offset..=right).contains(&col) || !(bottom - y_offset..=top).contains(&row) {
+        return Err("Coordinate is not within the rectangle.".to_string());
+    }
+
+    let max_distance = ((right as f64).powf(2.0) + ((top * 2) as f64).powf(2.0)).powf(0.5);
+    let distance = ((col as f64 - center_x).powf(2.0) + ((row as f64 - center_y) * 2.0).powf(2.0)).powf(0.5);
+    Ok(distance / (max_distance / 2.0))
 }
