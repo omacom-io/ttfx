@@ -34,6 +34,11 @@ spray-basic|basic.txt|spray
 spray-nw-slow|paragraph.txt|spray --spray-position nw --spray-volume 0.02 --movement-speed-range 0.3-0.8 --movement-easing in_out_quad
 spray-dynamic|colored.txt|--existing-color-handling dynamic spray
 spray-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spray --spray-position center
+sweep-basic|basic.txt|sweep
+sweep-custom|paragraph.txt|sweep --sweep-symbols # @ % --first-sweep-direction row_top_to_bottom --second-sweep-direction diagonal_bottom_left_to_top_right --final-gradient-stops ff0000 00ff00 --final-gradient-steps 12 --final-gradient-direction horizontal
+sweep-center|paragraph.txt|sweep --first-sweep-direction center_to_outside --second-sweep-direction outside_to_center
+sweep-dynamic|colored.txt|--existing-color-handling dynamic sweep
+sweep-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c sweep
 wipe-basic|basic.txt|wipe
 wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
 wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce

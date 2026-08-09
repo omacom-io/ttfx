@@ -14,6 +14,7 @@ pub mod scattered;
 pub mod slice;
 pub mod slide;
 pub mod spray;
+pub mod sweep;
 pub mod wipe;
 
 use clap::Subcommand;
@@ -48,6 +49,8 @@ pub enum EffectCommand {
     Slide(slide::SlideConfig),
     /// Draws the characters spawning at varying rates from a single point.
     Spray(spray::SprayConfig),
+    /// Sweep across the canvas to reveal uncolored text, reverse sweep to color the text.
+    Sweep(sweep::SweepConfig),
     /// Wipes the text across the terminal to reveal characters.
     Wipe(wipe::WipeConfig),
 }
@@ -70,6 +73,7 @@ impl EffectCommand {
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
             EffectCommand::Spray(config) => Box::new(spray::Spray::new(config.clone())),
+            EffectCommand::Sweep(config) => Box::new(sweep::Sweep::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
         }
     }
@@ -89,6 +93,7 @@ impl EffectCommand {
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
             EffectCommand::Spray(_) => "spray",
+            EffectCommand::Sweep(_) => "sweep",
             EffectCommand::Wipe(_) => "wipe",
         }
     }
