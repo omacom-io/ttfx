@@ -5,6 +5,7 @@ pub mod colorshift;
 pub mod common;
 pub mod errorcorrect;
 pub mod expand;
+pub mod highlight;
 pub mod middleout;
 pub mod pour;
 pub mod rain;
@@ -29,6 +30,8 @@ pub enum EffectCommand {
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
     Expand(expand::ExpandConfig),
+    /// Run a specular highlight across the text.
+    Highlight(highlight::HighlightConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
@@ -56,6 +59,7 @@ impl EffectCommand {
             EffectCommand::Colorshift(config) => Box::new(colorshift::ColorShift::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
+            EffectCommand::Highlight(config) => Box::new(highlight::Highlight::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
@@ -76,6 +80,7 @@ impl EffectCommand {
             EffectCommand::Colorshift(_) => "colorshift",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
+            EffectCommand::Highlight(_) => "highlight",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",

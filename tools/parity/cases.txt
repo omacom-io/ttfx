@@ -21,6 +21,11 @@ errorcorrect-basic|basic.txt|errorcorrect
 errorcorrect-heavy|paragraph.txt|errorcorrect --error-pairs 0.4 --swap-delay 2 --error-color ff8800 --correct-color 00ff88 --movement-speed 0.4
 errorcorrect-dynamic|colored.txt|--existing-color-handling dynamic errorcorrect --error-pairs 0.5
 errorcorrect-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c errorcorrect
+highlight-basic|basic.txt|highlight
+highlight-custom|paragraph.txt|highlight --highlight-brightness 0.5 --highlight-direction row_top_to_bottom --highlight-width 3 --final-gradient-stops ff0000 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
+highlight-center|paragraph.txt|highlight --highlight-direction center_to_outside --highlight-brightness 2.5
+highlight-dynamic|colored.txt|--existing-color-handling dynamic highlight
+highlight-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c highlight
 rain-basic|basic.txt|rain
 rain-custom|paragraph.txt|rain --rain-colors 00ff00 ff0000 --rain-symbols . , --movement-speed 0.8-1.2 --movement-easing out_bounce --final-gradient-direction vertical
 rain-dynamic|colored.txt|--existing-color-handling dynamic rain
