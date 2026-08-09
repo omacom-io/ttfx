@@ -118,6 +118,17 @@ pub struct Cli {
     /// (used by the parity harness; hidden from help)
     #[arg(long = "m0-dump", default_value_t = false, hide = true)]
     pub m0_dump: bool,
+
+    /// Parity harness: dump length-prefixed frames deterministically (requires --seed)
+    #[arg(long = "parity-dump", default_value_t = false, hide = true)]
+    pub parity_dump: bool,
+
+    /// Parity harness: stop after N frames
+    #[arg(long = "max-frames", hide = true)]
+    pub max_frames: Option<u64>,
+
+    #[command(subcommand)]
+    pub effect: Option<crate::effects::EffectCommand>,
 }
 
 impl Cli {

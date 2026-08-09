@@ -1,0 +1,9 @@
+# name|input|args   (each case runs with seeds 42 and 1337, max 400 frames)
+randomsequence-basic|basic.txt|randomsequence
+randomsequence-fast|basic.txt|randomsequence --speed 0.2 --final-gradient-frames 3
+randomsequence-single|single.txt|randomsequence
+randomsequence-colored-dynamic|colored.txt|--existing-color-handling dynamic randomsequence
+randomsequence-colored-always|colored.txt|--existing-color-handling always randomsequence
+randomsequence-xterm|paragraph.txt|--xterm-colors randomsequence --speed 0.05
+randomsequence-nocolor|basic.txt|--no-color randomsequence
+randomsequence-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c randomsequence --speed 0.03

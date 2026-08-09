@@ -2,6 +2,7 @@ pub mod animation;
 pub mod canvas;
 pub mod character;
 pub mod ctx;
+pub mod effect;
 pub mod error;
 pub mod events;
 pub mod input;

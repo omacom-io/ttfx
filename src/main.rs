@@ -55,9 +55,55 @@ fn main() -> ExitCode {
         return m0_dump(&input_data, &cli);
     }
 
-    // Effect dispatch lands in M3; until then only the debug path exists.
-    eprintln!("no effect specified (effects arrive in a later milestone)");
-    ExitCode::from(1)
+    let Some(effect_command) = &cli.effect else {
+        eprintln!("Error: No effect specified.");
+        return ExitCode::from(1);
+    };
+
+    let config = cli.terminal_config();
+    let rng = match cli.seed {
+        Some(seed) => ttfx::utils::rng::Rng::seeded(seed),
+        None => ttfx::utils::rng::Rng::from_entropy(),
+    };
+    let clock = if cli.parity_dump {
+        ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
+    } else {
+        ttfx::engine::ctx::Clock::real()
+    };
+    let frame_rate = config.frame_rate;
+    let mut ctx = match ttfx::engine::ctx::EngineCtx::new(&input_data, config, rng, clock) {
+        Ok(ctx) => ctx,
+        Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
+            eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
+            return ExitCode::from(1);
+        }
+        Err(e) => {
+            eprintln!("Error: {e}");
+            return ExitCode::from(1);
+        }
+    };
+    let _ = frame_rate;
+    let mut effect = effect_command.build_effect();
+
+    let result = if cli.parity_dump {
+        ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames).map(|_| ())
+    } else {
+        ttfx::install_sigint_handler();
+        ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
+    };
+    match result {
+        Ok(()) => {
+            if ttfx::interrupted() {
+                ExitCode::from(1)
+            } else {
+                ExitCode::SUCCESS
+            }
+        }
+        Err(e) => {
+            eprintln!("Error: {e}");
+            ExitCode::from(1)
+        }
+    }
 }
 
 /// M0 parity path: build the Terminal, make every character in
