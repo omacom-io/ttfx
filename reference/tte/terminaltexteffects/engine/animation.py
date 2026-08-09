@@ -1,0 +1,935 @@
+"""Classes for handling animations in terminal text effects.
+
+Classes:
+    CharacterVisual: A class for storing symbol, color, and terminal graphical modes for the character.
+    Frame: A class representing a frame in an animation.
+    Scene: A class representing a sequence of frames that can be played in an animation.
+    Animation: A class for handling animations for an EffectCharacter.
+
+"""
+
+from __future__ import annotations
+
+import typing
+from dataclasses import dataclass
+from enum import Enum, auto
+
+from terminaltexteffects.utils import ansitools, colorterm, easing, graphics, hexterm
+from terminaltexteffects.utils.exceptions import (
+    ActivateEmptySceneError,
+    AnimationSceneError,
+    FrameDurationError,
+    SceneNotFoundError,
+)
+
+if typing.TYPE_CHECKING:
+    from terminaltexteffects.engine import base_character, motion  # pragma: no cover
+
+
+@dataclass
+class CharacterVisual:
+    """A class for storing symbol, color, and terminal graphical modes for the character.
+
+    Args:
+        symbol (str): The unformatted symbol.
+        bold (bool): Bold mode.
+        dim (bool): Dim mode.
+        italic (bool): Italic mode.
+        underline (bool): Underline mode.
+        blink (bool): Blink mode.
+        reverse (bool): Reverse mode.
+        hidden (bool): Hidden mode.
+        strike (bool): Strike mode.
+        colors (graphics.ColorPair | None): The symbol's colors.
+        _fg_color_code (str | int | None): The symbol's foreground color code.
+        _bg_color_code (str | int | None): The symbol's background color code.
+
+    Attributes:
+        formatted_symbol (str): The current symbol with all ANSI sequences applied.
+
+    Methods:
+        format_symbol: Formats the symbol for printing by applying ANSI sequences for supported active modes and color.
+
+    """
+
+    symbol: str
+    bold: bool = False
+    dim: bool = False
+    italic: bool = False
+    underline: bool = False
+    blink: bool = False
+    reverse: bool = False
+    hidden: bool = False
+    strike: bool = False
+    colors: graphics.ColorPair | None = None  # the Color object provided during initialization
+    # the _*_color_code attributes are used to store the actual 8-bit int or 24-bit hex str after applying terminal
+    # config args these are used by colorterm to produce the ansi sequences
+    _fg_color_code: str | int | None = None
+    _bg_color_code: str | int | None = None
+
+    def __post_init__(self) -> None:
+        """Create the formatted symbol by applying ANSI sequences for any active modes and color."""
+        self.formatted_symbol = self.format_symbol()
+
+    def format_symbol(self) -> str:
+        """Format the symbol for printing by applying ANSI sequences for supported active modes and color.
+
+        The `dim` attribute is stored on the visual but is not currently emitted as an ANSI sequence.
+        """
+        formatting_string = ""
+        if self.bold:
+            formatting_string += ansitools.apply_bold()
+        # Future: review the dim ANSI sequence and decide whether CharacterVisual should emit it.
+        if self.italic:
+            formatting_string += ansitools.apply_italic()
+        if self.underline:
+            formatting_string += ansitools.apply_underline()
+        if self.blink:
+            formatting_string += ansitools.apply_blink()
+        if self.reverse:
+            formatting_string += ansitools.apply_reverse()
+        if self.hidden:
+            formatting_string += ansitools.apply_hidden()
+        if self.strike:
+            formatting_string += ansitools.apply_strikethrough()
+        if self._fg_color_code is not None:
+            formatting_string += colorterm.fg(self._fg_color_code)
+        if self._bg_color_code is not None:
+            formatting_string += colorterm.bg(self._bg_color_code)
+
+        return f"{formatting_string}{self.symbol}{ansitools.reset_all() if formatting_string else ''}"
+
+
+@dataclass
+class Frame:
+    """A Frame is a CharacterVisual with a duration.
+
+    Args:
+        character_visual (CharacterVisual): a CharacterVisual object
+        duration (int): the number of ticks to display the Frame
+
+    Attributes:
+        character_visual (CharacterVisual): the CharacterVisual object for the Frame
+        duration (int): the number of ticks to display the Frame
+        ticks_elapsed (int): the number of ticks that have elapsed displaying this frame
+
+    """
+
+    character_visual: CharacterVisual
+    duration: int
+
+    def __post_init__(self) -> None:
+        """Initialize the ticks_elapsed attribute to 0."""
+        self.ticks_elapsed = 0
+
+
+class Scene:
+    """A Scene is a collection of Frames that can be played in sequence. Scenes can be looped and synced to movement.
+
+    Methods:
+        add_frame: Adds a Frame to the Scene.
+        activate: Activates the Scene.
+        get_next_visual: Gets the next CharacterVisual in the Scene.
+        apply_gradient_to_symbols: Applies a gradient effect to a sequence of symbols.
+        reset_scene: Resets the Scene.
+
+    Attributes:
+        scene_id (str): the ID of the Scene
+        is_looping (bool): Whether the Scene should loop
+        sync (Scene.SyncMetric | None): The type of sync to use for the Scene
+        ease (easing.EasingFunction | None): The easing function to use for the Scene
+        no_color (bool): Whether to ignore colors
+        use_xterm_colors (bool): Whether to convert all colors to XTerm-256 colors
+        frames (list[Frame]): The list of Frames in the Scene
+        played_frames (list[Frame]): The list of Frames that have been played
+        frame_index_map (dict[int, Frame]): A mapping of frame index to Frame
+        easing_total_steps (int): The total number of steps in the easing function
+        easing_current_step (int): The current step in the easing function
+        preexisting_colors (graphics.ColorPair | None): The preexisting colors parsed from the input.
+        preexisting_bold (bool): Whether parsed input bold styling should override frame bold styling.
+
+    """
+
+    xterm_color_map: typing.ClassVar[dict[str, int]] = {}
+
+    class SyncMetric(Enum):
+        """Enum for specifying how a Scene synchronizes to motion progress.
+
+        Attributes:
+            DISTANCE (int): Sync scene progress to the active path's traveled distance.
+            STEP (int): Sync scene progress to the active path's current step count.
+
+        """
+
+        DISTANCE = auto()
+        STEP = auto()
+
+    def __init__(
+        self,
+        scene_id: str,
+        *,
+        is_looping: bool = False,
+        sync: SyncMetric | None = None,
+        ease: easing.EasingFunction | None = None,
+        no_color: bool = False,
+        use_xterm_colors: bool = False,
+    ) -> None:
+        """Initialize a Scene.
+
+        Args:
+            scene_id (str): the ID of the Scene
+            is_looping (bool, optional): Whether the Scene should loop. Defaults to False.
+            sync (Scene.SyncMetric | None, optional): The type of sync to use for the Scene. Defaults to None.
+            ease (easing.EasingFunction | None, optional): The easing function to use for the Scene. Defaults to None.
+            no_color (bool, optional): Whether to colors should be ignored. Defaults to False.
+            use_xterm_colors (bool, optional): Whether to convert all colors to XTerm-256 colors. Defaults to False.
+
+        """
+        self.scene_id = scene_id
+        self.is_looping = is_looping
+        self.sync: Scene.SyncMetric | None = sync
+        self.ease: easing.EasingFunction | None = ease
+        self.no_color = no_color
+        self.use_xterm_colors = use_xterm_colors
+        self.frames: list[Frame] = []
+        self.played_frames: list[Frame] = []
+        self.frame_index_map: dict[int, Frame] = {}
+        self.easing_total_steps: int = 0
+        self.easing_current_step: int = 0
+        self.preexisting_colors: graphics.ColorPair | None = None
+        self.preexisting_bold: bool = False
+
+    def _get_color_code(self, color: graphics.Color | None) -> str | int | None:
+        """Get the color code for the given color.
+
+        RGB colors are converted to XTerm-256 colors if use_xterm_colors is True.
+        If no_color is True, returns None. Otherwise, returns the RGB color.
+
+        Args:
+            color (graphics.Color | None): the color to get the code for
+
+        Returns:
+            str | int | None: the color code
+
+        """
+        if color:
+            if self.no_color:
+                return None
+            if self.use_xterm_colors:
+                if color.xterm_color is not None:
+                    return color.xterm_color
+                if color.rgb_color in self.xterm_color_map:
+                    return self.xterm_color_map[color.rgb_color]
+                xterm_color = hexterm.hex_to_xterm(color.rgb_color)
+                self.xterm_color_map[color.rgb_color] = xterm_color
+                return xterm_color
+            return color.rgb_color
+        return None
+
+    def add_frame(
+        self,
+        symbol: str,
+        duration: int,
+        *,
+        colors: graphics.ColorPair | None = None,
+        bold: bool = False,
+        dim: bool = False,
+        italic: bool = False,
+        underline: bool = False,
+        blink: bool = False,
+        reverse: bool = False,
+        hidden: bool = False,
+        strike: bool = False,
+    ) -> None:
+        """Add a Frame to the Scene with the given symbol, duration, color, and graphical modes.
+
+        If `preexisting_colors` is set on the Scene, those colors override the `colors`
+        argument for every frame added to the Scene.
+
+        Args:
+            symbol (str): the symbol to show
+            duration (int): the number of frames to use the Frame
+            colors (graphics.ColorPair | None, optional): the colors to use. Defaults to None.
+            bold (bool, optional): bold mode. Defaults to False.
+            dim (bool, optional): dim mode. Defaults to False.
+            italic (bool, optional): italic mode. Defaults to False.
+            underline (bool, optional): underline mode. Defaults to False.
+            blink (bool, optional): blink mode. Defaults to False.
+            reverse (bool, optional): reverse mode. Defaults to False.
+            hidden (bool, optional): hidden mode. Defaults to False.
+            strike (bool, optional): strike mode. Defaults to False.
+
+        Raises:
+            FrameDurationError: if the frame duration is less than 1
+
+        """
+        # override fg and bg colors if they are set in the Scene due to existing color handling = always
+        if self.preexisting_colors:
+            colors = self.preexisting_colors
+        if self.preexisting_bold:
+            bold = True
+
+        # get the color code for the fg and bg colors
+        if colors:
+            char_vis_fg_color = self._get_color_code(colors.fg_color)
+            char_vis_bg_color = self._get_color_code(colors.bg_color)
+        else:
+            char_vis_fg_color = None
+            char_vis_bg_color = None
+
+        if duration < 1:
+            raise FrameDurationError(duration)
+        char_vis = CharacterVisual(
+            symbol,
+            bold=bold,
+            dim=dim,
+            italic=italic,
+            underline=underline,
+            blink=blink,
+            reverse=reverse,
+            hidden=hidden,
+            strike=strike,
+            colors=colors,
+            _fg_color_code=char_vis_fg_color,
+            _bg_color_code=char_vis_bg_color,
+        )
+        frame = Frame(char_vis, duration)
+        self.frames.append(frame)
+        for _ in range(frame.duration):
+            self.frame_index_map[self.easing_total_steps] = frame
+            self.easing_total_steps += 1
+
+    def activate(self) -> CharacterVisual:
+        """Activate the Scene by returning the first frame's `CharacterVisual`.
+
+        Called by the `Animation` object when the Scene is activated.
+
+        Raises:
+            ActivateEmptySceneError: if the Scene has no frames
+
+        Returns:
+            CharacterVisual: the first frame's visual.
+
+        """
+        if self.frames:
+            return self.frames[0].character_visual
+        raise ActivateEmptySceneError(self)
+
+    def get_next_visual(self) -> CharacterVisual:
+        """Get the next CharacterVisual in the Scene.
+
+        Retrieve the current frame from `frames`, then increment the frame's `ticks_elapsed`.
+        If `ticks_elapsed` reaches the frame duration, reset that frame's `ticks_elapsed` to `0`
+        and move it from `frames` to `played_frames`. If the Scene is looping and all frames
+        have been played, restore `frames` from `played_frames` so the next loop begins from
+        the start of each frame again. Return the current frame's `CharacterVisual`.
+
+        Returns:
+            CharacterVisual: The visual of the current frame in the Scene.
+
+        """
+        current_frame = self.frames[0]
+        next_visual = current_frame.character_visual
+        current_frame.ticks_elapsed += 1
+        if current_frame.ticks_elapsed == current_frame.duration:
+            current_frame.ticks_elapsed = 0
+            self.played_frames.append(self.frames.pop(0))
+            if self.is_looping and not self.frames:
+                self.frames.extend(self.played_frames)
+                self.played_frames.clear()
+        return next_visual
+
+    def apply_gradient_to_symbols(
+        self,
+        symbols: typing.Sequence[str],
+        duration: int,
+        *,
+        fg_gradient: graphics.Gradient | None = None,
+        bg_gradient: graphics.Gradient | None = None,
+    ) -> None:
+        """Apply a gradient effect to a sequence of symbols and add each symbol as a frame to the Scene.
+
+        Args:
+            symbols (Sequence[str]): The sequence of symbols to apply the gradient to.
+            duration (int): The duration to show each frame.
+            fg_gradient (graphics.Gradient | None): The foreground gradient to apply. Defaults to None.
+            bg_gradient (graphics.Gradient | None): The background gradient to apply. Defaults to None.
+
+        Returns:
+            None
+
+        Raises:
+            AnimationSceneError: if gradients are invalid or symbols are invalid
+
+        """
+        T = typing.TypeVar("T")
+        R = typing.TypeVar("R")
+
+        def cyclic_distribution(
+            larger_seq: typing.Sequence[T],
+            smaller_seq: typing.Sequence[R],
+        ) -> typing.Generator[tuple[T, R], None, None]:
+            """Distributes the elements of a smaller sequence cyclically across a larger sequence with overflow.
+
+            Example:
+                cyclic_distribution([1, 2, 3, 4, 5], [a, b]) -> [(1, a), (2, a), (3, a), (4, b), (5, b)]
+
+            Args:
+                larger_seq (typing.Sequence[T]): the larger sequence
+                smaller_seq (typing.Sequence[R]): the smaller sequence
+
+            Yields:
+                typing.Generator[tuple[T, R], None, None]: a generator yielding tuples of elements from the
+                    larger and smaller sequences
+
+            """
+            repeat_factor = len(larger_seq) // len(smaller_seq)
+            overflow_count = len(larger_seq) % len(smaller_seq)
+            overflow_used = False
+            smaller_index = 0
+            current_repeat_factor = 0
+            for larger_seq_element in larger_seq:
+                if current_repeat_factor >= repeat_factor:
+                    if overflow_count:
+                        if overflow_used:
+                            smaller_index += 1
+                            current_repeat_factor = 0
+                            overflow_used = False
+                        else:
+                            overflow_used = True
+                            overflow_count -= 1
+                    else:
+                        smaller_index += 1
+                        current_repeat_factor = 0
+
+                current_repeat_factor += 1
+                yield larger_seq_element, smaller_seq[smaller_index]
+
+        if fg_gradient is None and bg_gradient is None:
+            message = "Foreground and background gradient are None. At least one gradient must be provided."
+            raise AnimationSceneError(
+                message,
+            )
+        if not ((fg_gradient and fg_gradient.spectrum) or (bg_gradient and bg_gradient.spectrum)):
+            message = (
+                "Foreground and background gradient are empty. At least one gradient must have at least one color."
+            )
+            raise AnimationSceneError(message)
+        for symbol in symbols:
+            if len(symbol) > 1:
+                message = f"Symbol must be a string with a length of 1. Received: `{symbol}`."
+                raise AnimationSceneError(message)
+        color_pairs: list[graphics.ColorPair] = []
+        if fg_gradient and fg_gradient.spectrum and bg_gradient and bg_gradient.spectrum:
+            if len(fg_gradient.spectrum) >= len(bg_gradient.spectrum):
+                color_pairs = [
+                    graphics.ColorPair(fg=fg_color, bg=bg_color)
+                    for fg_color, bg_color in cyclic_distribution(fg_gradient.spectrum, bg_gradient.spectrum)
+                ]
+            else:
+                color_pairs = [
+                    graphics.ColorPair(fg=fg_color, bg=bg_color)
+                    for bg_color, fg_color in cyclic_distribution(bg_gradient.spectrum, fg_gradient.spectrum)
+                ]
+        elif fg_gradient and fg_gradient.spectrum:
+            color_pairs = [graphics.ColorPair(fg=color, bg=None) for color in fg_gradient.spectrum]
+        elif bg_gradient and bg_gradient.spectrum:
+            color_pairs = [graphics.ColorPair(fg=None, bg=color) for color in bg_gradient.spectrum]
+
+        if len(symbols) >= len(color_pairs):
+            for symbol, colors in cyclic_distribution(symbols, color_pairs):
+                self.add_frame(symbol, duration, colors=colors)
+        else:
+            for colors, symbol in cyclic_distribution(color_pairs, symbols):
+                self.add_frame(symbol, duration, colors=colors)
+
+    def reset_scene(self) -> None:
+        """Reset the Scene to its initial playback state.
+
+        All remaining frames are moved back into the full frame sequence, each frame's
+        `ticks_elapsed` is reset to `0`, `played_frames` is cleared, and
+        `easing_current_step` is reset to `0`.
+        """
+        for sequence in self.frames:
+            sequence.ticks_elapsed = 0
+            self.played_frames.append(sequence)
+        self.frames.clear()
+        self.frames.extend(self.played_frames)
+        self.played_frames.clear()
+        self.easing_current_step = 0
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two Scene objects are equal based on their scene_id."""
+        if not isinstance(other, Scene):
+            return NotImplemented
+        return self.scene_id == other.scene_id
+
+    def __hash__(self) -> int:
+        """Return the hash value of the Scene based on its scene_id."""
+        return hash(self.scene_id)
+
+
+class Animation:
+    """Animation handler for an EffectCharacter.
+
+    It contains a scene_name -> Scene mapping and the active Scene. Calls to step_animation()
+    progress the Scene and apply the next visual to the character.
+
+
+    Attributes:
+        scenes (dict[str, Scene]): a mapping of scene IDs to Scene objects
+        character (base_character.EffectCharacter): the EffectCharacter object to animate
+        active_scene (Scene | None): the active Scene
+        use_xterm_colors (bool): whether to convert all colors to XTerm-256 colors
+        no_color (bool): whether to ignore colors
+        existing_color_handling (str): how to handle color ANSI sequences from the input data
+        input_fg_color (graphics.Color | None): the input foreground Color
+        input_bg_color (graphics.Color | None): the input background Color
+        input_bold (bool): whether the input character was parsed with active bold SGR styling
+        xterm_color_map (dict[str, int]): a mapping of RGB color codes to XTerm-256 color codes
+        active_scene_current_step (int): Reserved for scene-step tracking; currently reset on activation but
+            otherwise unused.
+        current_character_visual (CharacterVisual): the current visual of the character
+
+    Methods:
+        new_scene: Creates a new Scene and adds it to the Animation.
+        query_scene: Returns a Scene from the Animation.
+        active_scene_is_complete: Returns whether the active scene is complete.
+        set_appearance: Applies a symbol and color to the character.
+        adjust_color_brightness: Adjusts the brightness of a given color.
+        _ease_animation: Returns the percentage of total distance that should be moved based on the easing function.
+        step_animation: Apply the next symbol in the scene to the character.
+        activate_scene: Activates a Scene.
+
+    """
+
+    def __init__(self, character: base_character.EffectCharacter) -> None:
+        """Initialize the Animation object.
+
+        Args:
+            character (base_character.EffectCharacter): the EffectCharacter object to animate
+
+        """
+        self.scenes: dict[str, Scene] = {}
+        self.character = character
+        self.active_scene: Scene | None = None
+        self.use_xterm_colors: bool = False
+        self.no_color: bool = False
+        self.existing_color_handling: typing.Literal["always", "dynamic", "ignore"] = "ignore"
+        self.input_fg_color: graphics.Color | None = None
+        self.input_bg_color: graphics.Color | None = None
+        self.input_bold: bool = False
+        self.xterm_color_map: dict[str, int] = {}
+        # Future: review whether `active_scene_current_step` should be removed or implemented for real scene tracking.
+        self.active_scene_current_step: int = 0
+        self.current_character_visual: CharacterVisual = CharacterVisual(character.input_symbol)
+
+    def _get_color_code(self, color: graphics.Color | None) -> str | int | None:
+        """Get the color code for the given color.
+
+        RGB colors are converted to XTerm-256 colors if use_xterm_colors
+        is True. If no_color is True, returns None. Otherwise, returns the RGB color.
+
+        Args:
+            color (graphics.Color | None): the color to get the code for
+
+        Returns:
+            str | int | None: the color code
+
+        """
+        if color:
+            if self.no_color:
+                return None
+            if self.use_xterm_colors:
+                if color.xterm_color is not None:
+                    return color.xterm_color
+                if color.rgb_color in self.xterm_color_map:
+                    return self.xterm_color_map[color.rgb_color]
+                xterm_color = hexterm.hex_to_xterm(color.rgb_color)
+                self.xterm_color_map[color.rgb_color] = xterm_color
+                return xterm_color
+            return color.rgb_color
+        return None
+
+    def new_scene(
+        self,
+        *,
+        is_looping: bool = False,
+        sync: Scene.SyncMetric | None = None,
+        ease: easing.EasingFunction | None = None,
+        scene_id: str = "",
+    ) -> Scene:
+        """Create a new Scene and add it to the Animation.
+
+        If no ID is provided, a unique ID is generated. If `existing_color_handling` is `"always"`,
+        the Scene inherits the animation's input colors as `preexisting_colors`. If a Scene with the
+        same ID already exists, it is replaced in the animation's scene mapping.
+
+        Args:
+            scene_id (str): Name for the scene. Used to query for the scene.
+            is_looping (bool): Whether the scene should loop.
+            sync (Scene.SyncMetric | None): The type of sync to use for the scene.
+            ease (easing.EasingFunction | None): The easing function to use for the scene.
+
+        Returns:
+            Scene: The new Scene.
+
+        """
+        if not scene_id:
+            found_unique = False
+            current_id = len(self.scenes)
+            while not found_unique:
+                scene_id = f"{current_id}"
+                if scene_id not in self.scenes:
+                    found_unique = True
+                else:
+                    current_id += 1
+        # Future: review whether scene IDs should be enforced as unique and raise on duplicates.
+        # Confirm no effects intentionally overwrite scenes today, then update this behavior and docs together.
+        if self.existing_color_handling == "always" and self.character.uses_input_preexisting_colors:
+            preexisting_colors = graphics.ColorPair(fg=self.input_fg_color, bg=self.input_bg_color)
+            preexisting_bold = self.input_bold
+        else:
+            preexisting_colors = None
+            preexisting_bold = False
+        new_scene = Scene(
+            scene_id=scene_id,
+            is_looping=is_looping,
+            sync=sync,
+            ease=ease,
+            no_color=self.no_color,
+            use_xterm_colors=self.use_xterm_colors,
+        )
+        new_scene.preexisting_colors = preexisting_colors
+        new_scene.preexisting_bold = preexisting_bold
+        self.scenes[scene_id] = new_scene
+        return new_scene
+
+    @typing.overload
+    def query_scene(self, scene_id: str) -> Scene: ...
+    @typing.overload
+    def query_scene(self, scene_id: str, not_found_action: typing.Literal["raise"]) -> Scene: ...
+    @typing.overload
+    def query_scene(self, scene_id: str, not_found_action: None) -> Scene | None: ...
+    def query_scene(self, scene_id: str, not_found_action: typing.Literal["raise"] | None = "raise") -> Scene | None:
+        """Return the Scene with the given scene_id, or None if no Scene with the given ID exists.
+
+        Args:
+            scene_id (str): The ID of the Scene.
+            not_found_action (Literal["raise"] | None, optional): Action to take if a Scene with the given
+                `scene_id` is not found. If "raise", a SceneNotFoundError will be raised. If `None`, method will
+                return `None`.
+
+        Returns:
+            Scene | None: The Scene with the given `scene_id`, or None.
+
+        Raises:
+            SceneNotFoundError: If `not_found_action` is "raise" and a Scene with the given
+                `scene_id` is not found.
+
+        """
+        found_scene = self.scenes.get(scene_id, None)
+        if not_found_action and found_scene is None:
+            raise SceneNotFoundError(scene_id)
+        return found_scene
+
+    def active_scene_is_complete(self) -> bool:
+        """Return whether the active scene should be treated as complete.
+
+        A scene is treated as complete when there is no active scene, when the active
+        scene has no remaining frames to play, or when the active scene is looping.
+
+        Returns:
+            bool: True if the active scene is complete, False otherwise.
+
+        """
+        return bool(not self.active_scene or not self.active_scene.frames or self.active_scene.is_looping)
+
+    def set_appearance(self, symbol: str | None = None, colors: graphics.ColorPair | None = None) -> None:
+        """Update the current character visual with the symbol and colors provided.
+
+        If no symbol is provided, the character's input symbol is used.
+
+        If `existing_color_handling` is `"always"`, any provided foreground or background
+        colors are overridden by the character's input colors where available.
+
+        If the character has an active scene, any appearance set with this method
+        will be overwritten when the scene is stepped to the next frame.
+
+        Args:
+            symbol (str | None): The symbol to apply.
+            colors (graphics.ColorPair | None): The colors to apply.
+
+        """
+        if symbol is None:
+            symbol = self.character.input_symbol
+        if colors is None:
+            colors = graphics.ColorPair(fg=None, bg=None)
+        # In always mode, input-derived characters use exactly the parsed input fg/bg pair,
+        # even when one or both channels are absent.
+        bold = False
+        if self.existing_color_handling == "always" and self.character.uses_input_preexisting_colors:
+            colors = graphics.ColorPair(fg=self.input_fg_color, bg=self.input_bg_color)
+            bold = self.input_bold
+
+        char_vis_fg_color: str | int | None = self._get_color_code(colors.fg_color)
+        char_vis_bg_color: str | int | None = self._get_color_code(colors.bg_color)
+
+        self.current_character_visual = CharacterVisual(
+            symbol,
+            bold=bold,
+            colors=colors,
+            _fg_color_code=char_vis_fg_color,
+            _bg_color_code=char_vis_bg_color,
+        )
+
+    @staticmethod
+    def adjust_color_brightness(color: graphics.Color, brightness: float) -> graphics.Color:
+        """Adjust the brightness of a given color.
+
+        Args:
+            color (Color): The color code to adjust.
+            brightness (float): The brightness adjustment factor.
+
+        Returns:
+            Color: The adjusted color code.
+
+        """
+
+        def hue_to_rgb(lightness_scaled: float, color_intensity: float, hue_value: float) -> float:
+            """Convert a hue value to an RGB value component.
+
+            This function is a helper function used in the conversion from HSL (Hue, Saturation, Lightness)
+            color space to RGB (Red, Green, Blue) color space. It takes in three parameters: lightness_scaled,
+            color_intensity, and hue_value. These parameters are derived from the HSL color space and are used
+            to calculate the corresponding RGB value.
+
+            Args:
+                lightness_scaled (float): The lightness value from the HSL color space, scaled and shifted to be used in
+                    the RGB conversion.
+                color_intensity (float): The intensity of the color, used to adjust the RGB values.
+                hue_value (float): The hue value from the HSL color space, used to calculate the RGB values.
+
+            Returns:
+                float: The calculated RGB component.
+
+            """
+            if hue_value < 0:
+                hue_value += 1
+            if hue_value > 1:
+                hue_value -= 1
+            if hue_value < 1 / 6:
+                return lightness_scaled + (color_intensity - lightness_scaled) * 6 * hue_value
+            if hue_value < 1 / 2:
+                return color_intensity
+            if hue_value < 2 / 3:
+                return lightness_scaled + (color_intensity - lightness_scaled) * (2 / 3 - hue_value) * 6
+            return lightness_scaled
+
+        normalized_red = int(color.rgb_color[0:2], 16) / 255
+        normalized_green = int(color.rgb_color[2:4], 16) / 255
+        normalized_blue = int(color.rgb_color[4:6], 16) / 255
+
+        # Convert RGB to HSL
+        max_val = max(normalized_red, normalized_green, normalized_blue)
+        min_val = min(normalized_red, normalized_green, normalized_blue)
+        lightness = (max_val + min_val) / 2
+
+        if max_val == min_val:
+            hue_value = saturation = 0.0  # achromatic
+        else:
+            diff = max_val - min_val
+            lightness_threshold = 0.5
+            saturation = (
+                diff / (2 - max_val - min_val) if lightness > lightness_threshold else diff / (max_val + min_val)
+            )
+            if max_val == normalized_red:
+                hue_value = (normalized_green - normalized_blue) / diff + (
+                    6 if normalized_green < normalized_blue else 0
+                )
+            elif max_val == normalized_green:
+                hue_value = (normalized_blue - normalized_red) / diff + 2
+            else:
+                hue_value = (normalized_red - normalized_green) / diff + 4
+            hue_value /= 6
+
+        # Adjust lightness
+        lightness = max(min(lightness * brightness, 1), 0)
+
+        # Convert back to RGB
+        if saturation == 0:
+            red = green = blue = lightness  # achromatic
+        else:
+            color_intensity = (
+                lightness * (1 + saturation)
+                if lightness < lightness_threshold  # type: ignore[unbound]
+                else lightness + saturation - lightness * saturation
+            )
+            lightness_scaled = 2 * lightness - color_intensity
+            red = hue_to_rgb(lightness_scaled, color_intensity, hue_value + 1 / 3)
+            green = hue_to_rgb(lightness_scaled, color_intensity, hue_value)
+            blue = hue_to_rgb(lightness_scaled, color_intensity, hue_value - 1 / 3)
+
+        # Convert to hex
+        adjusted_color = f"{round(red * 255):02x}{round(green * 255):02x}{round(blue * 255):02x}"
+        return graphics.Color(adjusted_color)
+
+    def _ease_animation(self, easing_func: easing.EasingFunction) -> float:
+        """Return the percentage of total distance that should be moved based on the easing function.
+
+        Args:
+            easing_func (easing.EasingFunction): The easing function to use.
+
+        Returns:
+            float: The percentage of total distance to move.
+
+        """
+        if self.active_scene is None:
+            return 0
+        elapsed_step_ratio = self.active_scene.easing_current_step / self.active_scene.easing_total_steps
+        return easing_func(elapsed_step_ratio)
+
+    def step_animation(self) -> None:
+        """Progress the Scene and apply the next visual to the character.
+
+        Behavior:
+            * Synced scenes select a frame based on the active motion path's progress.
+            * Eased scenes select a frame from `frame_index_map` using easing progress.
+            * All other scenes advance by consuming frame duration through `Scene.get_next_visual()`.
+            * If a synced scene no longer has an active motion path, the final frame is applied and
+              the scene is marked complete.
+            * When a non-looping scene completes, it is reset, deactivated, and a `SCENE_COMPLETE`
+              event is triggered.
+        """
+        scene = self.active_scene
+        if scene is None or not scene.frames:
+            return
+
+        if scene.sync:
+            self._step_synced_scene(scene)
+        elif scene.ease:
+            self._step_eased_scene(scene)
+        else:
+            self.current_character_visual = scene.get_next_visual()
+
+        self._complete_scene_if_finished(scene)
+
+    def _step_synced_scene(self, scene: Scene) -> None:
+        """Apply the frame that matches the active motion path's progress."""
+        active_path = self.character.motion.active_path
+        if active_path is None:
+            self.current_character_visual = scene.frames[-1].character_visual
+            scene.played_frames.extend(scene.frames)
+            scene.frames.clear()
+            return
+
+        frame_index = self._synced_scene_frame_index(scene, active_path)
+        self.current_character_visual = scene.frames[frame_index].character_visual
+
+    def _synced_scene_frame_index(self, scene: Scene, active_path: motion.Path) -> int:
+        """Return the scene frame index for the active path's progress."""
+        final_frame_index = len(scene.frames) - 1
+        if scene.sync == Scene.SyncMetric.STEP:
+            progress_ratio = max(active_path.current_step, 1) / max(active_path.max_steps, 1)
+        else:
+            total_distance = max(active_path.total_distance, 1)
+            remaining_distance = max(active_path.total_distance - active_path.last_distance_reached, 1)
+            distance_reached = max(total_distance - remaining_distance, 1)
+            progress_ratio = distance_reached / total_distance
+
+        frame_index = round(final_frame_index * progress_ratio)
+        return max(min(frame_index, final_frame_index), 0)
+
+    def _step_eased_scene(self, scene: Scene) -> None:
+        """Apply the eased frame and update easing playback state."""
+        assert scene.ease is not None
+        easing_factor = self._ease_animation(scene.ease)
+        final_frame_index = max(scene.easing_total_steps - 1, 0)
+        frame_index = round(easing_factor * final_frame_index)
+        frame_index = max(min(frame_index, final_frame_index), 0)
+        self.current_character_visual = scene.frame_index_map[frame_index].character_visual
+
+        scene.easing_current_step += 1
+        if scene.easing_current_step == scene.easing_total_steps:
+            if scene.is_looping:
+                scene.easing_current_step = 0
+            else:
+                scene.played_frames.extend(scene.frames)
+                scene.frames.clear()
+
+    def _complete_scene_if_finished(self, scene: Scene) -> None:
+        """Reset completed scenes and trigger completion events."""
+        if not self.active_scene_is_complete():
+            return
+
+        if not scene.is_looping:
+            scene.reset_scene()
+            self.active_scene = None
+
+        self.character.event_handler._handle_event(
+            self.character.event_handler.Event.SCENE_COMPLETE,
+            scene,
+        )
+
+    def activate_scene(self, scene: Scene | str) -> None:
+        """Set the active scene and updates the current character visual.
+
+        If `scene` is a string, a scene query will be performed for a scene with
+        a `scene_id` matching the provided string.
+
+        This method does not reset scene playback state before activation. To restart
+        a scene from its initial frame sequence, reset the scene before activating it.
+
+        A SCENE_ACTIVATED event is triggered.
+
+        Args:
+            scene (Scene | str): Scene instance of Scene ID for the scene that should
+                be activated.
+
+        Raises:
+            SceneNotFoundError: Raised if the scene_id provided does not correspond to
+                a known scene.
+
+        """
+        if isinstance(scene, str):
+            found_scene = self.query_scene(scene)
+            if found_scene is None:
+                raise SceneNotFoundError(scene)
+        else:
+            found_scene = scene
+        self.active_scene = found_scene
+        self.active_scene_current_step = 0
+        self.current_character_visual = self.active_scene.activate()
+        self.character.event_handler._handle_event(self.character.event_handler.Event.SCENE_ACTIVATED, found_scene)
+
+    @typing.overload
+    def deactivate_scene(self) -> None: ...
+    @typing.overload
+    def deactivate_scene(self, scene: Scene) -> None: ...
+    @typing.overload
+    def deactivate_scene(self, scene: str) -> None: ...
+    def deactivate_scene(self, scene: Scene | str | None = None) -> None:
+        """Deactivate a scene if it is currently active.
+
+        If `scene` is omitted, the current active scene is deactivated if one exists.
+        If `scene` is a string, it is resolved as a scene ID before deactivation.
+
+        Args:
+            scene (Scene | str | None): Scene to deactivate, its ID, or None to deactivate the
+                current active scene.
+
+        Raises:
+            SceneNotFoundError: If `scene` is a string and no scene with that ID exists.
+
+        """
+        if scene is None:
+            self.active_scene = None
+            return
+        if isinstance(scene, str):
+            found_scene = self.query_scene(scene)
+            if found_scene is None:
+                raise SceneNotFoundError(scene)
+        else:
+            found_scene = scene
+        if self.active_scene and self.active_scene is found_scene:
+            self.active_scene = None

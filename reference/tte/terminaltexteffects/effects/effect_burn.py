@@ -1,0 +1,303 @@
+"""Characters are ignited and burn up the screen.
+
+Classes:
+    Burn: Characters are ignited and burn up the screen.
+    BurnConfig: Configuration for the Burn effect.
+    BurnIterator: Iterates over the Burn effect. Does not normally need to be called directly.
+
+"""
+
+from __future__ import annotations
+
+import random
+from dataclasses import dataclass
+
+from terminaltexteffects import Color, EffectCharacter, EventHandler, Gradient, ParticlePool, ParticleReset
+from terminaltexteffects.engine.base_config import (
+    BaseConfig,
+    FinalGradientDirectionArg,
+    FinalGradientStepsArg,
+    FinalGradientStopsArg,
+)
+from terminaltexteffects.engine.base_effect import BaseEffect, BaseEffectIterator
+from terminaltexteffects.utils import argutils
+from terminaltexteffects.utils.geometry import Coord
+from terminaltexteffects.utils.graphics import ColorPair
+from terminaltexteffects.utils.spanningtree.algo.primssimple import PrimsSimple
+
+
+def get_effect_resources() -> tuple[str, type[BaseEffect], type[BaseConfig]]:
+    """Get the command, effect class, and configuration class for the effect.
+
+    Returns:
+        tuple[str, type[BaseEffect], type[BaseConfig]]: The command name, effect class, and configuration class.
+
+    """
+    return "burn", Burn, BurnConfig
+
+
+@dataclass
+class BurnConfig(BaseConfig):
+    """Configuration for the Burn effect.
+
+    Attributes:
+        starting_color (Color): Color of the characters before they start to burn.
+        burn_colors (tuple[Color, ...]): Colors transitioned through as the characters burn.
+        smoke_chance (float): Chance a given character will produce smoke while burning. Use 0 for no smoke.
+        final_gradient_stops (tuple[Color, ...]): Tuple of colors for the final color gradient. If only one color
+            is provided, the characters will be displayed in that color.
+        final_gradient_steps (tuple[int, ...] | int): Tuple of the number of gradient steps to use. More steps will
+            create a smoother and longer gradient animation. Valid values are n > 0.
+        final_gradient_direction (Gradient.Direction): Direction of the final gradient.
+
+    """
+
+    parser_spec: argutils.ParserSpec = argutils.ParserSpec(
+        name="burn",
+        help="Burns vertically in the canvas.",
+        description="burn | Burn the canvas.",
+        epilog=(
+            "Example: terminaltexteffects burn --starting-color 837373 --burn-colors ffffff fff75d fe650d 8a003c "
+            "510100 --smoke-chance 0.5 --final-gradient-stops 00c3ff ffff1c --final-gradient-steps 12 "
+            "--final-gradient-direction vertical"
+        ),
+    )
+
+    starting_color: Color = argutils.ArgSpec(
+        name="--starting-color",
+        type=argutils.ColorArg.type_parser,
+        default=Color("#837373"),
+        metavar=argutils.ColorArg.METAVAR,
+        help="Color of the characters before they start to burn.",
+    )  # pyright: ignore[reportAssignmentType]
+    "Color : Color of the characters before they start to burn."
+
+    burn_colors: tuple[Color, ...] = argutils.ArgSpec(
+        name="--burn-colors",
+        type=argutils.ColorArg.type_parser,
+        default=(Color("#ffffff"), Color("#fff75d"), Color("#fe650d"), Color("#8A003C"), Color("#510100")),
+        nargs="+",
+        action=argutils.TupleAction,
+        metavar=argutils.ColorArg.METAVAR,
+        help="Colors transitioned through as the characters burn.",
+    )  # pyright: ignore[reportAssignmentType]
+    "tuple[Color, ...] : Colors transitioned through as the characters burn."
+
+    smoke_chance: float = argutils.ArgSpec(
+        name="--smoke-chance",
+        type=argutils.NonNegativeRatio.type_parser,
+        default=0.5,
+        metavar=argutils.NonNegativeRatio.METAVAR,
+        help="Chance a given character will produce smoke while burning. Use 0 for no smoke.",
+    )  # pyright: ignore[reportAssignmentType]
+    "float : Chance a given character will produce smoke while burning. Use 0 for no smoke."
+
+    final_gradient_stops: tuple[Color, ...] = FinalGradientStopsArg(
+        default=(Color("#00c3ff"), Color("#ffff1c")),
+    )  # pyright: ignore[reportAssignmentType]
+    (
+        "tuple[Color, ...] : Tuple of colors for the final color gradient. If only one color is provided, the "
+        "characters will be displayed in that color."
+    )
+
+    final_gradient_steps: tuple[int, ...] | int = FinalGradientStepsArg(
+        default=12,
+    )  # pyright: ignore[reportAssignmentType]
+    (
+        "tuple[int, ...] | int : Int or Tuple of ints for the number of gradient steps to use. More steps will "
+        "create a smoother and longer gradient animation."
+    )
+
+    final_gradient_direction: Gradient.Direction = FinalGradientDirectionArg(
+        default=Gradient.Direction.VERTICAL,
+    )  # pyright: ignore[reportAssignmentType]
+    "Gradient.Direction : Direction of the final gradient."
+
+
+class BurnIterator(BaseEffectIterator[BurnConfig]):
+    """Iterator for the Burn effect."""
+
+    def __init__(self, effect: Burn) -> None:
+        """Initialize the Burn effect iterator.
+
+        Args:
+            effect (Burn): The effect to use for the iterator.
+
+        """
+        super().__init__(effect)
+        self.pending_chars: list[EffectCharacter] = []
+        self.character_final_color_map: dict[EffectCharacter, Color] = {}
+        self.algo = PrimsSimple(self.terminal, limit_to_text_boundary=True)
+        self.smoke_particles = self._make_smoke_pool()
+        self.build()
+
+    @staticmethod
+    def _has_input_colors(character: EffectCharacter) -> bool:
+        return any((character.animation.input_fg_color, character.animation.input_bg_color))
+
+    def _is_burnable(self, character: EffectCharacter) -> bool:
+        return character.input_symbol != " " or (
+            self.terminal.config.existing_color_handling != "ignore" and self._has_input_colors(character)
+        )
+
+    def _make_smoke_pool(self) -> ParticlePool:
+        def initialize_smoke(new_char: EffectCharacter) -> None:
+            smoke_scn = new_char.animation.new_scene(scene_id="smoke")
+            for color in Gradient(Color("#504F4F"), Color("#C7C7C7"), steps=9):
+                smoke_scn.add_frame(
+                    new_char.input_symbol,
+                    10,
+                    colors=ColorPair(fg=color),
+                )
+            new_char.layer = 2
+
+        return ParticlePool(
+            self.terminal,
+            self.active_characters,
+            (".", ",", "'", "`", "#", "*"),
+            initial_count=2000,
+            max_size=2000,
+            initializer=initialize_smoke,
+        )
+
+    def _emit_smoke(self, origin: Coord, smoke_chance: float) -> None:
+        """Emit smoke from a burning character.
+
+        Sets up the smoke character path and activates the path and scene.
+
+        Args:
+            origin (Coord): Starting point for the smoke path.
+            smoke_chance (float): Chance a character will emit smoke.
+
+        """
+        if random.random() > smoke_chance:
+            return
+
+        def on_emit_smoke(next_particle: EffectCharacter) -> None:
+            smoke_scn = next_particle.animation.query_scene("smoke")
+            smoke_scn.reset_scene()
+            smoke_path = next_particle.motion.new_path(speed=0.5)
+            rise_target_coord = Coord(
+                random.randint(origin.column - 4, origin.column + 4),
+                self.terminal.canvas.top + 1,
+            )
+            smoke_path.new_waypoint(
+                rise_target_coord,
+            )
+            next_particle.motion.activate_path(smoke_path)
+            next_particle.animation.activate_scene(smoke_scn)
+            self.smoke_particles.reclaim_on_event(next_particle, caller=next_particle.animation.query_scene("smoke"))
+
+        self.smoke_particles.emit(
+            origin,
+            on_emit_smoke,
+            reset=ParticleReset(clear_paths=True, deactivate_path=True, deactivate_scene=True),
+        )
+
+    def build(self) -> None:
+        """Build the Burn effect."""
+        burn_char_order = [
+            "'",
+            ".",
+            "▖",
+            "▙",
+            "█",
+            "▜",
+            "▀",
+            "▝",
+            ".",
+        ]
+        final_gradient = Gradient(*self.config.final_gradient_stops, steps=self.config.final_gradient_steps)
+        final_gradient_mapping = final_gradient.build_coordinate_color_mapping(
+            self.terminal.canvas.text_bottom,
+            self.terminal.canvas.text_top,
+            self.terminal.canvas.text_left,
+            self.terminal.canvas.text_right,
+            self.config.final_gradient_direction,
+        )
+        for character in self.terminal.get_characters():
+            self.character_final_color_map[character] = final_gradient_mapping[character.input_coord]
+        fire_gradient = Gradient(*self.config.burn_colors, steps=10)
+
+        while not self.algo.complete:
+            self.algo.step()
+
+        for char in self.terminal.get_characters():
+            self.terminal.set_character_visibility(char, is_visible=True)
+            char.animation.set_appearance(
+                char.input_symbol,
+                colors=ColorPair(fg=self.config.starting_color),
+            )
+            burn_scn = char.animation.new_scene(scene_id="burn")
+            burn_scn.apply_gradient_to_symbols(burn_char_order, 4, fg_gradient=fire_gradient)
+            final_color_scn = char.animation.new_scene()
+            if self.terminal.config.existing_color_handling == "dynamic":
+                fg_gradient = (
+                    Gradient(fire_gradient.spectrum[-1], char.animation.input_fg_color, steps=8)
+                    if char.animation.input_fg_color
+                    else None
+                )
+                bg_gradient = (
+                    Gradient(fire_gradient.spectrum[-1], char.animation.input_bg_color, steps=8)
+                    if char.animation.input_bg_color
+                    else None
+                )
+                if fg_gradient or bg_gradient:
+                    final_color_scn.apply_gradient_to_symbols(
+                        char.input_symbol,
+                        4,
+                        fg_gradient=fg_gradient,
+                        bg_gradient=bg_gradient,
+                    )
+                else:
+                    final_color_scn.add_frame(char.input_symbol, 4, colors=ColorPair())
+            else:
+                for color in Gradient(fire_gradient.spectrum[-1], self.character_final_color_map[char], steps=8):
+                    final_color_scn.add_frame(char.input_symbol, 4, colors=ColorPair(fg=color))
+            char.event_handler.register_event(
+                EventHandler.Event.SCENE_COMPLETE,
+                burn_scn,
+                EventHandler.Action.ACTIVATE_SCENE,
+                final_color_scn,
+            )
+            char.event_handler.register_event(
+                EventHandler.Event.SCENE_COMPLETE,
+                burn_scn,
+                EventHandler.Action.CALLBACK,
+                EventHandler.Callback(lambda c: self._emit_smoke(c.input_coord, self.config.smoke_chance)),
+            )
+
+            self.pending_chars.append(char)
+
+    def __next__(self) -> str:
+        """Return the next frame in the animation."""
+        if self.algo.char_link_order or self.active_characters:
+            for _ in range(random.randint(2, 4)):
+                if self.algo.char_link_order:
+                    next_char = self.algo.char_link_order.pop(0)
+                    if not self._is_burnable(next_char):
+                        continue
+                    next_char.animation.activate_scene("burn")
+                    self.active_characters.add(next_char)
+
+            self.update()
+            return self.frame
+        raise StopIteration
+
+
+class Burn(BaseEffect[BurnConfig]):
+    """Characters are ignited and burn up the screen.
+
+    Attributes:
+        effect_config (BurnConfig): Configuration for the effect.
+        terminal_config (TerminalConfig): Configuration for the terminal.
+
+    """
+
+    @property
+    def _config_cls(self) -> type[BurnConfig]:
+        return BurnConfig
+
+    @property
+    def _iterator_cls(self) -> type[BurnIterator]:
+        return BurnIterator

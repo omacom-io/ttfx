@@ -1,0 +1,15 @@
+[package]
+name = "ttfx"
+version = "0.1.0"
+edition = "2021"
+description = "Terminal text effects — a Rust port of terminaltexteffects (TTE)"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+terminal_size = "0.4"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
