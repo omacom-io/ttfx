@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests + parity suite
+    # Parity CI is pinned to one platform/toolchain pair (plan.md §5.20):
+    # cross-platform builds are release targets, not parity targets.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Unit + golden + trace tests
+        run: cargo test --release
+      - name: Build release binary
+        run: cargo build --release
+      - name: Effect frame parity vs pinned reference
+        run: ./tools/parity/run_suite.sh
+      - name: Full tty byte-stream parity
+        run: ./tools/parity/tty_compare.sh
+      - name: CLI contract corpus
+        run: ./tools/tests/cli_corpus.sh
+
+  release-binary:
+    name: Static musl binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: cargo build --release --target x86_64-unknown-linux-musl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ttfx-x86_64-unknown-linux-musl
+          path: target/x86_64-unknown-linux-musl/release/ttfx
