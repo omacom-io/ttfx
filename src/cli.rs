@@ -114,6 +114,18 @@ pub struct Cli {
     #[arg(long = "seed")]
     pub seed: Option<u64>,
 
+    /// Run a random effect
+    #[arg(short = 'R', long = "random-effect", default_value_t = false)]
+    pub random_effect: bool,
+
+    /// Limit random-effect selection to these effects
+    #[arg(long = "include-effects", num_args = 1.., conflicts_with = "exclude_effects")]
+    pub include_effects: Vec<String>,
+
+    /// Exclude these effects from random-effect selection
+    #[arg(long = "exclude-effects", num_args = 1..)]
+    pub exclude_effects: Vec<String>,
+
     /// M0 debug: make every canvas character visible and print the first frame
     /// (used by the parity harness; hidden from help)
     #[arg(long = "m0-dump", default_value_t = false, hide = true)]

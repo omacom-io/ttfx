@@ -55,16 +55,48 @@ fn main() -> ExitCode {
         return m0_dump(&input_data, &cli);
     }
 
-    let Some(effect_command) = &cli.effect else {
-        eprintln!("Error: No effect specified.");
-        return ExitCode::from(1);
-    };
-
-    let config = cli.terminal_config();
-    let rng = match cli.seed {
+    let mut rng = match cli.seed {
         Some(seed) => ttfx::utils::rng::Rng::seeded(seed),
         None => ttfx::utils::rng::Rng::from_entropy(),
     };
+
+    // --random-effect: pick from the registry (filtered), run with pure
+    // default effect config — upstream ignores effect CLI args here too.
+    let chosen_effect;
+    let effect_command = if cli.random_effect {
+        use clap::CommandFactory;
+        let mut names: Vec<String> = cli::Cli::command()
+            .get_subcommands()
+            .map(|c| c.get_name().to_string())
+            .collect();
+        if !cli.include_effects.is_empty() {
+            names.retain(|n| cli.include_effects.contains(n));
+        }
+        names.retain(|n| !cli.exclude_effects.contains(n));
+        if names.is_empty() {
+            eprintln!("Error: No effects available after filtering.");
+            return ExitCode::from(1);
+        }
+        let name = names[rng.choice_index(names.len())].clone();
+        chosen_effect = match clap::Parser::try_parse_from::<_, &str>(["ttfx", &name]) {
+            Ok(cli::Cli { effect: Some(effect), .. }) => effect,
+            _ => {
+                eprintln!("Error: failed to build effect '{name}'.");
+                return ExitCode::from(1);
+            }
+        };
+        &chosen_effect
+    } else {
+        match &cli.effect {
+            Some(effect) => effect,
+            None => {
+                eprintln!("Error: No effect specified.");
+                return ExitCode::from(1);
+            }
+        }
+    };
+
+    let config = cli.terminal_config();
     let clock = if cli.parity_dump {
         ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
     } else {
