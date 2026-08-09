@@ -1,5 +1,6 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
+pub mod blackhole;
 pub mod bouncyballs;
 pub mod common;
 pub mod crumble;
@@ -21,6 +22,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Characters are consumed by a black hole and explode outwards.
+    Blackhole(blackhole::BlackholeConfig),
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
     /// Characters lose color and crumble into dust, vacuumed up, and reformed.
@@ -52,6 +55,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Blackhole(config) => Box::new(blackhole::Blackhole::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Crumble(config) => Box::new(crumble::Crumble::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
@@ -72,6 +76,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Blackhole(_) => "blackhole",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Crumble(_) => "crumble",
             EffectCommand::Errorcorrect(_) => "errorcorrect",

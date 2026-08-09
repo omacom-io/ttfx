@@ -51,3 +51,9 @@ crumble-dynamic|colored.txt|--existing-color-handling dynamic crumble
 crumble-always-xterm|colored.txt|--existing-color-handling always --xterm-colors crumble
 crumble-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c crumble
 crumble-single|single.txt|crumble
+blackhole-basic|basic.txt|blackhole
+blackhole-custom|paragraph.txt|blackhole --blackhole-color 00ffff --star-colors ff0000 00ff00 0000ff --final-gradient-stops ff0000 ffffff --final-gradient-steps 6 --final-gradient-direction horizontal
+blackhole-dynamic|colored.txt|--existing-color-handling dynamic blackhole
+blackhole-always-xterm|colored.txt|--existing-color-handling always --xterm-colors blackhole
+blackhole-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c blackhole
+blackhole-single|single.txt|blackhole
