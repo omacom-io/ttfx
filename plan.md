@@ -323,6 +323,11 @@ through `pycompat.rs` helpers with tests pinned to Python-generated golden value
 - The `lru_cache` layers (geometry, `shift_color_towards`, `make_easing`) are dropped —
   they're pure-function caches, so behavior is identical; Rust recomputation is cheaper than
   Python cache hits. If profiling disagrees, memoize `make_easing`'s Newton–Raphson solve only.
+  **Addendum (found during the swarm port):** the value-transparency claim fails when an
+  effect MUTATES a cached return value — swarm `random.shuffle`s the list returned by the
+  cached `find_coords_on_circle`, so later same-argument calls observe the shuffled entry.
+  Such effects reproduce the cache at effect level (a persistent map whose entries carry the
+  mutation); audit any effect that writes to a geometry function's return value.
 - The `AldousBroder` spanning-tree generator is not ported: it exists upstream but no shipped
   effect uses it (library-API surface, which is a non-goal).
 - No Python plugin loading.
