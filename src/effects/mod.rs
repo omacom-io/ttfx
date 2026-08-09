@@ -4,6 +4,7 @@ pub mod bouncyballs;
 pub mod common;
 pub mod errorcorrect;
 pub mod expand;
+pub mod fireworks;
 pub mod middleout;
 pub mod pour;
 pub mod rain;
@@ -26,6 +27,8 @@ pub enum EffectCommand {
     Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Expands the text from a single point.
     Expand(expand::ExpandConfig),
+    /// Characters launch and explode like fireworks and fall into place.
+    Fireworks(fireworks::FireworksConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
@@ -52,6 +55,7 @@ impl EffectCommand {
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
+            EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
@@ -71,6 +75,7 @@ impl EffectCommand {
             EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
+            EffectCommand::Fireworks(_) => "fireworks",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",

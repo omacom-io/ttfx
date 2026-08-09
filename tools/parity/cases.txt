@@ -45,3 +45,7 @@ middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --sta
 middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
 middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
 middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
+fireworks-basic|basic.txt|fireworks
+fireworks-custom|paragraph.txt|fireworks --explode-anywhere --firework-colors ff0000 00ff00 0000ff --firework-symbol * --firework-volume 0.12 --launch-delay 10 --explode-distance 0.4 --final-gradient-direction diagonal
+fireworks-dynamic|colored.txt|--existing-color-handling dynamic fireworks
+fireworks-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c fireworks --launch-delay 5
