@@ -17,7 +17,7 @@ and the command-line interface are their design — this project translates that
 and adds nothing of its own to the art. If you like what you see here, star the original.
 
 TTE is MIT licensed and so is this port; the original copyright is preserved in
-[LICENSE](LICENSE). Please file *effect* ideas upstream, where they belong.
+[LICENSE](LICENSE) and [NOTICE](NOTICE). Please file *effect* ideas upstream, where they belong.
 
 ## Why a port
 
@@ -101,5 +101,5 @@ targets a specific libc, but nothing else is tested.
 
 ## License
 
-MIT — see [LICENSE](LICENSE), which carries both this project's notice and the original
-TerminalTextEffects copyright.
+MIT — see [LICENSE](LICENSE), which carries both this project's copyright and the original
+TerminalTextEffects copyright, and [NOTICE](NOTICE) for the attribution in full.

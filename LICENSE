@@ -1,13 +1,7 @@
 MIT License
 
 Copyright (c) 2026 37signals / omacom-io
-
-This project is a port of TerminalTextEffects (TTE), and its effect designs,
-engine architecture, and command-line interface derive directly from that
-work:
-
-    TerminalTextEffects — https://github.com/ChrisBuilds/terminaltexteffects
-    MIT License, Copyright (c) 2023 ChrisBuilds
+Copyright (c) 2023 ChrisBuilds (TerminalTextEffects, from which this is ported)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
