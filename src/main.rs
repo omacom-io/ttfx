@@ -1,13 +1,10 @@
-mod cli;
-mod engine;
-mod utils;
-
 use std::io::{IsTerminal, Read};
 use std::process::ExitCode;
 
 use clap::Parser;
 
-use crate::engine::terminal::Terminal;
+use ttfx::engine::terminal::Terminal;
+use ttfx::{cli, engine};
 
 fn get_piped_input() -> String {
     let stdin = std::io::stdin();

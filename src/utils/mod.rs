@@ -1,3 +1,4 @@
+pub mod easing;
 pub mod ansi;
 pub mod geometry;
 pub mod graphics;
