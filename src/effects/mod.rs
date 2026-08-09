@@ -5,6 +5,7 @@ pub mod common;
 pub mod errorcorrect;
 pub mod expand;
 pub mod middleout;
+pub mod orbittingvolley;
 pub mod pour;
 pub mod rain;
 pub mod random_sequence;
@@ -29,6 +30,8 @@ pub enum EffectCommand {
     Expand(expand::ExpandConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
+    /// Four launchers orbit the canvas firing volleys of characters inward to build the input text from the center out.
+    Orbittingvolley(orbittingvolley::OrbittingVolleyConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
     /// Rain characters onto the canvas until the input text is formed.
@@ -56,6 +59,9 @@ impl EffectCommand {
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
+            EffectCommand::Orbittingvolley(config) => {
+                Box::new(orbittingvolley::OrbittingVolley::new(config.clone()))
+            }
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
@@ -76,6 +82,7 @@ impl EffectCommand {
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Middleout(_) => "middleout",
+            EffectCommand::Orbittingvolley(_) => "orbittingvolley",
             EffectCommand::Pour(_) => "pour",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Randomsequence(_) => "randomsequence",
