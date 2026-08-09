@@ -39,6 +39,11 @@ sweep-custom|paragraph.txt|sweep --sweep-symbols # @ % --first-sweep-direction r
 sweep-center|paragraph.txt|sweep --first-sweep-direction center_to_outside --second-sweep-direction outside_to_center
 sweep-dynamic|colored.txt|--existing-color-handling dynamic sweep
 sweep-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c sweep
+waves-basic|basic.txt|waves
+waves-custom|paragraph.txt|waves --wave-symbols ~ - = --wave-gradient-stops ff0000 0000ff --wave-gradient-steps 4 8 --wave-count 2 --wave-length 1 --wave-direction row_top_to_bottom --wave-easing out_bounce --final-gradient-stops 00ff00 --final-gradient-steps 6 --final-gradient-direction vertical
+waves-center|paragraph.txt|waves --wave-direction center_to_outside --wave-count 1
+waves-dynamic|colored.txt|--existing-color-handling dynamic waves --wave-count 1
+waves-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c waves --wave-count 1
 wipe-basic|basic.txt|wipe
 wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
 wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
