@@ -14,6 +14,7 @@ pub mod errorcorrect;
 pub mod expand;
 pub mod fireworks;
 pub mod highlight;
+pub mod laseretch;
 pub mod middleout;
 pub mod orbittingvolley;
 pub mod overflow;
@@ -63,6 +64,8 @@ pub enum EffectCommand {
     Fireworks(fireworks::FireworksConfig),
     /// Run a specular highlight across the text.
     Highlight(highlight::HighlightConfig),
+    /// A laser etches characters onto the terminal.
+    Laseretch(laseretch::LaserEtchConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
     /// Four launchers orbit the canvas firing volleys of characters inward to build the input text from the center out.
@@ -116,6 +119,7 @@ impl EffectCommand {
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
             EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
             EffectCommand::Highlight(config) => Box::new(highlight::Highlight::new(config.clone())),
+            EffectCommand::Laseretch(config) => Box::new(laseretch::LaserEtch::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Orbittingvolley(config) => Box::new(orbittingvolley::OrbittingVolley::new(config.clone())),
             EffectCommand::Overflow(config) => Box::new(overflow::Overflow::new(config.clone())),
@@ -151,6 +155,7 @@ impl EffectCommand {
             EffectCommand::Expand(_) => "expand",
             EffectCommand::Fireworks(_) => "fireworks",
             EffectCommand::Highlight(_) => "highlight",
+            EffectCommand::Laseretch(_) => "laseretch",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Orbittingvolley(_) => "orbittingvolley",
             EffectCommand::Overflow(_) => "overflow",

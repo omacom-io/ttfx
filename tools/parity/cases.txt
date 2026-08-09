@@ -140,3 +140,9 @@ binarypath-custom|paragraph.txt|binarypath --binary-colors ff0000 00ff00 0000ff 
 binarypath-dynamic|colored.txt|--existing-color-handling dynamic binarypath
 binarypath-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c binarypath --active-binary-groups 0.15
 binarypath-single|single.txt|binarypath
+laseretch-basic|basic.txt|laseretch
+laseretch-fast|paragraph.txt|laseretch --etch-speed 3 --etch-delay 0 --cool-gradient-stops 00ffe6 0077ff --laser-gradient-stops ff0000 ffff00 --spark-gradient-stops ffffff ff7b00 1a0900 --spark-cooling-frames 3 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+laseretch-dynamic|colored.txt|--existing-color-handling dynamic laseretch
+laseretch-group-quirk|basic.txt|laseretch --etch-pattern row_top_to_bottom
+laseretch-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c laseretch --etch-speed 4 --etch-delay 0
+laseretch-single|single.txt|laseretch
