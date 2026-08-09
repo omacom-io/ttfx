@@ -471,8 +471,13 @@ input parser on an ANSI corpus.
 | Upstream moves on and the port targets a stale version | Pinned reference is explicit; upgrades are a diff of `reference/tte/` + re-run of parity suite |
 | Scope creep into "improving" TTE | §5 divergence list is the only allowed list; everything else is transcription |
 
-## 10. Open questions (decide before M0)
+## 10. Open questions — all resolved
 
-1. Also ship a `tte` alias/symlink in packaging?
-2. Vendor upstream as git submodule vs plain checked-in snapshot (parity CI needs it; snapshot
-   is simpler, submodule is cleaner). → Decided: plain snapshot, simplest for CI.
+1. Ship a `tte` alias/symlink in packaging? → **No.** It would collide with a real
+   `terminaltexteffects` install, and the whole point is that `ttfx` stands alone. Users who
+   want the alias can add a shell alias themselves.
+2. Vendor upstream as git submodule vs plain checked-in snapshot? → **Plain snapshot**
+   (`reference/tte/`, docs stripped, 2.4MB), simplest for CI and immune to upstream retagging.
+3. musl static build verified locally? → **CI-only.** This machine has system rust (gnu target
+   only, no rustup), so the musl job lives in `.github/workflows/ci.yml` and uploads the
+   artifact. Local `cargo build --release` links just libc/libm/libgcc.
