@@ -78,6 +78,39 @@ pub fn parse_easing(s: &str) -> Result<Easing, String> {
     Easing::parse(s).ok_or_else(|| format!("invalid easing function: '{s}'"))
 }
 
+/// argutils.CharacterGroupArg: lowercased enum member names.
+pub fn parse_character_group(s: &str) -> Result<crate::engine::terminal::CharacterGroup, String> {
+    use crate::engine::terminal::CharacterGroup::*;
+    Ok(match s {
+        "column_left_to_right" => ColumnLeftToRight,
+        "column_right_to_left" => ColumnRightToLeft,
+        "row_top_to_bottom" => RowTopToBottom,
+        "row_bottom_to_top" => RowBottomToTop,
+        "diagonal_top_left_to_bottom_right" => DiagonalTopLeftToBottomRight,
+        "diagonal_bottom_left_to_top_right" => DiagonalBottomLeftToTopRight,
+        "diagonal_top_right_to_bottom_left" => DiagonalTopRightToBottomLeft,
+        "diagonal_bottom_right_to_top_left" => DiagonalBottomRightToTopLeft,
+        "center_to_outside" => CenterToOutside,
+        "outside_to_center" => OutsideToCenter,
+        _ => return Err(format!("invalid character group: '{s}'")),
+    })
+}
+
+/// argutils.CharacterSortArg: lowercased enum member names.
+pub fn parse_character_sort(s: &str) -> Result<crate::engine::terminal::CharacterSort, String> {
+    use crate::engine::terminal::CharacterSort::*;
+    Ok(match s {
+        "random" => Random,
+        "top_to_bottom_left_to_right" => TopToBottomLeftToRight,
+        "top_to_bottom_right_to_left" => TopToBottomRightToLeft,
+        "bottom_to_top_left_to_right" => BottomToTopLeftToRight,
+        "bottom_to_top_right_to_left" => BottomToTopRightToLeft,
+        "outside_row_to_middle" => OutsideRowToMiddle,
+        "middle_row_to_outside" => MiddleRowToOutside,
+        _ => return Err(format!("invalid character sort: '{s}'")),
+    })
+}
+
 /// argutils.Symbol: single printable character.
 pub fn parse_symbol(s: &str) -> Result<String, String> {
     if s.chars().count() == 1 {
