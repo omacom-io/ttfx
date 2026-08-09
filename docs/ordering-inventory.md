@@ -46,3 +46,6 @@ Audited, no patch needed (set iteration present but order-unobservable):
 |---|---|---|
 | slice | `for character in self.active_characters` at end of `build` (effect_slice.py) | only calls `set_character_visibility(True)`, a commutative per-character flag; render order is already canonicalized by the `_update_terminal_state` patch. ttfx iterates its `BTreeSet` (ascending id). |
 | expand, scattered | none beyond `active_characters` membership | build loops iterate `get_characters()` lists; `active_characters` ticking covered by the `BaseEffectIterator.update` patch. |
+| rings | none beyond `active_characters` membership | `Ring.characters`, `pending_chars`, `non_ring_chars` are lists; `rings` dict iterated in insertion order (radius ascending, `Vec<Ring>` in ttfx); RNG order fixed by list order. |
+| orbittingvolley | `any(launcher.magazine ...)` / `len(self.active_characters) > 1` | membership/length checks only; `_launchers` and magazines are lists; effect consumes no RNG. |
+| binarypath | none beyond `active_characters` membership | `pending_binary_representations`, `active_binary_reps`, `binary_characters`, `final_wipe_chars` are lists; the travel-phase `randrange` pops from a list, order preserved. |

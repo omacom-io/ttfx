@@ -1,5 +1,6 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
+pub mod binarypath;
 pub mod bouncyballs;
 pub mod common;
 pub mod errorcorrect;
@@ -22,6 +23,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Binary representations of each character move towards the home coordinate of the character.
+    Binarypath(binarypath::BinaryPathConfig),
     /// Characters fall from the top of the canvas as balls before settling into place.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
     /// Some characters start in the wrong position and are corrected in sequence.
@@ -55,6 +58,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Binarypath(config) => Box::new(binarypath::BinaryPath::new(config.clone())),
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
@@ -78,6 +82,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Binarypath(_) => "binarypath",
             EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Expand(_) => "expand",
