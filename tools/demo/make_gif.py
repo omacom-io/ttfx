@@ -17,11 +17,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / "target/release/ttfx"
 
-TEXT = "Omarchy"
-COLS, ROWS = 44, 13
-CELL_W, CELL_H = 11, 20
-FONT_SIZE = 16
-MAX_FRAMES = 70
+import os
+
+# Overridable so the same renderer handles a short word or the full ASCII logo.
+TEXT_FILE = os.environ.get("TTFX_DEMO_TEXT_FILE")
+TEXT = Path(TEXT_FILE).read_text().rstrip("\n") if TEXT_FILE else "Omarchy"
+COLS = int(os.environ.get("TTFX_DEMO_COLS", 44))
+ROWS = int(os.environ.get("TTFX_DEMO_ROWS", 13))
+CELL_W = float(os.environ.get("TTFX_DEMO_CELL_W", 11))
+CELL_H = float(os.environ.get("TTFX_DEMO_CELL_H", 20))
+FONT_SIZE = float(os.environ.get("TTFX_DEMO_FONT_SIZE", 16))
+MAX_FRAMES = int(os.environ.get("TTFX_DEMO_MAX_FRAMES", 70))
 BG = "#12121a"
 
 SGR = re.compile(r"\x1b\[([0-9;]*)m")
@@ -80,38 +86,79 @@ def xterm_hex(n: int) -> str:
     return "#" + _XTERM[n] if n < len(_XTERM) else "#000000"
 
 
+# Block-drawing glyphs are drawn as rects, not text: font glyphs don't tile
+# seamlessly at arbitrary cell sizes, which would put seams through solid areas
+# of the logo. Values are (y_fraction, height_fraction, opacity) within the cell.
+BLOCKS = {
+    "█": (0.0, 1.0, 1.0),    # █ full
+    "▄": (0.5, 0.5, 1.0),    # ▄ lower half
+    "▀": (0.0, 0.5, 1.0),    # ▀ upper half
+    "▓": (0.0, 1.0, 0.75),   # ▓ dark shade
+    "▒": (0.0, 1.0, 0.5),    # ▒ medium shade
+    "░": (0.0, 1.0, 0.25),   # ░ light shade
+}
+# half-width blocks need an x offset too: (x_frac, w_frac)
+HALF_BLOCKS = {"▌": (0.0, 0.5), "▐": (0.5, 0.5)}  # ▌ ▐
+
+
 def svg_for(frame: str) -> str:
     rows = parse_frame(frame)
     w, h = COLS * CELL_W, ROWS * CELL_H
     out = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}">',
-        f'<rect width="{w}" height="{h}" fill="{BG}"/>',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w:g}" height="{h:g}">',
+        f'<rect width="{w:g}" height="{h:g}" fill="{BG}"/>',
     ]
     # backgrounds first
     for r, cells in enumerate(rows[:ROWS]):
         for c, (_, _, bg, _) in enumerate(cells[:COLS]):
             if bg:
                 out.append(
-                    f'<rect x="{c*CELL_W}" y="{r*CELL_H}" width="{CELL_W}" height="{CELL_H}" fill="{bg}"/>'
+                    f'<rect x="{c*CELL_W:g}" y="{r*CELL_H:g}" width="{CELL_W:g}" height="{CELL_H:g}" fill="{bg}"/>'
                 )
-    # then glyphs, grouped into runs of identical style
+    # block glyphs as rects, so solid areas tile without seams
     for r, cells in enumerate(rows[:ROWS]):
-        y = r * CELL_H + FONT_SIZE
+        for c, (ch, fg, _, _) in enumerate(cells[:COLS]):
+            if ch in BLOCKS:
+                yf, hf, op = BLOCKS[ch]
+                alpha = f' opacity="{op}"' if op < 1.0 else ""
+                out.append(
+                    f'<rect x="{c*CELL_W:g}" y="{r*CELL_H + yf*CELL_H:g}" '
+                    f'width="{CELL_W:g}" height="{hf*CELL_H:g}" fill="{fg}"{alpha}/>'
+                )
+            elif ch in HALF_BLOCKS:
+                xf, wf = HALF_BLOCKS[ch]
+                out.append(
+                    f'<rect x="{c*CELL_W + xf*CELL_W:g}" y="{r*CELL_H:g}" '
+                    f'width="{wf*CELL_W:g}" height="{CELL_H:g}" fill="{fg}"/>'
+                )
+    # then glyphs, grouped into runs of identical style. textLength pins each
+    # run to an exact multiple of the cell width so long rows can't drift out
+    # of their columns when font metrics don't match the cell size.
+    for r, cells in enumerate(rows[:ROWS]):
+        y = r * CELL_H + FONT_SIZE * 0.8
         run, run_fg, run_bold, run_start = [], None, False, 0
+
         def flush():
             if run and "".join(run).strip():
                 text = "".join(run).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 weight = ' font-weight="bold"' if run_bold else ""
                 out.append(
-                    f'<text x="{run_start*CELL_W}" y="{y}" fill="{run_fg}"{weight} '
-                    f'font-family="DejaVu Sans Mono,monospace" font-size="{FONT_SIZE}" '
+                    f'<text x="{run_start*CELL_W:g}" y="{y:g}" fill="{run_fg}"{weight} '
+                    f'font-family="DejaVu Sans Mono,monospace" font-size="{FONT_SIZE:g}" '
+                    f'textLength="{len(run)*CELL_W:g}" lengthAdjust="spacingAndGlyphs" '
                     f'xml:space="preserve">{text}</text>'
                 )
+
         for c, (ch, fg, _, bold) in enumerate(cells[:COLS]):
-            if fg != run_fg or bold != run_bold:
+            is_block = ch in BLOCKS or ch in HALF_BLOCKS
+            if is_block or fg != run_fg or bold != run_bold:
                 flush()
                 run, run_fg, run_bold, run_start = [], fg, bold, c
-            run.append(ch)
+            # blocks were already drawn as rects; keep them out of the text run
+            if not is_block:
+                run.append(ch)
+            else:
+                run_start = c + 1
         flush()
     out.append("</svg>")
     return "".join(out)

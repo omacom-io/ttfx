@@ -44,11 +44,11 @@ for name in effects:
     desc = helps.get(name, "")
     cmd = f"ttfx {name}" + (f" {extra_args[name]}" if name in extra_args else "")
     cards.append(f"""      <figure class="card">
-        <div class="screen"><img src="data:image/gif;base64,{b64}" alt="{name} effect animating the word Omarchy" loading="lazy" width="484" height="260" /></div>
+        <div class="screen"><img src="data:image/gif;base64,{b64}" alt="{name} effect animating the Omarchy logo" loading="lazy" width="588" height="169" /></div>
         <figcaption>
           <h2>{name}</h2>
           <p class="desc">{desc}</p>
-          <code class="cmd"><span class="prompt">$</span> echo Omarchy | {cmd}</code>
+          <code class="cmd"><span class="prompt">$</span> omarchy-show-logo | {cmd}</code>
         </figcaption>
       </figure>""")
 
@@ -166,7 +166,7 @@ html = f"""<title>ttfx — all 37 effects</title>
 
   .grid {{
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
     gap: 1.5rem;
   }}
 
@@ -231,6 +231,16 @@ html = f"""<title>ttfx — all 37 effects</title>
   }}
   .cmd .prompt {{ color: var(--magenta); user-select: none; }}
 
+  .inline {{
+    font-family: var(--mono);
+    font-size: 0.9em;
+    color: var(--ink);
+    background: var(--surface-lift);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+  }}
+
   footer {{
     border-top: 1px solid var(--rule);
     padding-top: 1.5rem;
@@ -249,9 +259,10 @@ html = f"""<title>ttfx — all 37 effects</title>
   <header>
     <p class="eyebrow">ttfx · rust port of terminaltexteffects</p>
     <h1>All 37 effects<span class="caret">_</span></h1>
-    <p class="lede">Every effect in the library, rendering the word <strong>Omarchy</strong>. These
-      frames come out of the Rust binary — and each one is <strong>byte-identical</strong> to what the
-      original Python produces from the same input and seed.</p>
+    <p class="lede">Every effect in the library, animating the <strong>Omarchy</strong> logo straight
+      from <code class="inline">/usr/share/omarchy/logo.txt</code>. These frames come out of the Rust
+      binary — and each one is <strong>byte-identical</strong> to what the original Python produces
+      from the same input and seed.</p>
     <div class="stats">
       <div class="stat"><b>37</b><span>effects</span></div>
       <div class="stat"><b>354</b><span>parity cases</span></div>
@@ -266,7 +277,7 @@ html = f"""<title>ttfx — all 37 effects</title>
   </main>
 
   <footer>
-    <div>{len(effects)} effects · {total_kb} KB of animation · captured at 44&times;13 cells, seed 3</div>
+    <div>{len(effects)} effects · {total_kb} KB of animation · 81&times;10 logo on an 84&times;13 canvas, seed 3</div>
     <div>Descriptions are upstream's own help text. Two effects take demo-only arguments so
       a seven-letter word shows the effect off: errorcorrect needs enough swap pairs, and the
       time-budgeted effects are shortened.</div>
