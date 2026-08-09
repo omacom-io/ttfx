@@ -1,5 +1,6 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
+pub mod bouncyballs;
 pub mod common;
 pub mod rain;
 pub mod random_sequence;
@@ -12,6 +13,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Characters are bouncy balls falling from the top of the canvas.
+    Bouncyballs(bouncyballs::BouncyBallsConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
     /// Rain characters from the top of the canvas.
@@ -25,6 +28,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
@@ -36,6 +40,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Bouncyballs(_) => "bouncyballs",
             EffectCommand::Randomsequence(_) => "randomsequence",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Spray(_) => "spray",
