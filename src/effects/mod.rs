@@ -31,6 +31,7 @@ pub mod spotlights;
 pub mod spray;
 pub mod swarm;
 pub mod sweep;
+pub mod synthgrid;
 pub mod unstable;
 pub mod waves;
 pub mod wipe;
@@ -99,6 +100,8 @@ pub enum EffectCommand {
     Swarm(swarm::SwarmConfig),
     /// Sweep across the canvas to reveal uncolored text, reverse sweep to color the text.
     Sweep(sweep::SweepConfig),
+    /// Create a grid which fills with characters dissolving into the final text.
+    Synthgrid(synthgrid::SynthGridConfig),
     /// Spawn characters jumbled, explode them to the edge of the canvas, then reassemble them in the correct layout.
     Unstable(unstable::UnstableConfig),
     /// Waves travel across the terminal leaving behind the characters.
@@ -139,6 +142,7 @@ impl EffectCommand {
             EffectCommand::Spray(config) => Box::new(spray::Spray::new(config.clone())),
             EffectCommand::Swarm(config) => Box::new(swarm::Swarm::new(config.clone())),
             EffectCommand::Sweep(config) => Box::new(sweep::Sweep::new(config.clone())),
+            EffectCommand::Synthgrid(config) => Box::new(synthgrid::SynthGrid::new(config.clone())),
             EffectCommand::Unstable(config) => Box::new(unstable::Unstable::new(config.clone())),
             EffectCommand::Waves(config) => Box::new(waves::Waves::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
@@ -176,6 +180,7 @@ impl EffectCommand {
             EffectCommand::Spray(_) => "spray",
             EffectCommand::Swarm(_) => "swarm",
             EffectCommand::Sweep(_) => "sweep",
+            EffectCommand::Synthgrid(_) => "synthgrid",
             EffectCommand::Unstable(_) => "unstable",
             EffectCommand::Waves(_) => "waves",
             EffectCommand::Wipe(_) => "wipe",
