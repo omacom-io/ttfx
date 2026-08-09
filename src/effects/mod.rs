@@ -27,7 +27,7 @@ pub enum EffectCommand {
     /// Expands the text from a single point.
     Expand(expand::ExpandConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
-    Middleout(middleout::MiddleOutConfig),
+    Middleout(middleout::MiddleoutConfig),
     /// Pours the characters into position from the given direction.
     Pour(pour::PourConfig),
     /// Rain characters onto the canvas until the input text is formed.
@@ -52,7 +52,7 @@ impl EffectCommand {
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
             EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Expand(config) => Box::new(expand::Expand::new(config.clone())),
-            EffectCommand::Middleout(config) => Box::new(middleout::MiddleOut::new(config.clone())),
+            EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Rain(config) => Box::new(rain::Rain::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
