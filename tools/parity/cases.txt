@@ -12,3 +12,7 @@ wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
 wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
 wipe-dynamic|colored.txt|--existing-color-handling dynamic wipe
 wipe-xterm|basic.txt|--xterm-colors wipe --wipe-direction column_right_to_left
+expand-basic|basic.txt|expand
+expand-fast-easing|paragraph.txt|expand --movement-speed 0.8 --expand-easing out_bounce --final-gradient-stops ff0000 0000ff --final-gradient-direction horizontal
+expand-dynamic|colored.txt|--existing-color-handling dynamic expand
+expand-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c expand
