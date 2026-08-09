@@ -143,6 +143,12 @@ pub struct Cli {
     #[arg(long = "max-frames", hide = true)]
     pub max_frames: Option<u64>,
 
+    /// Parity harness: drive the clock virtually (1/frame_rate per frame) so
+    /// clock-dependent effects (matrix, thunderstorm) are reproducible on the
+    /// real tty output path. Implied by --parity-dump.
+    #[arg(long = "virtual-clock", default_value_t = false, hide = true)]
+    pub virtual_clock: bool,
+
     #[command(subcommand)]
     pub effect: Option<crate::effects::EffectCommand>,
 }

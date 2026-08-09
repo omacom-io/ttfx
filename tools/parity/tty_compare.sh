@@ -18,7 +18,10 @@ run_case() {
   local input="$1"; shift
   $PY --seed 42 --frame-rate 0 "$@" < "$inputs/$input" > "$tmp/py.bytes" 2>"$tmp/py.err"
   local py_rc=$?
-  $RUST --seed 42 --frame-rate 0 "$@" < "$inputs/$input" > "$tmp/rs.bytes" 2>"$tmp/rs.err"
+  # --virtual-clock matches the shim's virtual clock so clock-dependent
+  # effects (matrix, thunderstorm) are comparable; with a real clock their
+  # phase transitions legitimately track wall time, not frame count.
+  $RUST --seed 42 --frame-rate 0 --virtual-clock "$@" < "$inputs/$input" > "$tmp/rs.bytes" 2>"$tmp/rs.err"
   local rs_rc=$?
   if [ $py_rc -ne $rs_rc ]; then
     fail=$((fail+1)); failed_cases+=("$name (exit py=$py_rc rs=$rs_rc)"); return

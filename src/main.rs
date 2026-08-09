@@ -110,7 +110,7 @@ fn main() -> ExitCode {
     };
 
     let config = cli.terminal_config();
-    let clock = if cli.parity_dump {
+    let clock = if cli.parity_dump || cli.virtual_clock {
         ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
     } else {
         ttfx::engine::ctx::Clock::real()

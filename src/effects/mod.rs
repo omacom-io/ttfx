@@ -16,6 +16,7 @@ pub mod expand;
 pub mod fireworks;
 pub mod highlight;
 pub mod laseretch;
+pub mod matrix;
 pub mod middleout;
 pub mod orbittingvolley;
 pub mod overflow;
@@ -27,12 +28,15 @@ pub mod rings;
 pub mod scattered;
 pub mod slice;
 pub mod slide;
+pub mod smoke;
 pub mod spotlights;
 pub mod spray;
 pub mod swarm;
 pub mod sweep;
 pub mod synthgrid;
+pub mod thunderstorm;
 pub mod unstable;
+pub mod vhstape;
 pub mod waves;
 pub mod wipe;
 
@@ -70,6 +74,8 @@ pub enum EffectCommand {
     Highlight(highlight::HighlightConfig),
     /// A laser etches characters onto the terminal.
     Laseretch(laseretch::LaserEtchConfig),
+    /// Matrix digital rain effect.
+    Matrix(matrix::MatrixConfig),
     /// Text expands in a single row or column in the middle of the canvas then out.
     Middleout(middleout::MiddleoutConfig),
     /// Four launchers orbit the canvas firing volleys of characters inward to build the input text from the center out.
@@ -92,6 +98,8 @@ pub enum EffectCommand {
     Slice(slice::SliceConfig),
     /// Slide characters into view from outside the terminal.
     Slide(slide::SlideConfig),
+    /// Smoke floods the canvas colorizing any characters it crosses.
+    Smoke(smoke::SmokeConfig),
     /// Spotlights search the text area, illuminating characters, before converging in the center and expanding.
     Spotlights(spotlights::SpotlightsConfig),
     /// Draws the characters spawning at varying rates from a single point.
@@ -102,8 +110,12 @@ pub enum EffectCommand {
     Sweep(sweep::SweepConfig),
     /// Create a grid which fills with characters dissolving into the final text.
     Synthgrid(synthgrid::SynthGridConfig),
+    /// Create a thunderstorm in the terminal.
+    Thunderstorm(thunderstorm::ThunderstormConfig),
     /// Spawn characters jumbled, explode them to the edge of the canvas, then reassemble them in the correct layout.
     Unstable(unstable::UnstableConfig),
+    /// Lines of characters glitch left and right and lose detail like an old VHS tape.
+    Vhstape(vhstape::VhsTapeConfig),
     /// Waves travel across the terminal leaving behind the characters.
     Waves(waves::WavesConfig),
     /// Wipes the text across the terminal to reveal characters.
@@ -127,6 +139,7 @@ impl EffectCommand {
             EffectCommand::Fireworks(config) => Box::new(fireworks::Fireworks::new(config.clone())),
             EffectCommand::Highlight(config) => Box::new(highlight::Highlight::new(config.clone())),
             EffectCommand::Laseretch(config) => Box::new(laseretch::LaserEtch::new(config.clone())),
+            EffectCommand::Matrix(config) => Box::new(matrix::Matrix::new(config.clone())),
             EffectCommand::Middleout(config) => Box::new(middleout::Middleout::new(config.clone())),
             EffectCommand::Orbittingvolley(config) => Box::new(orbittingvolley::OrbittingVolley::new(config.clone())),
             EffectCommand::Overflow(config) => Box::new(overflow::Overflow::new(config.clone())),
@@ -138,12 +151,15 @@ impl EffectCommand {
             EffectCommand::Scattered(config) => Box::new(scattered::Scattered::new(config.clone())),
             EffectCommand::Slice(config) => Box::new(slice::Slice::new(config.clone())),
             EffectCommand::Slide(config) => Box::new(slide::Slide::new(config.clone())),
+            EffectCommand::Smoke(config) => Box::new(smoke::Smoke::new(config.clone())),
             EffectCommand::Spotlights(config) => Box::new(spotlights::Spotlights::new(config.clone())),
             EffectCommand::Spray(config) => Box::new(spray::Spray::new(config.clone())),
             EffectCommand::Swarm(config) => Box::new(swarm::Swarm::new(config.clone())),
             EffectCommand::Sweep(config) => Box::new(sweep::Sweep::new(config.clone())),
             EffectCommand::Synthgrid(config) => Box::new(synthgrid::SynthGrid::new(config.clone())),
+            EffectCommand::Thunderstorm(config) => Box::new(thunderstorm::Thunderstorm::new(config.clone())),
             EffectCommand::Unstable(config) => Box::new(unstable::Unstable::new(config.clone())),
+            EffectCommand::Vhstape(config) => Box::new(vhstape::VhsTape::new(config.clone())),
             EffectCommand::Waves(config) => Box::new(waves::Waves::new(config.clone())),
             EffectCommand::Wipe(config) => Box::new(wipe::Wipe::new(config.clone())),
         }
@@ -165,6 +181,7 @@ impl EffectCommand {
             EffectCommand::Fireworks(_) => "fireworks",
             EffectCommand::Highlight(_) => "highlight",
             EffectCommand::Laseretch(_) => "laseretch",
+            EffectCommand::Matrix(_) => "matrix",
             EffectCommand::Middleout(_) => "middleout",
             EffectCommand::Orbittingvolley(_) => "orbittingvolley",
             EffectCommand::Overflow(_) => "overflow",
@@ -176,12 +193,15 @@ impl EffectCommand {
             EffectCommand::Scattered(_) => "scattered",
             EffectCommand::Slice(_) => "slice",
             EffectCommand::Slide(_) => "slide",
+            EffectCommand::Smoke(_) => "smoke",
             EffectCommand::Spotlights(_) => "spotlights",
             EffectCommand::Spray(_) => "spray",
             EffectCommand::Swarm(_) => "swarm",
             EffectCommand::Sweep(_) => "sweep",
             EffectCommand::Synthgrid(_) => "synthgrid",
+            EffectCommand::Thunderstorm(_) => "thunderstorm",
             EffectCommand::Unstable(_) => "unstable",
+            EffectCommand::Vhstape(_) => "vhstape",
             EffectCommand::Waves(_) => "waves",
             EffectCommand::Wipe(_) => "wipe",
         }

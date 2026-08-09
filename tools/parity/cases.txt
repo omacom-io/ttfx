@@ -1,159 +1,178 @@
-# name|input|args   (each case runs with seeds 42 and 1337, max 400 frames)
-randomsequence-basic|basic.txt|randomsequence
-randomsequence-fast|basic.txt|randomsequence --speed 0.2 --final-gradient-frames 3
-randomsequence-single|single.txt|randomsequence
-randomsequence-colored-dynamic|colored.txt|--existing-color-handling dynamic randomsequence
-randomsequence-colored-always|colored.txt|--existing-color-handling always randomsequence
-randomsequence-xterm|paragraph.txt|--xterm-colors randomsequence --speed 0.05
-randomsequence-nocolor|basic.txt|--no-color randomsequence
-randomsequence-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c randomsequence --speed 0.03
-bouncyballs-basic|basic.txt|bouncyballs
-bouncyballs-custom|paragraph.txt|bouncyballs --ball-colors ff0000 00ff00 0000ff --ball-symbols o . x --ball-delay 0 --movement-speed 1.2 --movement-easing out_quad --final-gradient-direction horizontal
-bouncyballs-dynamic|colored.txt|--existing-color-handling dynamic bouncyballs
-bouncyballs-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bouncyballs
-colorshift-basic|basic.txt|colorshift
-colorshift-custom|paragraph.txt|colorshift --gradient-stops ff0000 00ff00 0000ff --gradient-steps 6 --gradient-frames 3 --no-loop --travel-direction horizontal --reverse-travel-direction --cycles 1 --final-gradient-direction diagonal
-colorshift-notravel|paragraph.txt|colorshift --no-travel --cycles 2 --skip-final-gradient
-colorshift-vertical|basic.txt|colorshift --travel-direction vertical --cycles 1
-colorshift-dynamic|colored.txt|--existing-color-handling dynamic colorshift --cycles 1
-colorshift-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c colorshift --cycles 1
-errorcorrect-basic|basic.txt|errorcorrect
-errorcorrect-heavy|paragraph.txt|errorcorrect --error-pairs 0.4 --swap-delay 2 --error-color ff8800 --correct-color 00ff88 --movement-speed 0.4
-errorcorrect-dynamic|colored.txt|--existing-color-handling dynamic errorcorrect --error-pairs 0.5
-errorcorrect-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c errorcorrect
-highlight-basic|basic.txt|highlight
-highlight-custom|paragraph.txt|highlight --highlight-brightness 0.5 --highlight-direction row_top_to_bottom --highlight-width 3 --final-gradient-stops ff0000 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
-highlight-center|paragraph.txt|highlight --highlight-direction center_to_outside --highlight-brightness 2.5
-highlight-dynamic|colored.txt|--existing-color-handling dynamic highlight
-highlight-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c highlight
-rain-basic|basic.txt|rain
-rain-custom|paragraph.txt|rain --rain-colors 00ff00 ff0000 --rain-symbols . , --movement-speed 0.8-1.2 --movement-easing out_bounce --final-gradient-direction vertical
-rain-dynamic|colored.txt|--existing-color-handling dynamic rain
-rain-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c rain
-spray-basic|basic.txt|spray
-spray-nw-slow|paragraph.txt|spray --spray-position nw --spray-volume 0.02 --movement-speed-range 0.3-0.8 --movement-easing in_out_quad
-spray-dynamic|colored.txt|--existing-color-handling dynamic spray
-spray-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spray --spray-position center
-sweep-basic|basic.txt|sweep
-sweep-custom|paragraph.txt|sweep --sweep-symbols # @ % --first-sweep-direction row_top_to_bottom --second-sweep-direction diagonal_bottom_left_to_top_right --final-gradient-stops ff0000 00ff00 --final-gradient-steps 12 --final-gradient-direction horizontal
-sweep-center|paragraph.txt|sweep --first-sweep-direction center_to_outside --second-sweep-direction outside_to_center
-sweep-dynamic|colored.txt|--existing-color-handling dynamic sweep
-sweep-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c sweep
-waves-basic|basic.txt|waves
-waves-custom|paragraph.txt|waves --wave-symbols ~ - = --wave-gradient-stops ff0000 0000ff --wave-gradient-steps 4 8 --wave-count 2 --wave-length 1 --wave-direction row_top_to_bottom --wave-easing out_bounce --final-gradient-stops 00ff00 --final-gradient-steps 6 --final-gradient-direction vertical
-waves-center|paragraph.txt|waves --wave-direction center_to_outside --wave-count 1
-waves-dynamic|colored.txt|--existing-color-handling dynamic waves --wave-count 1
-waves-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c waves --wave-count 1
-wipe-basic|basic.txt|wipe
-wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
-wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
-wipe-dynamic|colored.txt|--existing-color-handling dynamic wipe
-wipe-xterm|basic.txt|--xterm-colors wipe --wipe-direction column_right_to_left
-pour-basic|basic.txt|pour
-pour-up-fast|paragraph.txt|pour --pour-direction up --pour-speed 4 --gap 0 --movement-speed-range 0.3-0.9 --movement-easing out_bounce
-pour-left|paragraph.txt|pour --pour-direction left --starting-color ff0000 --final-gradient-frames 3
-pour-dynamic|colored.txt|--existing-color-handling dynamic pour
-pour-always-xterm|colored.txt|--existing-color-handling always --xterm-colors pour --pour-direction right
-pour-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c pour
-slide-basic|basic.txt|slide
-slide-column-merge|paragraph.txt|slide --grouping column --merge --gap 0 --movement-speed 0.5
-slide-diagonal-reverse|paragraph.txt|slide --grouping diagonal --reverse-direction --movement-easing out_bounce --final-gradient-frames 3
-slide-dynamic|colored.txt|--existing-color-handling dynamic slide
-slide-always-xterm|colored.txt|--existing-color-handling always --xterm-colors slide --grouping column
-slide-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c slide --grouping diagonal --merge
-middleout-basic|basic.txt|middleout
-middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --starting-color 00ff00 --center-movement-speed 0.3 --full-movement-speed 0.9 --center-easing out_bounce --full-easing in_quad
-middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
-middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
-middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
-decrypt-basic|basic.txt|decrypt
-decrypt-custom|paragraph.txt|decrypt --typing-speed 3 --ciphertext-colors ff0000 00ff00 0000ff --final-gradient-stops eda000 00d1ff --final-gradient-direction horizontal
-decrypt-single|single.txt|decrypt --typing-speed 1
-decrypt-dynamic|colored.txt|--existing-color-handling dynamic decrypt
-decrypt-always-xterm|colored.txt|--existing-color-handling always --xterm-colors decrypt
-decrypt-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c decrypt
-print-basic|basic.txt|print
-print-fast|paragraph.txt|print --print-speed 4 --print-head-return-speed 3 --print-head-easing out_quad --final-gradient-direction vertical
-print-single|single.txt|print --print-speed 1 --print-head-return-speed 0.5
-print-dynamic|colored.txt|--existing-color-handling dynamic print
-print-always-xterm|colored.txt|--existing-color-handling always --xterm-colors print
-print-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c print
-overflow-basic|basic.txt|overflow
-overflow-fast|paragraph.txt|overflow --overflow-cycles-range 1-2 --overflow-speed 5 --overflow-gradient-stops ff0000 00ff00 --final-gradient-direction horizontal
-overflow-single|single.txt|overflow --overflow-speed 1
-overflow-dynamic|colored.txt|--existing-color-handling dynamic overflow
-overflow-always-xterm|colored.txt|--existing-color-handling always --xterm-colors overflow
-overflow-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c overflow
-unstable-basic|basic.txt|unstable
-unstable-custom|paragraph.txt|unstable --unstable-color 00ffff --explosion-ease in_out_quad --explosion-speed 2 --reassembly-ease out_bounce --reassembly-speed 0.5 --final-gradient-direction horizontal
-unstable-single|single.txt|unstable --explosion-speed 0.4
-unstable-dynamic|colored.txt|--existing-color-handling dynamic unstable
-unstable-always-xterm|colored.txt|--existing-color-handling always --xterm-colors unstable
-unstable-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c unstable
-crumble-basic|basic.txt|crumble
-crumble-custom|paragraph.txt|crumble --final-gradient-stops ff0000 00ff00 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
-crumble-dynamic|colored.txt|--existing-color-handling dynamic crumble
-crumble-always-xterm|colored.txt|--existing-color-handling always --xterm-colors crumble
-crumble-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c crumble
-crumble-single|single.txt|crumble
-blackhole-basic|basic.txt|blackhole
-blackhole-custom|paragraph.txt|blackhole --blackhole-color 00ffff --star-colors ff0000 00ff00 0000ff --final-gradient-stops ff0000 ffffff --final-gradient-steps 6 --final-gradient-direction horizontal
-blackhole-dynamic|colored.txt|--existing-color-handling dynamic blackhole
-blackhole-always-xterm|colored.txt|--existing-color-handling always --xterm-colors blackhole
-blackhole-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c blackhole
-blackhole-single|single.txt|blackhole
-swarm-basic|basic.txt|swarm
-swarm-custom|paragraph.txt|swarm --base-color ff0000 00ff00 --flash-color ffffff --swarm-size 0.2 --swarm-coordination 0.5 --swarm-area-count-range 3-6 --final-gradient-stops ff00ff 00ffff --final-gradient-steps 6 --final-gradient-direction vertical
-swarm-dynamic|colored.txt|--existing-color-handling dynamic swarm
-swarm-always-xterm|colored.txt|--existing-color-handling always --xterm-colors swarm
-swarm-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c swarm
-swarm-single|single.txt|swarm
-spotlights-basic|basic.txt|spotlights --search-duration 60
-spotlights-custom|paragraph.txt|spotlights --beam-width-ratio 1.5 --beam-falloff 0.5 --search-duration 40 --search-speed-range 0.5-1.0 --spotlight-count 5 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
-spotlights-dynamic|colored.txt|--existing-color-handling dynamic spotlights --search-duration 50
-spotlights-always-xterm|colored.txt|--existing-color-handling always --xterm-colors spotlights --search-duration 50
-spotlights-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spotlights --search-duration 60
-spotlights-single|single.txt|spotlights --search-duration 30 --spotlight-count 1
-fireworks-basic|basic.txt|fireworks
-fireworks-custom|paragraph.txt|fireworks --explode-anywhere --firework-colors ff0000 00ff00 0000ff --firework-symbol * --firework-volume 0.12 --launch-delay 10 --explode-distance 0.4 --final-gradient-direction diagonal
-fireworks-dynamic|colored.txt|--existing-color-handling dynamic fireworks
-fireworks-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c fireworks --launch-delay 5
-bubbles-basic|basic.txt|bubbles
-bubbles-rainbow-anywhere|paragraph.txt|bubbles --rainbow --pop-condition anywhere --bubble-speed 0.8 --bubble-delay 8
-bubbles-bottom|paragraph.txt|bubbles --pop-condition bottom --bubble-colors ff0000 00ff00 --pop-color 00ffff --movement-easing out_bounce
-bubbles-dynamic|colored.txt|--existing-color-handling dynamic bubbles --bubble-delay 5
-bubbles-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bubbles
 beams-basic|basic.txt|beams
 beams-custom|paragraph.txt|beams --beam-row-symbols - = --beam-column-symbols . : --beam-delay 2 --beam-row-speed-range 30-80 --beam-column-speed-range 12-20 --beam-gradient-stops ff0000 0000ff --beam-gradient-steps 4 --beam-gradient-frames 1 --final-gradient-direction horizontal --final-wipe-speed 5
 beams-dynamic|colored.txt|--existing-color-handling dynamic beams
 beams-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c beams
-rings-basic|basic.txt|rings
-rings-custom|paragraph.txt|rings --ring-colors ff0000 00ff00 --ring-gap 0.2 --spin-duration 50 --spin-speed 0.5-2.0 --disperse-duration 50 --spin-disperse-cycles 2 --final-gradient-direction horizontal
-rings-dynamic|colored.txt|--existing-color-handling dynamic rings --spin-duration 60 --disperse-duration 60
-rings-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c rings --spin-duration 80 --disperse-duration 40
+binarypath-basic|basic.txt|binarypath
+binarypath-custom|paragraph.txt|binarypath --binary-colors ff0000 00ff00 0000ff --movement-speed 2 --active-binary-groups 0.3 --final-gradient-direction vertical
+binarypath-dynamic|colored.txt|--existing-color-handling dynamic binarypath
+binarypath-single|single.txt|binarypath
+binarypath-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c binarypath --active-binary-groups 0.15
+blackhole-always-xterm|colored.txt|--existing-color-handling always --xterm-colors blackhole
+blackhole-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c blackhole
+blackhole-basic|basic.txt|blackhole
+blackhole-custom|paragraph.txt|blackhole --blackhole-color 00ffff --star-colors ff0000 00ff00 0000ff --final-gradient-stops ff0000 ffffff --final-gradient-steps 6 --final-gradient-direction horizontal
+blackhole-dynamic|colored.txt|--existing-color-handling dynamic blackhole
+blackhole-single|single.txt|blackhole
+bouncyballs-basic|basic.txt|bouncyballs
+bouncyballs-custom|paragraph.txt|bouncyballs --ball-colors ff0000 00ff00 0000ff --ball-symbols o . x --ball-delay 0 --movement-speed 1.2 --movement-easing out_quad --final-gradient-direction horizontal
+bouncyballs-dynamic|colored.txt|--existing-color-handling dynamic bouncyballs
+bouncyballs-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bouncyballs
+bubbles-basic|basic.txt|bubbles
+bubbles-bottom|paragraph.txt|bubbles --pop-condition bottom --bubble-colors ff0000 00ff00 --pop-color 00ffff --movement-easing out_bounce
+bubbles-dynamic|colored.txt|--existing-color-handling dynamic bubbles --bubble-delay 5
+bubbles-rainbow-anywhere|paragraph.txt|bubbles --rainbow --pop-condition anywhere --bubble-speed 0.8 --bubble-delay 8
+bubbles-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bubbles
+burn-basic|basic.txt|burn
+burn-custom|paragraph.txt|burn --starting-color 404040 --burn-colors ff0000 ffa500 ffff00 --smoke-chance 1.0 --final-gradient-stops 00ff00 0000ff --final-gradient-steps 8 --final-gradient-direction horizontal
+burn-dynamic|colored.txt|--existing-color-handling dynamic burn
+burn-nosmoke|basic.txt|burn --smoke-chance 0.0
+burn-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c burn
+colorshift-basic|basic.txt|colorshift
+colorshift-custom|paragraph.txt|colorshift --gradient-stops ff0000 00ff00 0000ff --gradient-steps 6 --gradient-frames 3 --no-loop --travel-direction horizontal --reverse-travel-direction --cycles 1 --final-gradient-direction diagonal
+colorshift-dynamic|colored.txt|--existing-color-handling dynamic colorshift --cycles 1
+colorshift-notravel|paragraph.txt|colorshift --no-travel --cycles 2 --skip-final-gradient
+colorshift-vertical|basic.txt|colorshift --travel-direction vertical --cycles 1
+colorshift-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c colorshift --cycles 1
+crumble-always-xterm|colored.txt|--existing-color-handling always --xterm-colors crumble
+crumble-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c crumble
+crumble-basic|basic.txt|crumble
+crumble-custom|paragraph.txt|crumble --final-gradient-stops ff0000 00ff00 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
+crumble-dynamic|colored.txt|--existing-color-handling dynamic crumble
+crumble-single|single.txt|crumble
+decrypt-always-xterm|colored.txt|--existing-color-handling always --xterm-colors decrypt
+decrypt-basic|basic.txt|decrypt
+decrypt-custom|paragraph.txt|decrypt --typing-speed 3 --ciphertext-colors ff0000 00ff00 0000ff --final-gradient-stops eda000 00d1ff --final-gradient-direction horizontal
+decrypt-dynamic|colored.txt|--existing-color-handling dynamic decrypt
+decrypt-single|single.txt|decrypt --typing-speed 1
+decrypt-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c decrypt
+errorcorrect-basic|basic.txt|errorcorrect
+errorcorrect-dynamic|colored.txt|--existing-color-handling dynamic errorcorrect --error-pairs 0.5
+errorcorrect-heavy|paragraph.txt|errorcorrect --error-pairs 0.4 --swap-delay 2 --error-color ff8800 --correct-color 00ff88 --movement-speed 0.4
+errorcorrect-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c errorcorrect
+fireworks-basic|basic.txt|fireworks
+fireworks-custom|paragraph.txt|fireworks --explode-anywhere --firework-colors ff0000 00ff00 0000ff --firework-symbol * --firework-volume 0.12 --launch-delay 10 --explode-distance 0.4 --final-gradient-direction diagonal
+fireworks-dynamic|colored.txt|--existing-color-handling dynamic fireworks
+fireworks-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c fireworks --launch-delay 5
+highlight-basic|basic.txt|highlight
+highlight-center|paragraph.txt|highlight --highlight-direction center_to_outside --highlight-brightness 2.5
+highlight-custom|paragraph.txt|highlight --highlight-brightness 0.5 --highlight-direction row_top_to_bottom --highlight-width 3 --final-gradient-stops ff0000 0000ff --final-gradient-steps 6 --final-gradient-direction horizontal
+highlight-dynamic|colored.txt|--existing-color-handling dynamic highlight
+highlight-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c highlight
+laseretch-basic|basic.txt|laseretch
+laseretch-dynamic|colored.txt|--existing-color-handling dynamic laseretch
+laseretch-fast|paragraph.txt|laseretch --etch-speed 3 --etch-delay 0 --cool-gradient-stops 00ffe6 0077ff --laser-gradient-stops ff0000 ffff00 --spark-gradient-stops ffffff ff7b00 1a0900 --spark-cooling-frames 3 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+laseretch-group-quirk|basic.txt|laseretch --etch-pattern row_top_to_bottom
+laseretch-single|single.txt|laseretch
+laseretch-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c laseretch --etch-speed 4 --etch-delay 0
+matrix-basic|basic.txt|matrix
+matrix-custom|paragraph.txt|matrix --rain-time 2 --highlight-color ffffff --rain-color-gradient ff0000 00ff00 --rain-symbols a b c 1 2 3 --rain-fall-delay-range 1-5 --rain-column-delay-range 2-4 --symbol-swap-chance 0.05 --color-swap-chance 0.02 --resolve-delay 1 --final-gradient-stops ff0000 0000ff --final-gradient-steps 8 --final-gradient-frames 2 --final-gradient-direction vertical
+matrix-dynamic|colored.txt|--existing-color-handling dynamic matrix --rain-time 1
+matrix-short|basic.txt|matrix --rain-time 1
+matrix-single|single.txt|matrix --rain-time 1
+matrix-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c matrix --rain-time 2
+middleout-always-xterm|colored.txt|--existing-color-handling always --xterm-colors middleout
+middleout-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c middleout --expand-direction horizontal
+middleout-basic|basic.txt|middleout
+middleout-dynamic|colored.txt|--existing-color-handling dynamic middleout
+middleout-horizontal|paragraph.txt|middleout --expand-direction horizontal --starting-color 00ff00 --center-movement-speed 0.3 --full-movement-speed 0.9 --center-easing out_bounce --full-easing in_quad
+# name|input|args   (each case runs with seeds 42 and 1337, max 400 frames)
 orbittingvolley-basic|basic.txt|orbittingvolley
 orbittingvolley-custom|paragraph.txt|orbittingvolley --top-launcher-symbol T --right-launcher-symbol R --bottom-launcher-symbol B --left-launcher-symbol L --launcher-movement-speed 1.4 --character-movement-speed 0.8 --volley-size 0.1 --launch-delay 10 --character-easing in_out_quad --final-gradient-direction vertical
 orbittingvolley-dynamic|colored.txt|--existing-color-handling dynamic orbittingvolley --launch-delay 5
 orbittingvolley-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c orbittingvolley --volley-size 0.2
-binarypath-basic|basic.txt|binarypath
-binarypath-custom|paragraph.txt|binarypath --binary-colors ff0000 00ff00 0000ff --movement-speed 2 --active-binary-groups 0.3 --final-gradient-direction vertical
-binarypath-dynamic|colored.txt|--existing-color-handling dynamic binarypath
-binarypath-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c binarypath --active-binary-groups 0.15
-binarypath-single|single.txt|binarypath
-burn-basic|basic.txt|burn
-burn-custom|paragraph.txt|burn --starting-color 404040 --burn-colors ff0000 ffa500 ffff00 --smoke-chance 1.0 --final-gradient-stops 00ff00 0000ff --final-gradient-steps 8 --final-gradient-direction horizontal
-burn-nosmoke|basic.txt|burn --smoke-chance 0.0
-burn-dynamic|colored.txt|--existing-color-handling dynamic burn
-burn-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c burn
-laseretch-basic|basic.txt|laseretch
-laseretch-fast|paragraph.txt|laseretch --etch-speed 3 --etch-delay 0 --cool-gradient-stops 00ffe6 0077ff --laser-gradient-stops ff0000 ffff00 --spark-gradient-stops ffffff ff7b00 1a0900 --spark-cooling-frames 3 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
-laseretch-dynamic|colored.txt|--existing-color-handling dynamic laseretch
-laseretch-group-quirk|basic.txt|laseretch --etch-pattern row_top_to_bottom
-laseretch-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c laseretch --etch-speed 4 --etch-delay 0
-laseretch-single|single.txt|laseretch
+overflow-always-xterm|colored.txt|--existing-color-handling always --xterm-colors overflow
+overflow-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c overflow
+overflow-basic|basic.txt|overflow
+overflow-dynamic|colored.txt|--existing-color-handling dynamic overflow
+overflow-fast|paragraph.txt|overflow --overflow-cycles-range 1-2 --overflow-speed 5 --overflow-gradient-stops ff0000 00ff00 --final-gradient-direction horizontal
+overflow-single|single.txt|overflow --overflow-speed 1
+pour-always-xterm|colored.txt|--existing-color-handling always --xterm-colors pour --pour-direction right
+pour-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c pour
+pour-basic|basic.txt|pour
+pour-dynamic|colored.txt|--existing-color-handling dynamic pour
+pour-left|paragraph.txt|pour --pour-direction left --starting-color ff0000 --final-gradient-frames 3
+pour-up-fast|paragraph.txt|pour --pour-direction up --pour-speed 4 --gap 0 --movement-speed-range 0.3-0.9 --movement-easing out_bounce
+print-always-xterm|colored.txt|--existing-color-handling always --xterm-colors print
+print-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c print
+print-basic|basic.txt|print
+print-dynamic|colored.txt|--existing-color-handling dynamic print
+print-fast|paragraph.txt|print --print-speed 4 --print-head-return-speed 3 --print-head-easing out_quad --final-gradient-direction vertical
+print-single|single.txt|print --print-speed 1 --print-head-return-speed 0.5
+rain-basic|basic.txt|rain
+rain-custom|paragraph.txt|rain --rain-colors 00ff00 ff0000 --rain-symbols . , --movement-speed 0.8-1.2 --movement-easing out_bounce --final-gradient-direction vertical
+rain-dynamic|colored.txt|--existing-color-handling dynamic rain
+rain-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c rain
+randomsequence-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c randomsequence --speed 0.03
+randomsequence-basic|basic.txt|randomsequence
+randomsequence-colored-always|colored.txt|--existing-color-handling always randomsequence
+randomsequence-colored-dynamic|colored.txt|--existing-color-handling dynamic randomsequence
+randomsequence-fast|basic.txt|randomsequence --speed 0.2 --final-gradient-frames 3
+randomsequence-nocolor|basic.txt|--no-color randomsequence
+randomsequence-single|single.txt|randomsequence
+randomsequence-xterm|paragraph.txt|--xterm-colors randomsequence --speed 0.05
+rings-basic|basic.txt|rings
+rings-custom|paragraph.txt|rings --ring-colors ff0000 00ff00 --ring-gap 0.2 --spin-duration 50 --spin-speed 0.5-2.0 --disperse-duration 50 --spin-disperse-cycles 2 --final-gradient-direction horizontal
+rings-dynamic|colored.txt|--existing-color-handling dynamic rings --spin-duration 60 --disperse-duration 60
+rings-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c rings --spin-duration 80 --disperse-duration 40
+slide-always-xterm|colored.txt|--existing-color-handling always --xterm-colors slide --grouping column
+slide-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c slide --grouping diagonal --merge
+slide-basic|basic.txt|slide
+slide-column-merge|paragraph.txt|slide --grouping column --merge --gap 0 --movement-speed 0.5
+slide-diagonal-reverse|paragraph.txt|slide --grouping diagonal --reverse-direction --movement-easing out_bounce --final-gradient-frames 3
+slide-dynamic|colored.txt|--existing-color-handling dynamic slide
+smoke-basic|basic.txt|smoke
+smoke-custom|paragraph.txt|smoke --starting-color 333333 --smoke-symbols + @ % --smoke-gradient-stops 111111 eeeeee --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+smoke-dynamic|colored.txt|--existing-color-handling dynamic smoke
+smoke-wholecanvas|basic.txt|smoke --use-whole-canvas
+smoke-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c smoke
+spotlights-always-xterm|colored.txt|--existing-color-handling always --xterm-colors spotlights --search-duration 50
+spotlights-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spotlights --search-duration 60
+spotlights-basic|basic.txt|spotlights --search-duration 60
+spotlights-custom|paragraph.txt|spotlights --beam-width-ratio 1.5 --beam-falloff 0.5 --search-duration 40 --search-speed-range 0.5-1.0 --spotlight-count 5 --final-gradient-stops ff0000 00ff00 --final-gradient-steps 6 --final-gradient-direction horizontal
+spotlights-dynamic|colored.txt|--existing-color-handling dynamic spotlights --search-duration 50
+spotlights-single|single.txt|spotlights --search-duration 30 --spotlight-count 1
+spray-basic|basic.txt|spray
+spray-dynamic|colored.txt|--existing-color-handling dynamic spray
+spray-nw-slow|paragraph.txt|spray --spray-position nw --spray-volume 0.02 --movement-speed-range 0.3-0.8 --movement-easing in_out_quad
+spray-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c spray --spray-position center
+swarm-always-xterm|colored.txt|--existing-color-handling always --xterm-colors swarm
+swarm-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c swarm
+swarm-basic|basic.txt|swarm
+swarm-custom|paragraph.txt|swarm --base-color ff0000 00ff00 --flash-color ffffff --swarm-size 0.2 --swarm-coordination 0.5 --swarm-area-count-range 3-6 --final-gradient-stops ff00ff 00ffff --final-gradient-steps 6 --final-gradient-direction vertical
+swarm-dynamic|colored.txt|--existing-color-handling dynamic swarm
+swarm-single|single.txt|swarm
+sweep-basic|basic.txt|sweep
+sweep-center|paragraph.txt|sweep --first-sweep-direction center_to_outside --second-sweep-direction outside_to_center
+sweep-custom|paragraph.txt|sweep --sweep-symbols # @ % --first-sweep-direction row_top_to_bottom --second-sweep-direction diagonal_bottom_left_to_top_right --final-gradient-stops ff0000 00ff00 --final-gradient-steps 12 --final-gradient-direction horizontal
+sweep-dynamic|colored.txt|--existing-color-handling dynamic sweep
+sweep-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c sweep
+synthgrid-always-xterm|colored.txt|--existing-color-handling always --xterm-colors synthgrid
+synthgrid-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c synthgrid
 synthgrid-basic|basic.txt|synthgrid
 synthgrid-custom|paragraph.txt|synthgrid --grid-gradient-stops CC00CC ffffff --grid-gradient-steps 6 --grid-gradient-direction horizontal --text-gradient-stops ff0000 00ff00 --text-gradient-steps 8 --text-gradient-direction diagonal --grid-row-symbol = --grid-column-symbol : --text-generation-symbols # @ % --max-active-blocks 0.5
 synthgrid-dynamic|colored.txt|--existing-color-handling dynamic synthgrid
-synthgrid-always-xterm|colored.txt|--existing-color-handling always --xterm-colors synthgrid
-synthgrid-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c synthgrid
 synthgrid-single|single.txt|synthgrid
+thunderstorm-basic|basic.txt|thunderstorm --storm-time 2
+thunderstorm-custom|paragraph.txt|thunderstorm --storm-time 3 --text-glow-time 1 --spark-glow-time 1 --lightning-color ffff00
+thunderstorm-dynamic|colored.txt|--existing-color-handling dynamic thunderstorm --storm-time 2
+thunderstorm-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c thunderstorm --storm-time 2
+unstable-always-xterm|colored.txt|--existing-color-handling always --xterm-colors unstable
+unstable-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c unstable
+unstable-basic|basic.txt|unstable
+unstable-custom|paragraph.txt|unstable --unstable-color 00ffff --explosion-ease in_out_quad --explosion-speed 2 --reassembly-ease out_bounce --reassembly-speed 0.5 --final-gradient-direction horizontal
+unstable-dynamic|colored.txt|--existing-color-handling dynamic unstable
+unstable-single|single.txt|unstable --explosion-speed 0.4
+vhstape-basic|basic.txt|vhstape
+vhstape-dynamic|colored.txt|--existing-color-handling dynamic vhstape --total-glitch-time 150
+vhstape-fast|paragraph.txt|vhstape --total-glitch-time 200 --glitch-line-chance 0.1 --noise-chance 0.01
+vhstape-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c vhstape --total-glitch-time 150
+waves-basic|basic.txt|waves
+waves-center|paragraph.txt|waves --wave-direction center_to_outside --wave-count 1
+waves-custom|paragraph.txt|waves --wave-symbols ~ - = --wave-gradient-stops ff0000 0000ff --wave-gradient-steps 4 8 --wave-count 2 --wave-length 1 --wave-direction row_top_to_bottom --wave-easing out_bounce --final-gradient-stops 00ff00 --final-gradient-steps 6 --final-gradient-direction vertical
+waves-dynamic|colored.txt|--existing-color-handling dynamic waves --wave-count 1
+waves-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c waves --wave-count 1
+wipe-basic|basic.txt|wipe
+wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
+wipe-dynamic|colored.txt|--existing-color-handling dynamic wipe
+wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
+wipe-xterm|basic.txt|--xterm-colors wipe --wipe-direction column_right_to_left
