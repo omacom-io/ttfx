@@ -46,3 +46,4 @@ Audited, no patch needed (set iteration present but order-unobservable):
 |---|---|---|
 | slice | `for character in self.active_characters` at end of `build` (effect_slice.py) | only calls `set_character_visibility(True)`, a commutative per-character flag; render order is already canonicalized by the `_update_terminal_state` patch. ttfx iterates its `BTreeSet` (ascending id). |
 | expand, scattered | none beyond `active_characters` membership | build loops iterate `get_characters()` lists; `active_characters` ticking covered by the `BaseEffectIterator.update` patch. |
+| colorshift, highlight, sweep, waves | none beyond `active_characters` membership (`add`/`update` only) | build loops iterate `get_characters()`/`get_characters_grouped()` lists; colorshift's `loop_tracker_map` dict is keyed access only (never iterated); ticking covered by the `BaseEffectIterator.update` patch. |
