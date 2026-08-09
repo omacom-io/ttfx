@@ -12,3 +12,9 @@ wipe-row|paragraph.txt|wipe --wipe-direction row_top_to_bottom --wipe-delay 2
 wipe-center|paragraph.txt|wipe --wipe-direction center_to_outside --wipe-ease out_bounce
 wipe-dynamic|colored.txt|--existing-color-handling dynamic wipe
 wipe-xterm|basic.txt|--xterm-colors wipe --wipe-direction column_right_to_left
+pour-basic|basic.txt|pour
+pour-up-fast|paragraph.txt|pour --pour-direction up --pour-speed 4 --gap 0 --movement-speed-range 0.3-0.9 --movement-easing out_bounce
+pour-left|paragraph.txt|pour --pour-direction left --starting-color ff0000 --final-gradient-frames 3
+pour-dynamic|colored.txt|--existing-color-handling dynamic pour
+pour-always-xterm|colored.txt|--existing-color-handling always --xterm-colors pour --pour-direction right
+pour-anchored|paragraph.txt|--canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c pour

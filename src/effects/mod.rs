@@ -1,6 +1,7 @@
 //! Static effect registry (replaces upstream pkgutil discovery).
 
 pub mod common;
+pub mod pour;
 pub mod random_sequence;
 pub mod wipe;
 
@@ -10,6 +11,8 @@ use crate::engine::effect::Effect;
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum EffectCommand {
+    /// Pours the characters into position from the given direction.
+    Pour(pour::PourConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
     /// Wipes the text across the terminal to reveal characters.
@@ -19,6 +22,7 @@ pub enum EffectCommand {
 impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
+            EffectCommand::Pour(config) => Box::new(pour::Pour::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
@@ -28,6 +32,7 @@ impl EffectCommand {
 
     pub fn name(&self) -> &'static str {
         match self {
+            EffectCommand::Pour(_) => "pour",
             EffectCommand::Randomsequence(_) => "randomsequence",
             EffectCommand::Wipe(_) => "wipe",
         }
