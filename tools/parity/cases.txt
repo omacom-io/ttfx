@@ -11,6 +11,10 @@ bouncyballs-basic|basic.txt|bouncyballs
 bouncyballs-custom|paragraph.txt|bouncyballs --ball-colors ff0000 00ff00 0000ff --ball-symbols o . x --ball-delay 0 --movement-speed 1.2 --movement-easing out_quad --final-gradient-direction horizontal
 bouncyballs-dynamic|colored.txt|--existing-color-handling dynamic bouncyballs
 bouncyballs-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c bouncyballs
+errorcorrect-basic|basic.txt|errorcorrect
+errorcorrect-heavy|paragraph.txt|errorcorrect --error-pairs 0.4 --swap-delay 2 --error-color ff8800 --correct-color 00ff88 --movement-speed 0.4
+errorcorrect-dynamic|colored.txt|--existing-color-handling dynamic errorcorrect --error-pairs 0.5
+errorcorrect-xterm-anchored|paragraph.txt|--xterm-colors --canvas-width 60 --canvas-height 20 --anchor-canvas c --anchor-text c errorcorrect
 rain-basic|basic.txt|rain
 rain-custom|paragraph.txt|rain --rain-colors 00ff00 ff0000 --rain-symbols . , --movement-speed 0.8-1.2 --movement-easing out_bounce --final-gradient-direction vertical
 rain-dynamic|colored.txt|--existing-color-handling dynamic rain

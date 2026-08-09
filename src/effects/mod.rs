@@ -2,6 +2,7 @@
 
 pub mod bouncyballs;
 pub mod common;
+pub mod errorcorrect;
 pub mod rain;
 pub mod random_sequence;
 pub mod spray;
@@ -15,6 +16,8 @@ use crate::engine::effect::Effect;
 pub enum EffectCommand {
     /// Characters are bouncy balls falling from the top of the canvas.
     Bouncyballs(bouncyballs::BouncyBallsConfig),
+    /// Some characters start in the wrong position and are corrected in sequence.
+    Errorcorrect(errorcorrect::ErrorCorrectConfig),
     /// Prints the input data in a random sequence.
     Randomsequence(random_sequence::RandomSequenceConfig),
     /// Rain characters from the top of the canvas.
@@ -29,6 +32,7 @@ impl EffectCommand {
     pub fn build_effect(&self) -> Box<dyn Effect> {
         match self {
             EffectCommand::Bouncyballs(config) => Box::new(bouncyballs::BouncyBalls::new(config.clone())),
+            EffectCommand::Errorcorrect(config) => Box::new(errorcorrect::ErrorCorrect::new(config.clone())),
             EffectCommand::Randomsequence(config) => {
                 Box::new(random_sequence::RandomSequence::new(config.clone()))
             }
@@ -41,6 +45,7 @@ impl EffectCommand {
     pub fn name(&self) -> &'static str {
         match self {
             EffectCommand::Bouncyballs(_) => "bouncyballs",
+            EffectCommand::Errorcorrect(_) => "errorcorrect",
             EffectCommand::Randomsequence(_) => "randomsequence",
             EffectCommand::Rain(_) => "rain",
             EffectCommand::Spray(_) => "spray",
