@@ -9,7 +9,6 @@
 //! by id after every emission point, and segment walks are index-based so
 //! reentrant list mutation behaves like Python list iteration.
 
-use std::rc::Rc;
 use std::time::Instant;
 
 use crate::engine::active_characters::ActiveCharacters;
@@ -119,9 +118,6 @@ impl EngineCtx {
     // event dispatch (EventHandler._handle_event)
     // ------------------------------------------------------------------
 
-    /// Execute all actions registered for (event, caller) on `id`, in
-    /// registration order, inline and reentrantly. The action list is indexed
-    /// per iteration because a callback may append more actions to it.
     /// Whether an emission of `event` on `id` can have any observable effect —
     /// false lets hot emission sites skip building the CallerKey entirely.
     #[inline]
@@ -129,6 +125,9 @@ impl EngineCtx {
         self.event_log.is_some() || self.terminal.arena[id.0 as usize].event_handler.subscribes(event)
     }
 
+    /// Execute all actions registered for (event, caller) on `id`, in
+    /// registration order, inline and reentrantly. The action list is indexed
+    /// per iteration because a callback may append more actions to it.
     pub fn handle_event(
         &mut self,
         hooks: &mut dyn EffectHooks,
@@ -263,7 +262,7 @@ impl EngineCtx {
         );
         let layer = {
             let ch = &mut self.terminal.arena[id.0 as usize];
-            ch.motion.active_path = Some(Rc::from(path_id));
+            ch.motion.active_path = ch.motion.paths.shared_key(path_id);
             let path = ch.motion.paths.get_mut(path_id).unwrap();
             path.total_distance += distance_to_first_waypoint;
             if let Some(origin) = &path.origin_segment {
@@ -512,7 +511,7 @@ impl EngineCtx {
                 .expect("activate_scene: scene not found")
                 .activate()
                 .expect("activate_scene: empty scene");
-            ch.animation.active_scene = Some(Rc::from(scene_id));
+            ch.animation.active_scene = ch.animation.scenes.shared_key(scene_id);
             ch.animation.active_scene_current_step = 0;
             ch.animation.current_character_visual = visual;
         }

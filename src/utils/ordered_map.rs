@@ -5,15 +5,25 @@
 
 use std::cell::Cell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 const INDEX_THRESHOLD: usize = 8;
 const NO_CACHED_LOOKUP: usize = usize::MAX;
 
+/// Keys are shared so that long-lived handles (Motion::active_path,
+/// Animation::active_scene) can hold the map's own key allocation; lookups
+/// then settle on a pointer compare instead of a memcmp.
 #[derive(Debug, Clone)]
 pub struct OrderedMap<V> {
-    entries: Vec<(String, V)>,
-    index: Option<Box<HashMap<String, usize>>>,
+    entries: Vec<(Rc<str>, V)>,
+    index: Option<Box<HashMap<Rc<str>, usize>>>,
     last_lookup: Cell<usize>,
+}
+
+/// Same string, same allocation — true only for keys handed out by this map.
+#[inline]
+fn same_allocation(entry: &str, key: &str) -> bool {
+    std::ptr::eq(entry.as_ptr(), key.as_ptr()) && entry.len() == key.len()
 }
 
 impl<V> OrderedMap<V> {
@@ -34,7 +44,8 @@ impl<V> OrderedMap<V> {
     }
 
     /// Python dict semantics: overwriting an existing key keeps its position.
-    pub fn insert(&mut self, key: String, value: V) {
+    pub fn insert(&mut self, key: impl Into<Rc<str>>, value: V) {
+        let key: Rc<str> = key.into();
         if let Some(position) = self.position(&key) {
             self.entries[position].1 = value;
             return;
@@ -65,8 +76,14 @@ impl<V> OrderedMap<V> {
         Some(&mut self.entries[position].1)
     }
 
-    pub fn keys(&self) -> impl Iterator<Item = &String> {
+    pub fn keys(&self) -> impl Iterator<Item = &Rc<str>> {
         self.entries.iter().map(|(k, _)| k)
+    }
+
+    /// The map's own handle for `key`, for callers that want later lookups to
+    /// hit the pointer fast path.
+    pub fn shared_key(&self, key: &str) -> Option<Rc<str>> {
+        self.position(key).map(|position| Rc::clone(&self.entries[position].0))
     }
 
     pub fn values(&self) -> impl Iterator<Item = &V> {
@@ -77,7 +94,7 @@ impl<V> OrderedMap<V> {
         self.entries.iter_mut().map(|(_, v)| v)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &V)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&Rc<str>, &V)> {
         self.entries.iter().map(|(k, v)| (k, v))
     }
 
@@ -107,12 +124,18 @@ impl<V> OrderedMap<V> {
 
     fn position(&self, key: &str) -> Option<usize> {
         let cached = self.last_lookup.get();
-        if cached < self.entries.len() && self.entries[cached].0 == key {
-            return Some(cached);
+        if cached < self.entries.len() {
+            let entry_key = &self.entries[cached].0;
+            if same_allocation(entry_key, key) || **entry_key == *key {
+                return Some(cached);
+            }
         }
         let position = match &self.index {
             Some(index) => index.get(key).copied(),
-            None => self.entries.iter().position(|(entry_key, _)| entry_key == key),
+            None => self
+                .entries
+                .iter()
+                .position(|(entry_key, _)| same_allocation(entry_key, key) || **entry_key == *key),
         };
         self.last_lookup.set(position.unwrap_or(NO_CACHED_LOOKUP));
         position
@@ -137,7 +160,7 @@ mod tests {
         }
         map.insert("3".to_string(), 30);
         assert_eq!(map.get("3"), Some(&30));
-        assert_eq!(map.keys().map(String::as_str).collect::<Vec<_>>()[..5], ["0", "1", "2", "3", "4"]);
+        assert_eq!(map.keys().map(|key| &**key).collect::<Vec<_>>()[..5], ["0", "1", "2", "3", "4"]);
 
         assert_eq!(map.remove("4"), Some(4));
         assert_eq!(map.get("5"), Some(&5));

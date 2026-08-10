@@ -416,7 +416,7 @@ impl Effect for Swarm {
                 .map_err(EngineError::Other)?;
                 let all_paths: Vec<String> = {
                     let ch = &ctx.terminal.arena[id.0 as usize];
-                    ch.motion.paths.keys().cloned().collect()
+                    ch.motion.paths.keys().map(|key| key.to_string()).collect()
                 };
                 ctx.chain_paths(id, &all_paths, false).map_err(EngineError::Other)?;
             }
