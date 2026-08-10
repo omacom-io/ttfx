@@ -326,55 +326,47 @@ impl EasingTracker {
 
 /// easing.SequenceEaser over owned elements (effects use it over id groups).
 #[derive(Debug, Clone)]
-pub struct SequenceEaser<T: Clone> {
+pub struct SequenceEaser<T> {
     pub sequence: Vec<T>,
     pub easing_tracker: EasingTracker,
-    pub added: Vec<T>,
-    pub removed: Vec<T>,
-    pub total: Vec<T>,
 }
 
-impl<T: Clone> SequenceEaser<T> {
+#[derive(Debug, Clone, Copy)]
+pub struct SequenceStep<'a, T> {
+    pub added: &'a [T],
+    pub removed: &'a [T],
+}
+
+impl<T> SequenceEaser<T> {
     pub fn new(sequence: Vec<T>, easing_function: Easing, total_steps: i64) -> Self {
         SequenceEaser {
             sequence,
             easing_tracker: EasingTracker::new(easing_function, total_steps, true),
-            added: Vec::new(),
-            removed: Vec::new(),
-            total: Vec::new(),
         }
     }
 
-    pub fn step(&mut self) -> &[T] {
+    pub fn step(&mut self) -> SequenceStep<'_, T> {
         let previous_eased = self.easing_tracker.eased_value;
         let eased_value = self.easing_tracker.step();
         let seq_len = self.sequence.len();
         if seq_len == 0 {
-            self.added.clear();
-            self.removed.clear();
-            self.total.clear();
-            return &self.added;
+            return SequenceStep { added: &[], removed: &[] };
         }
         // int() truncation, faithfully
         let length = (eased_value * seq_len as f64) as i64 as usize;
         let previous_length = (previous_eased * seq_len as f64) as i64 as usize;
 
         match length.cmp(&previous_length) {
-            std::cmp::Ordering::Greater => {
-                self.added = self.sequence[previous_length..length].to_vec();
-                self.removed.clear();
-            }
-            std::cmp::Ordering::Less => {
-                self.added.clear();
-                self.removed = self.sequence[length..previous_length].to_vec();
-            }
-            std::cmp::Ordering::Equal => {
-                self.added.clear();
-                self.removed.clear();
-            }
+            std::cmp::Ordering::Greater => SequenceStep {
+                added: &self.sequence[previous_length..length],
+                removed: &[],
+            },
+            std::cmp::Ordering::Less => SequenceStep {
+                added: &[],
+                removed: &self.sequence[length..previous_length],
+            },
+            std::cmp::Ordering::Equal => SequenceStep { added: &[], removed: &[] },
         }
-        self.total = self.sequence[..length].to_vec();
-        &self.added
     }
 
     pub fn is_complete(&self) -> bool {
@@ -383,8 +375,46 @@ impl<T: Clone> SequenceEaser<T> {
 
     pub fn reset(&mut self) {
         self.easing_tracker.reset();
-        self.added.clear();
-        self.removed.clear();
-        self.total.clear();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Easing, SequenceEaser};
+
+    #[derive(Debug, PartialEq)]
+    struct NonClone(u8);
+
+    #[test]
+    fn sequence_easer_returns_borrowed_deltas_without_clone() {
+        let mut easer = SequenceEaser::new(
+            vec![NonClone(0), NonClone(1), NonClone(2), NonClone(3)],
+            Easing::Linear,
+            4,
+        );
+
+        assert_eq!(easer.step().added, &[NonClone(0)]);
+        assert_eq!(easer.step().added, &[NonClone(1)]);
+        assert_eq!(easer.step().added, &[NonClone(2)]);
+        assert_eq!(easer.step().added, &[NonClone(3)]);
+        assert!(easer.step().added.is_empty());
+
+        easer.reset();
+        assert_eq!(easer.step().added, &[NonClone(0)]);
+    }
+
+    #[test]
+    fn sequence_easer_reports_reversed_easing_as_removed() {
+        let sequence: Vec<usize> = (0..100).collect();
+        let mut easer = SequenceEaser::new(sequence, Easing::OutBounce, 100);
+        let mut saw_removed = false;
+
+        for _ in 0..100 {
+            let step = easer.step();
+            assert!(step.added.is_empty() || step.removed.is_empty());
+            saw_removed |= !step.removed.is_empty();
+        }
+
+        assert!(saw_removed);
     }
 }
