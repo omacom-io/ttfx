@@ -27,7 +27,8 @@ impl Rng {
 
     pub fn from_entropy() -> Self {
         let mut buf = [0u8; 8];
-        // /dev/urandom is always present on the Linux targets we support.
+        // /dev/urandom is always present on the Unix targets we support
+        // (Linux and macOS).
         use std::io::Read;
         std::fs::File::open("/dev/urandom")
             .and_then(|mut f| f.read_exact(&mut buf))

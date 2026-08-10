@@ -30,6 +30,26 @@ jobs:
       - name: CLI contract corpus
         run: ./tools/tests/cli_corpus.sh
 
+  test-macos:
+    name: Tests (macOS)
+    # No parity suites here: bit-exact parity is pinned to Linux/glibc.
+    # This job proves the port builds, tests green (with the boundary-tolerant
+    # easing assertion for Apple's libm), and honors the CLI contract on macOS.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Unit + golden + trace tests
+        run: cargo test --release
+      - name: Build release binary
+        run: cargo build --release
+      - name: CLI contract corpus
+        run: ./tools/tests/cli_corpus.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ttfx-aarch64-apple-darwin
+          path: target/release/ttfx
+
   release-binary:
     name: Static musl binary
     runs-on: ubuntu-latest

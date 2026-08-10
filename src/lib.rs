@@ -13,7 +13,7 @@ static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 pub fn install_sigint_handler() {
     // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
-        libc_signal(2 /* SIGINT */, handle_sigint as usize);
+        libc_signal(2 /* SIGINT */, handle_sigint as *const () as usize);
     }
 }
 
