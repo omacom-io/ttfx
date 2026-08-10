@@ -24,8 +24,8 @@ TTE is MIT licensed and so is this port; the original copyright is preserved in
 ## Why a port
 
 TTE is a Python package. That's the right call for a library, but for a shell toy that lives in
-your prompt pipeline it means an interpreter, an install step, and ~85 ms of import before the
-first frame. ttfx is one dependency-free binary that starts in ~1 ms.
+your prompt pipeline it means an interpreter, an install step, and ~65 ms of import before the
+first frame. ttfx is one dependency-free binary that starts in half a millisecond.
 
 That difference is the whole reason this exists. On a fullscreen canvas the heavier effects run
 out of headroom under Python. Time to render a whole animation, pacing disabled so this measures
@@ -33,15 +33,17 @@ throughput rather than `sleep()`:
 
 | At 200×50 cells | frames | ttfx | Python TTE | ttfx fps |
 |---|---|---|---|---|
-| slide | 375 | 147 ms | 2,417 ms | 2,557 |
-| beams | 732 | 345 ms | 5,471 ms | 2,123 |
-| rings | 1,566 | 1,492 ms | 12,512 ms | 1,050 |
-| waves | 633 | 1,082 ms | 9,157 ms | 585 |
-| startup | — | 0.9 ms | 83 ms | — |
+| slide | 375 | 76 ms | 2,203 ms | 4,930 |
+| beams | 732 | 181 ms | 5,564 ms | 4,050 |
+| rings | 1,566 | 521 ms | 10,439 ms | 3,004 |
+| waves | 633 | 374 ms | 8,745 ms | 1,693 |
+| startup | — | 0.5 ms | 64 ms | — |
 
-Across the 35 effects that aren't gated on wall-clock time, the median speedup is **14.1×**
-(range 6.3×–26.6×). The two that are gated — `matrix` and `thunderstorm` — render 2.1× and 1.2×
-the frames in the same seconds instead of finishing sooner.
+Across the 35 effects that aren't gated on wall-clock time, the median speedup is **27.5×**
+(range 17.1×–47.4×). The two that are gated — `matrix` and `thunderstorm` — spend most of their
+runtime in a fixed animation duration that no implementation can shorten, so they come in at
+1.9× and 1.3×; what ttfx buys there is a far higher frame rate inside that window, not a shorter
+one.
 
 Reproduce it with `python3 tools/tests/bench_full.py`, or set `TTFX_BENCH_COLS`, `TTFX_BENCH_LINES`
 and `TTFX_BENCH_FILL=1` for the fullscreen numbers above. Both sides run their real user-facing
