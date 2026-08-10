@@ -25,6 +25,18 @@ fn get_piped_input() -> String {
     }
 }
 
+/// Skip the arena teardown on the way out. Output is already flushed and
+/// nothing in the engine has a Drop impl that does work, so freeing tens of
+/// thousands of characters — each with its own scenes, paths and frames — one
+/// by one is pure exit latency; on binarypath it is ~4% of the run.
+///
+/// Only the exit paths come through here. A resize rebuild drops its engine
+/// normally, so a long session of resizes does not accumulate them.
+fn forget_engine<E, C>(effect: E, ctx: C) {
+    std::mem::forget(effect);
+    std::mem::forget(ctx);
+}
+
 fn main() -> ExitCode {
     ttfx::restore_sigpipe();
     let cli = cli::Cli::parse();
@@ -109,39 +121,65 @@ fn main() -> ExitCode {
         }
     };
 
-    let config = cli.terminal_config();
-    let clock = if cli.parity_dump || cli.virtual_clock {
-        ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
-    } else {
-        ttfx::engine::ctx::Clock::real()
-    };
-    let frame_rate = config.frame_rate;
-    let mut ctx = match ttfx::engine::ctx::EngineCtx::new(&input_data, config, rng, clock) {
-        Ok(ctx) => ctx,
-        Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
-            eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
-            return ExitCode::from(1);
-        }
-        Err(e) => {
-            eprintln!("Error: {e}");
-            return ExitCode::from(1);
-        }
-    };
-    let _ = frame_rate;
-    let mut effect = effect_command.build_effect();
-
-    let result = if cli.parity_dump {
-        ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames).map(|_| ())
-    } else {
+    let mut config = cli.terminal_config();
+    // SIGWINCH is delivered to every process in the terminal's foreground group,
+    // whatever its stdout points at. Reacting to it when the animation is being
+    // redirected would leave a truncated first run followed by a complete second
+    // one in the file, so the resize path is tty-only.
+    let resize_aware = !cli.parity_dump && std::io::stdout().is_terminal();
+    if !cli.parity_dump {
         ttfx::install_sigint_handler();
-        ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
+    }
+    if resize_aware {
+        ttfx::install_sigwinch_handler();
+    }
+
+    let result = loop {
+        let clock = if cli.parity_dump || cli.virtual_clock {
+            ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
+        } else {
+            ttfx::engine::ctx::Clock::real()
+        };
+        let mut ctx = match ttfx::engine::ctx::EngineCtx::new(
+            &input_data,
+            config.clone(),
+            rng,
+            clock,
+        ) {
+            Ok(ctx) => ctx,
+            Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
+                eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
+                return ExitCode::from(1);
+            }
+            Err(e) => {
+                eprintln!("Error: {e}");
+                return ExitCode::from(1);
+            }
+        };
+        let mut effect = effect_command.build_effect();
+
+        let outcome = if cli.parity_dump {
+            ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
+                .map(|_| ttfx::engine::effect::RunOutcome::Complete)
+        } else {
+            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, resize_aware)
+        };
+        match outcome {
+            Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
+                // run_effect wiped the old area and left the cursor at its top,
+                // so the rebuild lays out from here. --reuse-canvas would send
+                // prep_canvas to a DEC anchor that no longer applies, so it only
+                // governs the first run. Dropping this engine normally is what
+                // keeps a long session of resizes from accumulating them.
+                config.reuse_canvas = false;
+                rng = ctx.rng;
+            }
+            done => {
+                forget_engine(effect, ctx);
+                break done.map(|_| ());
+            }
+        }
     };
-    // Output is already flushed, and nothing in the engine has a Drop impl that
-    // does work. Freeing an arena of tens of thousands of characters, each with
-    // its own scenes, paths and frames, is pure exit latency — on binarypath it
-    // is ~4% of the run. Hand it to the kernel instead.
-    std::mem::forget(effect);
-    std::mem::forget(ctx);
     std::mem::forget(input_data);
 
     match result {

@@ -116,6 +116,12 @@ pub struct Terminal {
     pub arena: Vec<EffectCharacter>,
     next_character_id: u32,
     pub input_colors_frequency: ColorFrequency,
+    terminal_dimensions: (i64, i64),
+    resize_seen_at: Option<Instant>,
+    layout: Layout,
+    /// Pre-wrap input line lengths — all `compute_layout` needs from the input,
+    /// so a resize can re-derive the geometry without re-preprocessing.
+    input_line_lengths: Vec<i64>,
     pub canvas_column_offset: i64,
     pub canvas_row_offset: i64,
     pub visible_top: i64,
@@ -179,23 +185,19 @@ impl Terminal {
         }
         .preprocess(input_data)?;
 
-        let (mut terminal_width, mut terminal_height) = get_terminal_dimensions();
-        let (canvas_height, canvas_width) =
-            get_canvas_dimensions(&config, &preprocessed_lines, terminal_width, terminal_height);
-        let mut canvas = Canvas::new(canvas_height, canvas_width);
-
-        let (canvas_column_offset, canvas_row_offset) = if !config.ignore_terminal_dimensions {
-            calc_canvas_offsets(&config, &canvas, terminal_width, terminal_height)
-        } else {
-            terminal_width = canvas.right;
-            terminal_height = canvas.top;
-            (0, 0)
-        };
-
-        let visible_top = std::cmp::min(canvas.top + canvas_row_offset, terminal_height);
-        let visible_bottom = std::cmp::max(canvas.bottom + canvas_row_offset, 1);
-        let visible_right = std::cmp::min(canvas.right + canvas_column_offset, terminal_width);
-        let visible_left = std::cmp::max(canvas.left + canvas_column_offset, 1);
+        let input_line_lengths: Vec<i64> = preprocessed_lines.iter().map(|l| l.len() as i64).collect();
+        let terminal_dimensions = get_terminal_dimensions();
+        let layout = compute_layout(&config, &input_line_lengths, terminal_dimensions.0, terminal_dimensions.1);
+        let mut canvas = Canvas::new(layout.canvas_height, layout.canvas_width);
+        let Layout {
+            column_offset: canvas_column_offset,
+            row_offset: canvas_row_offset,
+            visible_top,
+            visible_bottom,
+            visible_right,
+            visible_left,
+            ..
+        } = layout;
 
         let input_characters = setup_input_characters(&config, &mut canvas, &mut arena, preprocessed_lines)?
             .into_iter()
@@ -224,6 +226,10 @@ impl Terminal {
             arena,
             next_character_id,
             input_colors_frequency,
+            terminal_dimensions,
+            resize_seen_at: None,
+            layout,
+            input_line_lengths,
             canvas_column_offset,
             canvas_row_offset,
             visible_top,
@@ -602,6 +608,49 @@ impl Terminal {
         }
     }
 
+    /// Whether a resize has landed, settled, and actually moved something.
+    ///
+    /// Settled: dragging a window edge emits a SIGWINCH per step, and rebuilding
+    /// for each one pins the animation at its opening frames for the whole drag.
+    /// Each signal restarts a quiet window; the old canvas keeps animating until
+    /// it expires, so the wait costs nothing on screen.
+    ///
+    /// Moved something: a new terminal size is not enough. With an input-sized
+    /// canvas and no anchor offsets most resizes leave every rendered cell
+    /// exactly where it was, and restarting for those is pure loss. Explicitly
+    /// ignored dimensions are fixed by definition.
+    pub fn resize_settled(&mut self) -> bool {
+        const QUIET: std::time::Duration = std::time::Duration::from_millis(50);
+
+        if crate::take_terminal_resize() {
+            self.resize_seen_at = Some(Instant::now());
+        }
+        match self.resize_seen_at {
+            Some(seen) if seen.elapsed() >= QUIET => self.resize_seen_at = None,
+            _ => return false,
+        }
+        if self.config.ignore_terminal_dimensions {
+            return false;
+        }
+        let (width, height) = get_terminal_dimensions();
+        if (width, height) == self.terminal_dimensions {
+            return false;
+        }
+        compute_layout(&self.config, &self.input_line_lengths, width, height) != self.layout
+    }
+
+    /// After a resize: go back to the top of the area this run allocated, wipe
+    /// it, and leave the cursor there so the rebuilt canvas takes the same rows
+    /// instead of scrolling a second one into the terminal.
+    pub fn reset_canvas_area(&self, out: &mut impl Write) -> std::io::Result<()> {
+        out.write_all(ansi::DEC_RESTORE_CURSOR.as_bytes())?;
+        if self.visible_top > 0 {
+            out.write_all(ansi::move_cursor_up(self.visible_top as usize).as_bytes())?;
+        }
+        out.write_all(ansi::CLEAR_TO_END_OF_SCREEN.as_bytes())?;
+        Ok(())
+    }
+
     // --- tty side (upstream's second Terminal instance) ---
 
     pub fn prep_canvas(&mut self, out: &mut impl Write) -> std::io::Result<()> {
@@ -671,10 +720,54 @@ fn get_terminal_dimensions() -> (i64, i64) {
     }
 }
 
+/// Everything about the drawing area that is derived from the terminal size.
+/// A resize only matters if recomputing this yields something different, so it
+/// is factored out of Terminal::new rather than inlined there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Layout {
+    canvas_height: i64,
+    canvas_width: i64,
+    column_offset: i64,
+    row_offset: i64,
+    visible_top: i64,
+    visible_bottom: i64,
+    visible_right: i64,
+    visible_left: i64,
+}
+
+fn compute_layout(
+    config: &TerminalConfig,
+    line_lengths: &[i64],
+    terminal_width: i64,
+    terminal_height: i64,
+) -> Layout {
+    let (canvas_height, canvas_width) =
+        get_canvas_dimensions(config, line_lengths, terminal_width, terminal_height);
+    let canvas = Canvas::new(canvas_height, canvas_width);
+    let (mut width, mut height) = (terminal_width, terminal_height);
+    let (column_offset, row_offset) = if !config.ignore_terminal_dimensions {
+        calc_canvas_offsets(config, &canvas, width, height)
+    } else {
+        width = canvas.right;
+        height = canvas.top;
+        (0, 0)
+    };
+    Layout {
+        canvas_height,
+        canvas_width,
+        column_offset,
+        row_offset,
+        visible_top: std::cmp::min(canvas.top + row_offset, height),
+        visible_bottom: std::cmp::max(canvas.bottom + row_offset, 1),
+        visible_right: std::cmp::min(canvas.right + column_offset, width),
+        visible_left: std::cmp::max(canvas.left + column_offset, 1),
+    }
+}
+
 /// Terminal._get_canvas_dimensions -> (height, width).
 fn get_canvas_dimensions(
     config: &TerminalConfig,
-    preprocessed_lines: &[Vec<CharId>],
+    line_lengths: &[i64],
     terminal_width: i64,
     terminal_height: i64,
 ) -> (i64, i64) {
@@ -683,7 +776,7 @@ fn get_canvas_dimensions(
     } else if config.canvas_width == 0 {
         terminal_width
     } else {
-        let input_width = preprocessed_lines.iter().map(|l| l.len() as i64).max().unwrap_or(0);
+        let input_width = line_lengths.iter().copied().max().unwrap_or(0);
         if config.ignore_terminal_dimensions {
             input_width
         } else {
@@ -695,11 +788,11 @@ fn get_canvas_dimensions(
     } else if config.canvas_height == 0 {
         terminal_height
     } else {
-        let input_height = preprocessed_lines.len() as i64;
+        let input_height = line_lengths.len() as i64;
         if config.ignore_terminal_dimensions {
             input_height
         } else if config.wrap_text {
-            std::cmp::min(wrapped_line_count(preprocessed_lines, canvas_width), terminal_height)
+            std::cmp::min(wrapped_line_count(line_lengths, canvas_width), terminal_height)
         } else {
             std::cmp::min(terminal_height, input_height)
         }
@@ -707,10 +800,10 @@ fn get_canvas_dimensions(
     (canvas_height, canvas_width)
 }
 
-fn wrapped_line_count(lines: &[Vec<CharId>], width: i64) -> i64 {
+fn wrapped_line_count(line_lengths: &[i64], width: i64) -> i64 {
     let mut count: i64 = 0;
-    for line in lines {
-        let mut remaining = line.len() as i64;
+    for &length in line_lengths {
+        let mut remaining = length;
         while remaining > width {
             count += 1;
             remaining -= width;
