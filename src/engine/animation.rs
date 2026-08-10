@@ -25,6 +25,80 @@ pub enum SyncMetric {
     Step,
 }
 
+thread_local! {
+    /// Reused assembly buffer for CharacterVisual::new's SGR string.
+    static FORMAT_SCRATCH: std::cell::RefCell<String> = const { std::cell::RefCell::new(String::new()) };
+}
+
+/// Inline capacity for a formatted symbol. A 24-bit foreground and background
+/// pair plus a reset is 42 bytes, so all but pathological styling fits.
+const INLINE_SYMBOL_CAPACITY: usize = 63;
+
+/// The precomputed ANSI string for one cell, stored inline when it fits.
+///
+/// The frame writer emits one of these per visible cell — millions of times
+/// over a run — and a `str` copy of a couple of dozen bytes is dominated by the
+/// memcpy call itself. An inline buffer of fixed size lets the writer copy the
+/// whole block unconditionally and then advance by the real length.
+#[derive(Debug, Clone)]
+pub enum FormattedSymbol {
+    Inline { bytes: [u8; INLINE_SYMBOL_CAPACITY], len: u8 },
+    Heap(Box<str>),
+}
+
+impl FormattedSymbol {
+    fn new(text: &str) -> Self {
+        if text.len() <= INLINE_SYMBOL_CAPACITY {
+            let mut bytes = [0u8; INLINE_SYMBOL_CAPACITY];
+            bytes[..text.len()].copy_from_slice(text.as_bytes());
+            FormattedSymbol::Inline { bytes, len: text.len() as u8 }
+        } else {
+            FormattedSymbol::Heap(text.into())
+        }
+    }
+
+    #[inline]
+    pub fn as_str(&self) -> &str {
+        match self {
+            FormattedSymbol::Inline { bytes, len } => {
+                // SAFETY: built from a &str prefix, so the range is valid UTF-8.
+                unsafe { std::str::from_utf8_unchecked(&bytes[..*len as usize]) }
+            }
+            FormattedSymbol::Heap(text) => text,
+        }
+    }
+
+    /// Append to a UTF-8 byte buffer, copying the whole inline block in one go.
+    #[inline]
+    pub fn append_to(&self, out: &mut Vec<u8>) {
+        match self {
+            FormattedSymbol::Inline { bytes, len } => {
+                if out.len() + INLINE_SYMBOL_CAPACITY > out.capacity() {
+                    out.reserve(INLINE_SYMBOL_CAPACITY);
+                }
+                let start = out.len();
+                // SAFETY: the reserve above guarantees room for the whole block;
+                // only the first `len` bytes are published as initialized.
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        bytes.as_ptr(),
+                        out.as_mut_ptr().add(start),
+                        INLINE_SYMBOL_CAPACITY,
+                    );
+                    out.set_len(start + *len as usize);
+                }
+            }
+            FormattedSymbol::Heap(text) => out.extend_from_slice(text.as_bytes()),
+        }
+    }
+}
+
+impl PartialEq for FormattedSymbol {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
 /// animation.CharacterVisual with the formatted ANSI string precomputed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CharacterVisual {
@@ -40,7 +114,7 @@ pub struct CharacterVisual {
     pub colors: Option<ColorPair>,
     pub fg_color_code: Option<ColorCode>,
     pub bg_color_code: Option<ColorCode>,
-    pub formatted_symbol: String,
+    pub formatted_symbol: FormattedSymbol,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -73,9 +147,16 @@ impl CharacterVisual {
             colors: p.colors,
             fg_color_code: p.fg_color_code,
             bg_color_code: p.bg_color_code,
-            formatted_symbol: String::new(),
+            formatted_symbol: FormattedSymbol::Inline { bytes: [0; INLINE_SYMBOL_CAPACITY], len: 0 },
         };
-        vis.formatted_symbol = vis.format_symbol();
+        // Effects rebuild visuals every frame, so the SGR string is assembled in
+        // a reused scratch buffer rather than a fresh allocation per visual.
+        FORMAT_SCRATCH.with(|scratch| {
+            let mut scratch = scratch.borrow_mut();
+            scratch.clear();
+            vis.format_symbol_into(&mut scratch);
+            vis.formatted_symbol = FormattedSymbol::new(&scratch);
+        });
         vis
     }
 
@@ -85,8 +166,7 @@ impl CharacterVisual {
 
     /// SGR emission in upstream's fixed order; `dim` intentionally omitted;
     /// bare symbol when nothing applies.
-    fn format_symbol(&self) -> String {
-        let mut fmt = String::new();
+    fn format_symbol_into(&self, fmt: &mut String) {
         if self.bold {
             fmt.push_str(ansi::BOLD);
         }
@@ -109,15 +189,14 @@ impl CharacterVisual {
             fmt.push_str(ansi::STRIKETHROUGH);
         }
         if let Some(code) = &self.fg_color_code {
-            ansi::fg(code, &mut fmt);
+            ansi::fg(code, fmt);
         }
         if let Some(code) = &self.bg_color_code {
-            ansi::bg(code, &mut fmt);
+            ansi::bg(code, fmt);
         }
-        if fmt.is_empty() {
-            self.symbol.clone()
-        } else {
-            format!("{fmt}{}{}", self.symbol, ansi::RESET_ALL)
+        fmt.push_str(&self.symbol);
+        if fmt.len() != self.symbol.len() {
+            fmt.push_str(ansi::RESET_ALL);
         }
     }
 }

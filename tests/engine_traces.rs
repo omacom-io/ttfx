@@ -57,7 +57,7 @@ fn snapshot(ctx: &mut EngineCtx, log: &mut Vec<String>, tick: i64, ids: &[CharId
             ch.motion.current_coord.column,
             ch.motion.current_coord.row,
             ch.layer,
-            esc(&ch.animation.current_character_visual.formatted_symbol),
+            esc(ch.animation.current_character_visual.formatted_symbol.as_str()),
         ));
     }
 }
