@@ -48,8 +48,8 @@ fn snapshot(ctx: &mut EngineCtx, log: &mut Vec<String>, tick: i64, ids: &[CharId
     log.append(ctx.event_log.as_mut().unwrap());
     for &id in ids {
         let ch = &ctx.terminal.arena[id.0 as usize];
-        let ap = ch.motion.active_path.clone().unwrap_or_else(|| "-".to_string());
-        let sc = ch.animation.active_scene.clone().unwrap_or_else(|| "-".to_string());
+        let ap = ch.motion.active_path.as_deref().unwrap_or("-");
+        let sc = ch.animation.active_scene.as_deref().unwrap_or("-");
         let active = if ch.is_active() { "True" } else { "False" };
         log.push(format!(
             "tick={tick} char={} coord={},{} layer={} path={ap} scene={sc} vis={} active={active}",

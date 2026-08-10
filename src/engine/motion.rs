@@ -2,6 +2,8 @@
 //! logic that fires events (Path.step, Motion.move, activate_path) lives on
 //! EngineCtx (ctx.rs) so actions run inline at upstream emission points.
 
+use std::rc::Rc;
+
 use crate::engine::events::WaypointKey;
 use crate::utils::easing::Easing;
 use crate::utils::geometry::{self, Coord};
@@ -152,8 +154,8 @@ pub struct Motion {
     pub paths: OrderedMap<Path>,
     pub current_coord: Coord,
     pub previous_coord: Coord,
-    pub active_path: Option<String>,
-    pub completed_path: Option<String>,
+    pub active_path: Option<Rc<str>>,
+    pub completed_path: Option<Rc<str>>,
 }
 
 impl Motion {

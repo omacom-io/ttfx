@@ -447,11 +447,11 @@ impl Effect for Swarm {
                     let id = self.current_swarm[i];
                     let active_path_id = ctx.terminal.arena[id.0 as usize].motion.active_path.clone();
                     if let Some(path_id) = active_path_id {
-                        if path_id != self.active_swarm_area
+                        if path_id.as_ref() != self.active_swarm_area
                             && path_id.contains("swarm_area")
                             && first_char_digit(&path_id) > first_char_digit(&self.active_swarm_area)
                         {
-                            self.active_swarm_area = path_id;
+                            self.active_swarm_area = path_id.to_string();
                             for &other in &self.current_swarm.clone() {
                                 if other != id && ctx.rng.random() < self.config.swarm_coordination {
                                     let area = self.active_swarm_area.clone();
