@@ -44,10 +44,6 @@ pub fn take_terminal_resize() -> bool {
     TERMINAL_RESIZED.swap(false, Ordering::SeqCst)
 }
 
-pub(crate) fn terminal_resize_pending() -> bool {
-    TERMINAL_RESIZED.load(Ordering::SeqCst)
-}
-
 /// Restore default SIGPIPE so `ttfx ... | head` dies quietly like any Unix
 /// tool instead of panicking on a broken pipe (Rust ignores SIGPIPE by default).
 pub fn restore_sigpipe() {
@@ -71,28 +67,6 @@ unsafe fn libc_signal(signum: i32, handler: usize) {
     }
 }
 
-/// Wait for the window to stop changing size before acting on a resize.
-/// Dragging a window edge emits a SIGWINCH per step; rebuilding for each one
-/// pins the animation at its opening frames for the whole drag and then starts
-/// it over on release.
-pub fn wait_for_resize_to_settle() {
-    use std::time::{Duration, Instant};
-    const QUIET: Duration = Duration::from_millis(40);
-    const LIMIT: Duration = Duration::from_secs(2);
-
-    let deadline = Instant::now() + LIMIT;
-    let mut last = crate::engine::terminal::get_terminal_dimensions();
-    while Instant::now() < deadline && !interrupted() {
-        std::thread::sleep(QUIET);
-        take_terminal_resize();
-        let current = crate::engine::terminal::get_terminal_dimensions();
-        if current == last {
-            break;
-        }
-        last = current;
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,9 +75,7 @@ mod tests {
     fn terminal_resize_notifications_are_consumed() {
         take_terminal_resize();
         handle_sigwinch(SIGWINCH);
-        assert!(terminal_resize_pending());
         assert!(take_terminal_resize());
-        assert!(!terminal_resize_pending());
         assert!(!take_terminal_resize());
     }
 }

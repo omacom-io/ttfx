@@ -158,35 +158,25 @@ fn main() -> ExitCode {
         };
         let mut effect = effect_command.build_effect();
 
-        if cli.parity_dump {
-            let dumped = ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
-                .map(|_| ());
-            forget_engine(effect, ctx);
-            break dumped;
-        }
-
-        let outcome = if resize_aware {
-            ttfx::engine::effect::run_effect_resize_aware(effect.as_mut(), &mut ctx)
-        } else {
-            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
+        let outcome = if cli.parity_dump {
+            ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
                 .map(|_| ttfx::engine::effect::RunOutcome::Complete)
+        } else {
+            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, resize_aware)
         };
         match outcome {
             Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
-                // run_effect_resize_aware wiped the old area and left the cursor
-                // at its top, so the rebuild lays out from here. Reusing the
-                // canvas would restore a DEC anchor that no longer applies.
+                // run_effect wiped the old area and left the cursor at its top,
+                // so the rebuild lays out from here. --reuse-canvas would send
+                // prep_canvas to a DEC anchor that no longer applies, so it only
+                // governs the first run. Dropping this engine normally is what
+                // keeps a long session of resizes from accumulating them.
                 config.reuse_canvas = false;
                 rng = ctx.rng;
-                ttfx::wait_for_resize_to_settle();
             }
-            Ok(_) => {
+            done => {
                 forget_engine(effect, ctx);
-                break Ok(());
-            }
-            Err(e) => {
-                forget_engine(effect, ctx);
-                break Err(e);
+                break done.map(|_| ());
             }
         }
     };

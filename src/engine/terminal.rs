@@ -117,6 +117,7 @@ pub struct Terminal {
     next_character_id: u32,
     pub input_colors_frequency: ColorFrequency,
     terminal_dimensions: (i64, i64),
+    resize_seen_at: Option<Instant>,
     layout: Layout,
     /// Pre-wrap input line lengths — all `compute_layout` needs from the input,
     /// so a resize can re-derive the geometry without re-preprocessing.
@@ -226,6 +227,7 @@ impl Terminal {
             next_character_id,
             input_colors_frequency,
             terminal_dimensions,
+            resize_seen_at: None,
             layout,
             input_line_lengths,
             canvas_column_offset,
@@ -606,12 +608,27 @@ impl Terminal {
         }
     }
 
-    /// Whether a SIGWINCH actually moved anything. A new terminal size is not
-    /// enough: with an input-sized canvas and no anchor offsets, most resizes
-    /// leave every rendered cell exactly where it was, and restarting the
-    /// animation for those is pure loss. Explicitly ignored dimensions are
-    /// fixed by definition.
-    pub fn layout_changed(&self) -> bool {
+    /// Whether a resize has landed, settled, and actually moved something.
+    ///
+    /// Settled: dragging a window edge emits a SIGWINCH per step, and rebuilding
+    /// for each one pins the animation at its opening frames for the whole drag.
+    /// Each signal restarts a quiet window; the old canvas keeps animating until
+    /// it expires, so the wait costs nothing on screen.
+    ///
+    /// Moved something: a new terminal size is not enough. With an input-sized
+    /// canvas and no anchor offsets most resizes leave every rendered cell
+    /// exactly where it was, and restarting for those is pure loss. Explicitly
+    /// ignored dimensions are fixed by definition.
+    pub fn resize_settled(&mut self) -> bool {
+        const QUIET: std::time::Duration = std::time::Duration::from_millis(50);
+
+        if crate::take_terminal_resize() {
+            self.resize_seen_at = Some(Instant::now());
+        }
+        match self.resize_seen_at {
+            Some(seen) if seen.elapsed() >= QUIET => self.resize_seen_at = None,
+            _ => return false,
+        }
         if self.config.ignore_terminal_dimensions {
             return false;
         }
@@ -678,33 +695,15 @@ impl Terminal {
         let frame_delay = 1.0 / self.frame_rate as f64;
         let elapsed = self.last_time_printed.elapsed().as_secs_f64();
         if elapsed < frame_delay {
-            sleep_until_signal(std::time::Duration::from_secs_f64(frame_delay - elapsed));
+            std::thread::sleep(std::time::Duration::from_secs_f64(frame_delay - elapsed));
         }
         self.last_time_printed = Instant::now();
     }
 }
 
-/// Sleep for frame pacing in slices, so an interrupt or a resize is noticed
-/// within a few milliseconds instead of at the end of the frame delay.
-/// `thread::sleep` retries through EINTR, so a signal alone will not cut it.
-fn sleep_until_signal(duration: std::time::Duration) {
-    const SLICE: std::time::Duration = std::time::Duration::from_millis(4);
-    let deadline = Instant::now() + duration;
-    loop {
-        if crate::interrupted() || crate::terminal_resize_pending() {
-            return;
-        }
-        let remaining = deadline.saturating_duration_since(Instant::now());
-        if remaining.is_zero() {
-            return;
-        }
-        std::thread::sleep(remaining.min(SLICE));
-    }
-}
-
 /// shutil.get_terminal_size semantics: COLUMNS/LINES env vars win; else query
 /// the tty; on failure (80, 24).
-pub(crate) fn get_terminal_dimensions() -> (i64, i64) {
+fn get_terminal_dimensions() -> (i64, i64) {
     let env_dim = |name: &str| -> Option<i64> {
         std::env::var(name).ok()?.parse::<i64>().ok()
     };

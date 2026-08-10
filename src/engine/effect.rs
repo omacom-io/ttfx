@@ -23,21 +23,10 @@ pub enum RunOutcome {
 /// __main__ run loop with terminal_output(): prep canvas, stream frames,
 /// always restore the cursor (even on error — RAII would not run on a raw
 /// process exit, so this is explicit).
-pub fn run_effect(effect: &mut dyn Effect, ctx: &mut EngineCtx) -> Result<(), EngineError> {
-    run_effect_inner(effect, ctx, false).map(|_| ())
-}
-
-/// Run an effect until it completes, is interrupted, or the terminal changes
-/// size. The CLI uses the resize outcome to rebuild dimension-dependent effect
-/// state; `run_effect` remains unchanged for library callers.
-pub fn run_effect_resize_aware(
-    effect: &mut dyn Effect,
-    ctx: &mut EngineCtx,
-) -> Result<RunOutcome, EngineError> {
-    run_effect_inner(effect, ctx, true)
-}
-
-fn run_effect_inner(
+///
+/// With `stop_on_resize`, a settled terminal resize also ends the pass, wiped
+/// and parked at the top of the area so the caller can rebuild in place.
+pub fn run_effect(
     effect: &mut dyn Effect,
     ctx: &mut EngineCtx,
     stop_on_resize: bool,
@@ -78,13 +67,10 @@ fn run_effect_inner(
     result.map(|_| outcome)
 }
 
-fn requested_stop(ctx: &EngineCtx, stop_on_resize: bool) -> Option<RunOutcome> {
+fn requested_stop(ctx: &mut EngineCtx, stop_on_resize: bool) -> Option<RunOutcome> {
     if crate::interrupted() {
         Some(RunOutcome::Interrupted)
-    } else if stop_on_resize
-        && crate::take_terminal_resize()
-        && ctx.terminal.layout_changed()
-    {
+    } else if stop_on_resize && ctx.terminal.resize_settled() {
         Some(RunOutcome::TerminalResized)
     } else {
         None
