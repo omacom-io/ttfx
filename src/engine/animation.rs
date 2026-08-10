@@ -195,7 +195,7 @@ impl Scene {
             }
             return Some(ColorCode::Xterm(hexterm::hex_to_xterm(&color.rgb_color)));
         }
-        Some(ColorCode::Rgb(color.rgb_color.clone()))
+        Some(ColorCode::Rgb(color.rgb_color.to_string()))
     }
 
     /// Scene.add_frame with the preexisting-color/bold overrides.
@@ -396,7 +396,7 @@ impl Animation {
             }
             return Some(ColorCode::Xterm(hexterm::hex_to_xterm(&color.rgb_color)));
         }
-        Some(ColorCode::Rgb(color.rgb_color.clone()))
+        Some(ColorCode::Rgb(color.rgb_color.to_string()))
     }
 
     /// Animation.new_scene: auto-ids are stringified integers probing upward;
