@@ -249,7 +249,7 @@ impl Effect for Middleout {
             };
             ctx.active_characters = characters.into_iter().collect();
             // upstream iterates the set here; canonical ascending character_id
-            let ordered: Vec<CharId> = ctx.active_characters.iter().copied().collect();
+            let ordered: Vec<CharId> = ctx.active_characters.iter().collect();
             for id in ordered {
                 ctx.activate_path(self, id, "full");
                 ctx.activate_scene(self, id, "full");

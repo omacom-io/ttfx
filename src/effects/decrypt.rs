@@ -348,7 +348,7 @@ impl Effect for Decrypt {
             // canonical ascending-id order.
             ctx.active_characters.clear();
             ctx.active_characters.extend(self.decrypting_pending_chars.iter().copied());
-            let active: Vec<CharId> = ctx.active_characters.iter().copied().collect();
+            let active: Vec<CharId> = ctx.active_characters.iter().collect();
             for id in active {
                 ctx.activate_scene(self, id, "fast_decrypt");
             }

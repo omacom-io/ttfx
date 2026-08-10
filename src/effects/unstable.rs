@@ -415,14 +415,13 @@ impl Effect for Unstable {
             if !ctx.active_characters.is_empty() {
                 // Upstream iterates the active_characters set (effect_unstable.py:332);
                 // canonical order is ascending character_id (shim patched to match).
-                let snapshot: Vec<CharId> = ctx.active_characters.iter().copied().collect();
+                let snapshot: Vec<CharId> = ctx.active_characters.iter().collect();
                 for id in snapshot {
                     ctx.tick(self, id);
                 }
                 let retained: Vec<CharId> = ctx
                     .active_characters
                     .iter()
-                    .copied()
                     .filter(|&id| {
                         let ch = &ctx.terminal.arena[id.0 as usize];
                         let explosion_target = ch.motion.paths.get("explosion").unwrap().waypoints[0].coord;
@@ -453,14 +452,13 @@ impl Effect for Unstable {
         if self.phase == Phase::Reassembly && !ctx.active_characters.is_empty() {
             // Upstream iterates the active_characters set (effect_unstable.py:354);
             // canonical order is ascending character_id (shim patched to match).
-            let snapshot: Vec<CharId> = ctx.active_characters.iter().copied().collect();
+            let snapshot: Vec<CharId> = ctx.active_characters.iter().collect();
             for id in snapshot {
                 ctx.tick(self, id);
             }
             let retained: Vec<CharId> = ctx
                 .active_characters
                 .iter()
-                .copied()
                 .filter(|&id| {
                     let ch = &ctx.terminal.arena[id.0 as usize];
                     let reassembly_target = ch.motion.paths.get("reassembly").unwrap().waypoints[0].coord;

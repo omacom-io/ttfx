@@ -9,10 +9,10 @@
 //! by id after every emission point, and segment walks are index-based so
 //! reentrant list mutation behaves like Python list iteration.
 
-use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::time::Instant;
 
+use crate::engine::active_characters::ActiveCharacters;
 use crate::engine::animation::SyncMetric;
 use crate::engine::character::CharId;
 use crate::engine::error::EngineError;
@@ -90,7 +90,7 @@ pub struct EngineCtx {
     pub clock: Clock,
     /// BaseEffectIterator.active_characters — canonical ascending-id order
     /// (CharId order == character_id order by construction).
-    pub active_characters: BTreeSet<CharId>,
+    pub active_characters: ActiveCharacters,
     active_character_scratch: Vec<CharId>,
     pub preexisting_colors_present: bool,
     /// When Some, every event emission appends a trace line (test harness).
@@ -108,7 +108,7 @@ impl EngineCtx {
             terminal,
             rng,
             clock,
-            active_characters: BTreeSet::new(),
+            active_characters: ActiveCharacters::new(),
             active_character_scratch: Vec::new(),
             preexisting_colors_present,
             event_log: None,
@@ -640,7 +640,7 @@ impl EngineCtx {
     pub fn update(&mut self, hooks: &mut dyn EffectHooks) {
         let mut snapshot = std::mem::take(&mut self.active_character_scratch);
         snapshot.clear();
-        snapshot.extend(self.active_characters.iter().copied());
+        snapshot.extend(self.active_characters.iter());
         for &id in &snapshot {
             self.tick(hooks, id);
         }

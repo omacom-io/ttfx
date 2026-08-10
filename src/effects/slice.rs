@@ -250,7 +250,7 @@ impl Effect for Slice {
                 }
             }
         }
-        let active: Vec<CharId> = ctx.active_characters.iter().copied().collect();
+        let active: Vec<CharId> = ctx.active_characters.iter().collect();
         for id in active {
             ctx.terminal.set_character_visibility(id, true);
         }
