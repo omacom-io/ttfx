@@ -60,7 +60,7 @@ fn easing_matches_python_bit_exactly() {
             // (measured max 2.3e-16 absolute on macOS), so other platforms get
             // the boundary-tolerant assertion instead. Quantized effect output
             // absorbs this either way.
-            let within_tolerance = if cfg!(target_os = "linux") {
+            let within_tolerance = if cfg!(all(target_os = "linux", target_env = "gnu")) {
                 // CubicBezier tolerates 1 ulp even here: in optimized builds
                 // LLVM const-folds some powf calls, which can differ from
                 // runtime libm by an ulp.
