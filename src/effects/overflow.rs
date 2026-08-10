@@ -1,6 +1,6 @@
 //! overflow, ported from effects/effect_overflow.py.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use clap::Args;
 
@@ -92,7 +92,7 @@ impl Row {
 
 pub struct Overflow {
     config: OverflowConfig,
-    pending_rows: Vec<Row>,
+    pending_rows: VecDeque<Row>,
     active_rows: Vec<Row>,
     character_final_color_map: HashMap<CharId, Color>,
     delay: i64,
@@ -103,7 +103,7 @@ impl Overflow {
     pub fn new(config: OverflowConfig) -> Self {
         Overflow {
             config,
-            pending_rows: Vec::new(),
+            pending_rows: VecDeque::new(),
             active_rows: Vec::new(),
             character_final_color_map: HashMap::new(),
             delay: 0,
@@ -180,7 +180,7 @@ impl Effect for Overflow {
                         copy.animation.input_bg_color = input_bg;
                         copied_characters.push(copy_id);
                     }
-                    self.pending_rows.push(Row { characters: copied_characters, final_: false });
+                    self.pending_rows.push_back(Row { characters: copied_characters, final_: false });
                 }
             }
         }
@@ -220,7 +220,7 @@ impl Effect for Overflow {
                     );
                 }
             }
-            self.pending_rows.push(Row { characters: row, final_: true });
+            self.pending_rows.push_back(Row { characters: row, final_: true });
         }
         self.delay = 0;
         let steps = std::cmp::max(
@@ -240,7 +240,7 @@ impl Effect for Overflow {
     fn next_frame(&mut self, ctx: &mut EngineCtx) -> Option<String> {
         if !self.pending_rows.is_empty() {
             if self.delay == 0 {
-                let spectrum = self.overflow_gradient.as_ref().unwrap().spectrum.clone();
+                let spectrum = &self.overflow_gradient.as_ref().unwrap().spectrum;
                 for _ in 0..ctx.rng.randint(1, self.config.overflow_speed) {
                     if !self.pending_rows.is_empty() {
                         for row in &self.active_rows {
@@ -252,7 +252,7 @@ impl Effect for Overflow {
                                 row.set_color(ctx, Some(spectrum[index].clone()), None);
                             }
                         }
-                        let next_row = self.pending_rows.remove(0);
+                        let next_row = self.pending_rows.pop_front().unwrap();
                         next_row.setup(ctx);
                         next_row.move_up(ctx);
                         if !next_row.final_ {
