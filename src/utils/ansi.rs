@@ -32,20 +32,43 @@ pub enum ColorCode {
     Xterm(u8),
 }
 
+/// Decimal digits of a byte, without going through core::fmt. Every restyled
+/// character reassembles its SGR sequence, so the formatting machinery shows up
+/// in profiles.
+#[inline]
+fn push_decimal(out: &mut String, value: u8) {
+    if value >= 100 {
+        out.push((b'0' + value / 100) as char);
+    }
+    if value >= 10 {
+        out.push((b'0' + (value / 10) % 10) as char);
+    }
+    out.push((b'0' + value % 10) as char);
+}
+
 /// colorterm._color: fg selector 38, bg selector 48.
 fn sgr_color(code: &ColorCode, location: u8, out: &mut String) {
+    out.push_str("\x1b[");
+    push_decimal(out, location);
     match code {
         ColorCode::Rgb(hex) => {
             let s = hex.trim_matches('#');
             let r = u8::from_str_radix(&s[0..2], 16).unwrap();
             let g = u8::from_str_radix(&s[2..4], 16).unwrap();
             let b = u8::from_str_radix(&s[4..6], 16).unwrap();
-            write!(out, "\x1b[{location};2;{r};{g};{b}m").unwrap();
+            out.push_str(";2;");
+            push_decimal(out, r);
+            out.push(';');
+            push_decimal(out, g);
+            out.push(';');
+            push_decimal(out, b);
         }
         ColorCode::Xterm(n) => {
-            write!(out, "\x1b[{location};5;{n}m").unwrap();
+            out.push_str(";5;");
+            push_decimal(out, *n);
         }
     }
+    out.push('m');
 }
 
 pub fn fg(code: &ColorCode, out: &mut String) {
