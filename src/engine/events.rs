@@ -59,7 +59,44 @@ pub enum CallerRef<'a> {
     Waypoint(&'a WaypointKey),
 }
 
+/// FNV-1a over a byte run, seeded so the three caller kinds cannot collide.
+#[inline]
+fn fnv(mut hash: u32, bytes: &[u8]) -> u32 {
+    for &byte in bytes {
+        hash ^= byte as u32;
+        hash = hash.wrapping_mul(16_777_619);
+    }
+    hash
+}
+
+impl CallerRef<'_> {
+    /// A cheap digest of the caller's identity. Registered entries store theirs,
+    /// so a lookup hashes once and then rejects candidates with an integer
+    /// compare instead of a string compare each.
+    #[inline]
+    fn fingerprint(self) -> u32 {
+        match self {
+            CallerRef::Scene(id) => fnv(0x0100_0193, id.as_bytes()),
+            CallerRef::Path(id) => fnv(0x0200_0193, id.as_bytes()),
+            CallerRef::Waypoint(key) => {
+                let hash = fnv(0x0300_0193, &key.coord.column.to_le_bytes());
+                let hash = fnv(hash, &key.coord.row.to_le_bytes());
+                fnv(hash, key.waypoint_id.as_bytes())
+            }
+        }
+    }
+}
+
 impl CallerKey {
+    #[inline]
+    fn as_ref(&self) -> CallerRef<'_> {
+        match self {
+            CallerKey::Scene(id) => CallerRef::Scene(id),
+            CallerKey::Path(id) => CallerRef::Path(id),
+            CallerKey::Waypoint(key) => CallerRef::Waypoint(key),
+        }
+    }
+
     #[inline]
     fn matches(&self, caller: CallerRef<'_>) -> bool {
         match (self, caller) {
@@ -112,8 +149,16 @@ pub enum EventAction {
 /// nothing could match.
 #[derive(Debug, Clone, Default)]
 pub struct EventHandler {
-    registered_events: Vec<((Event, CallerKey), Vec<EventAction>)>,
+    registered_events: Vec<RegisteredEvent>,
     subscribed: u8,
+}
+
+#[derive(Debug, Clone)]
+struct RegisteredEvent {
+    event: Event,
+    fingerprint: u32,
+    caller: CallerKey,
+    actions: Vec<EventAction>,
 }
 
 impl EventHandler {
@@ -121,14 +166,21 @@ impl EventHandler {
     /// DuplicateEventRegistrationError). Caller/target id resolution and type
     /// validation happen in EngineCtx::register_event, which has arena access.
     pub fn push(&mut self, event: Event, caller: CallerKey, action: EventAction) -> Result<(), String> {
-        let key = (event, caller);
-        if let Some(entry) = self.registered_events.iter_mut().find(|(k, _)| *k == key) {
-            if entry.1.contains(&action) {
-                return Err(format!("duplicate event registration: {:?} {:?}", entry.0, action));
+        let fingerprint = caller.as_ref().fingerprint();
+        let existing = self.registered_events.iter_mut().find(|entry| {
+            entry.event == event && entry.fingerprint == fingerprint && entry.caller == caller
+        });
+        if let Some(entry) = existing {
+            if entry.actions.contains(&action) {
+                return Err(format!(
+                    "duplicate event registration: {:?} {:?}",
+                    (entry.event, &entry.caller),
+                    action
+                ));
             }
-            entry.1.push(action);
+            entry.actions.push(action);
         } else {
-            self.registered_events.push((key, vec![action]));
+            self.registered_events.push(RegisteredEvent { event, fingerprint, caller, actions: vec![action] });
         }
         self.subscribed |= event.bit();
         Ok(())
@@ -146,12 +198,23 @@ impl EventHandler {
         if !self.subscribes(event) {
             return None;
         }
-        self.registered_events.iter().position(|((e, c), _)| *e == event && c.matches(caller))
+        // Hashing the query only pays once there is a run of candidates to
+        // reject; a table with a couple of entries compares them directly.
+        if self.registered_events.len() <= 2 {
+            return self
+                .registered_events
+                .iter()
+                .position(|entry| entry.event == event && entry.caller.matches(caller));
+        }
+        let fingerprint = caller.fingerprint();
+        self.registered_events.iter().position(|entry| {
+            entry.event == event && entry.fingerprint == fingerprint && entry.caller.matches(caller)
+        })
     }
 
     #[inline]
     pub fn actions(&self, index: usize) -> &[EventAction] {
-        &self.registered_events[index].1
+        &self.registered_events[index].actions
     }
 
     pub fn clear(&mut self) {
