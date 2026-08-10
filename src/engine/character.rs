@@ -71,6 +71,8 @@ impl EffectCharacter {
     /// incomplete OR motion has an active path. Note looping scenes report
     /// complete, so loop-only characters read as inactive (faithful quirk).
     pub fn is_active(&self) -> bool {
-        !self.animation.active_scene_is_complete() || !self.motion.movement_is_complete()
+        // Movement is a null check; scene completion is a map lookup. Same
+        // answer either way, so ask the cheap question first.
+        !self.motion.movement_is_complete() || !self.animation.active_scene_is_complete()
     }
 }
