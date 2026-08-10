@@ -26,7 +26,12 @@ REF = ROOT / "reference/tte"
 REPEATS = int(sys.argv[1]) if len(sys.argv) > 1 else 3
 CLOCK_BOUND = {"matrix", "thunderstorm"}
 
-ENV = {**os.environ, "COLUMNS": "100", "LINES": "30", "PYTHONPATH": str(REF)}
+# Canvas geometry is overridable so the same harness covers a modest terminal and
+# a fullscreen one — the heavier effects only diverge once the canvas gets big.
+COLS = os.environ.get("TTFX_BENCH_COLS", "100")
+LINES = os.environ.get("TTFX_BENCH_LINES", "30")
+
+ENV = {**os.environ, "COLUMNS": COLS, "LINES": LINES, "PYTHONPATH": str(REF)}
 
 
 def effects() -> list[str]:
@@ -64,10 +69,20 @@ def frames_of(effect: str, data: bytes) -> int:
 
 
 def main() -> int:
-    text = "\n".join(f"benchmark line {i:03d} — the quick brown fox jumps over the lazy dog" for i in range(20))
+    # Default input is a fixed small block; TTFX_BENCH_FILL=1 grows it to cover the
+    # canvas instead, which is what the character-driven effects actually scale on.
+    filler = "the quick brown fox jumps over the lazy dog"
+    if os.environ.get("TTFX_BENCH_FILL") == "1":
+        rows, width = max(1, int(LINES) - 4), max(20, int(COLS) - 10)
+        lines = [f"benchmark line {i:03d} — {filler}" for i in range(rows)]
+        lines = [(l * (width // len(l) + 1))[:width] for l in lines]
+    else:
+        lines = [f"benchmark line {i:03d} — {filler}" for i in range(20)]
+    text = "\n".join(lines)
     data = text.encode()
 
-    print(f"input: {len(text.splitlines())} lines x {max(len(l) for l in text.splitlines())} cols"
+    print(f"canvas: {COLS}x{LINES} · input: {len(text.splitlines())} lines x"
+          f" {max(len(l) for l in text.splitlines())} cols"
           f" · best of {REPEATS} · frame pacing off\n")
 
     # startup: smallest possible unit of work

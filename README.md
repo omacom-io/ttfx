@@ -9,6 +9,8 @@ fortune | ttfx --random-effect
 git log --oneline -10 | ttfx matrix
 ```
 
+<img src="docs/effects/decrypt.gif" width="588" alt="the decrypt effect resolving the Omarchy logo">
+
 ## Credit where it's due
 
 **This is a port of [TerminalTextEffects](https://github.com/ChrisBuilds/terminaltexteffects)
@@ -22,20 +24,60 @@ TTE is MIT licensed and so is this port; the original copyright is preserved in
 ## Why a port
 
 TTE is a Python package. That's the right call for a library, but for a shell toy that lives in
-your prompt pipeline it means an interpreter, an install step, and ~90 ms of import before the
+your prompt pipeline it means an interpreter, an install step, and ~85 ms of import before the
 first frame. ttfx is one dependency-free binary that starts in ~1 ms.
 
-That difference is the whole reason this exists. On a fullscreen canvas the heavier effects
-can't hold a high frame rate under Python:
+That difference is the whole reason this exists. On a fullscreen canvas the heavier effects run
+out of headroom under Python. Time to render a whole animation, pacing disabled so this measures
+throughput rather than `sleep()`:
 
-| At 200×50 cells | ttfx | Python TTE |
-|---|---|---|
-| beams | 564 fps | 71 fps |
-| slide | 5,113 fps | 264 fps |
-| waves | 4,118 fps | 491 fps |
-| startup | 1.2 ms | 107 ms |
+| At 200×50 cells | frames | ttfx | Python TTE | ttfx fps |
+|---|---|---|---|---|
+| slide | 375 | 147 ms | 2,417 ms | 2,557 |
+| beams | 732 | 345 ms | 5,471 ms | 2,123 |
+| rings | 1,566 | 1,492 ms | 12,512 ms | 1,050 |
+| waves | 633 | 1,082 ms | 9,157 ms | 585 |
+| startup | — | 0.9 ms | 83 ms | — |
 
-Across all 37 effects the median speedup is **9.6×** (range 4.5×–21.6×).
+Across the 35 effects that aren't gated on wall-clock time, the median speedup is **14.1×**
+(range 6.3×–26.6×). The two that are gated — `matrix` and `thunderstorm` — render 2.1× and 1.2×
+the frames in the same seconds instead of finishing sooner.
+
+Reproduce it with `python3 tools/tests/bench_full.py`, or set `TTFX_BENCH_COLS`, `TTFX_BENCH_LINES`
+and `TTFX_BENCH_FILL=1` for the fullscreen numbers above. Both sides run their real user-facing
+command, best of five.
+
+## The effects
+
+All 37, each animating the Omarchy logo. Every frame below came out of the Rust binary — and is
+byte-identical to what the Python original produces from the same input and seed.
+
+|     |     |
+|:---:|:---:|
+| <b>beams</b><br><img src="docs/effects/beams.gif" width="400" alt="beams"><br><sub>Create beams which travel over the canvas illuminating the characters behind them</sub> | <b>binarypath</b><br><img src="docs/effects/binarypath.gif" width="400" alt="binarypath"><br><sub>Binary representations of each character move towards the home coordinate of the character</sub> |
+| <b>blackhole</b><br><img src="docs/effects/blackhole.gif" width="400" alt="blackhole"><br><sub>Characters are consumed by a black hole and explode outwards</sub> | <b>bouncyballs</b><br><img src="docs/effects/bouncyballs.gif" width="400" alt="bouncyballs"><br><sub>Characters are bouncy balls falling from the top of the canvas</sub> |
+| <b>bubbles</b><br><img src="docs/effects/bubbles.gif" width="400" alt="bubbles"><br><sub>Characters are formed into bubbles that float down and pop</sub> | <b>burn</b><br><img src="docs/effects/burn.gif" width="400" alt="burn"><br><sub>Burns vertically in the canvas</sub> |
+| <b>colorshift</b><br><img src="docs/effects/colorshift.gif" width="400" alt="colorshift"><br><sub>Display a gradient that shifts colors across the terminal</sub> | <b>crumble</b><br><img src="docs/effects/crumble.gif" width="400" alt="crumble"><br><sub>Characters lose color and crumble into dust, vacuumed up, and reformed</sub> |
+| <b>decrypt</b><br><img src="docs/effects/decrypt.gif" width="400" alt="decrypt"><br><sub>Display a movie style decryption effect</sub> | <b>errorcorrect</b><br><img src="docs/effects/errorcorrect.gif" width="400" alt="errorcorrect"><br><sub>Some characters start in the wrong position and are corrected in sequence</sub> |
+| <b>expand</b><br><img src="docs/effects/expand.gif" width="400" alt="expand"><br><sub>Expands the text from a single point</sub> | <b>fireworks</b><br><img src="docs/effects/fireworks.gif" width="400" alt="fireworks"><br><sub>Characters launch and explode like fireworks and fall into place</sub> |
+| <b>highlight</b><br><img src="docs/effects/highlight.gif" width="400" alt="highlight"><br><sub>Run a specular highlight across the text</sub> | <b>laseretch</b><br><img src="docs/effects/laseretch.gif" width="400" alt="laseretch"><br><sub>A laser etches characters onto the terminal</sub> |
+| <b>matrix</b><br><img src="docs/effects/matrix.gif" width="400" alt="matrix"><br><sub>Matrix digital rain effect</sub> | <b>middleout</b><br><img src="docs/effects/middleout.gif" width="400" alt="middleout"><br><sub>Text expands in a single row or column in the middle of the canvas then out</sub> |
+| <b>orbittingvolley</b><br><img src="docs/effects/orbittingvolley.gif" width="400" alt="orbittingvolley"><br><sub>Four launchers orbit the canvas firing volleys of characters inward to build the input text from the center out</sub> | <b>overflow</b><br><img src="docs/effects/overflow.gif" width="400" alt="overflow"><br><sub>Input text overflows and scrolls the terminal in a random order until eventually appearing ordered</sub> |
+| <b>pour</b><br><img src="docs/effects/pour.gif" width="400" alt="pour"><br><sub>Pours the characters into position from the given direction</sub> | <b>print</b><br><img src="docs/effects/print.gif" width="400" alt="print"><br><sub>Lines are printed one at a time following a print head. Print head performs line feed, carriage return</sub> |
+| <b>rain</b><br><img src="docs/effects/rain.gif" width="400" alt="rain"><br><sub>Rain characters from the top of the canvas</sub> | <b>randomsequence</b><br><img src="docs/effects/randomsequence.gif" width="400" alt="randomsequence"><br><sub>Prints the input data in a random sequence</sub> |
+| <b>rings</b><br><img src="docs/effects/rings.gif" width="400" alt="rings"><br><sub>Characters are dispersed and form into spinning rings</sub> | <b>scattered</b><br><img src="docs/effects/scattered.gif" width="400" alt="scattered"><br><sub>Text is scattered across the canvas and moves into position</sub> |
+| <b>slice</b><br><img src="docs/effects/slice.gif" width="400" alt="slice"><br><sub>Slices the input in half and slides it into place from opposite directions</sub> | <b>slide</b><br><img src="docs/effects/slide.gif" width="400" alt="slide"><br><sub>Slide characters into view from outside the terminal</sub> |
+| <b>smoke</b><br><img src="docs/effects/smoke.gif" width="400" alt="smoke"><br><sub>Smoke floods the canvas colorizing any characters it crosses</sub> | <b>spotlights</b><br><img src="docs/effects/spotlights.gif" width="400" alt="spotlights"><br><sub>Spotlights search the text area, illuminating characters, before converging in the center and expanding</sub> |
+| <b>spray</b><br><img src="docs/effects/spray.gif" width="400" alt="spray"><br><sub>Draws the characters spawning at varying rates from a single point</sub> | <b>swarm</b><br><img src="docs/effects/swarm.gif" width="400" alt="swarm"><br><sub>Characters are grouped into swarms and move around the terminal before settling into position</sub> |
+| <b>sweep</b><br><img src="docs/effects/sweep.gif" width="400" alt="sweep"><br><sub>Sweep across the canvas to reveal uncolored text, reverse sweep to color the text</sub> | <b>synthgrid</b><br><img src="docs/effects/synthgrid.gif" width="400" alt="synthgrid"><br><sub>Create a grid which fills with characters dissolving into the final text</sub> |
+| <b>thunderstorm</b><br><img src="docs/effects/thunderstorm.gif" width="400" alt="thunderstorm"><br><sub>Create a thunderstorm in the terminal</sub> | <b>unstable</b><br><img src="docs/effects/unstable.gif" width="400" alt="unstable"><br><sub>Spawn characters jumbled, explode them to the edge of the canvas, then reassemble them in the correct layout</sub> |
+| <b>vhstape</b><br><img src="docs/effects/vhstape.gif" width="400" alt="vhstape"><br><sub>Lines of characters glitch left and right and lose detail like an old VHS tape</sub> | <b>waves</b><br><img src="docs/effects/waves.gif" width="400" alt="waves"><br><sub>Waves travel across the terminal leaving behind the characters</sub> |
+| <b>wipe</b><br><img src="docs/effects/wipe.gif" width="400" alt="wipe"><br><sub>Wipes the text across the terminal to reveal characters</sub> |  |
+
+Every effect takes its own options — `ttfx <effect> --help`. A few of the GIFs above shorten a
+timed phase so the loop stays watchable (`matrix --rain-time 3`, `thunderstorm --storm-time 3`,
+`vhstape --total-glitch-time 250`, `spotlights --search-duration 80`, `errorcorrect
+--error-pairs 0.5`); everything else is stock.
 
 ## Fidelity
 
