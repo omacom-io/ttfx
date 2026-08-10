@@ -30,6 +30,16 @@ struct FloatPoint {
     row: f64,
 }
 
+impl FloatPoint {
+    #[inline]
+    fn interpolate(self, other: Self, t: f64) -> Self {
+        FloatPoint {
+            column: (1.0 - t) * self.column + t * other.column,
+            row: (1.0 - t) * self.row + t * other.row,
+        }
+    }
+}
+
 /// find_coords_on_circle: coords_limit 0 -> round(2*pi*r); x offset from the
 /// origin is doubled for cell aspect; every point rounded (banker's).
 pub fn find_coords_on_circle(origin: Coord, radius: i64, coords_limit: i64, unique: bool) -> Vec<Coord> {
@@ -133,21 +143,33 @@ pub fn extrapolate_along_ray(origin: Coord, target: Coord, offset_from_target: f
 /// find_coord_on_bezier_curve: recursive De Casteljau of arbitrary degree with
 /// float intermediates, rounded only at the end.
 pub fn find_coord_on_bezier_curve(start: Coord, control: &[Coord], end: Coord, t: f64) -> Coord {
+    if control.is_empty() {
+        return find_coord_on_line(start, end, t);
+    }
+
+    let start = FloatPoint { column: start.column as f64, row: start.row as f64 };
+    let end = FloatPoint { column: end.column as f64, row: end.row as f64 };
+
+    // Every production path is quadratic. Keep that per-frame hot path on the
+    // stack instead of allocating a Vec at each De Casteljau level.
+    if let [control] = control {
+        let control = FloatPoint { column: control.column as f64, row: control.row as f64 };
+        let point = start.interpolate(control, t).interpolate(control.interpolate(end, t), t);
+        return Coord::new(round_half_even(point.column), round_half_even(point.row));
+    }
+
     let mut points: Vec<FloatPoint> = Vec::with_capacity(control.len() + 2);
-    points.push(FloatPoint { column: start.column as f64, row: start.row as f64 });
+    points.push(start);
     for c in control {
         points.push(FloatPoint { column: c.column as f64, row: c.row as f64 });
     }
-    points.push(FloatPoint { column: end.column as f64, row: end.row as f64 });
-    while points.len() > 1 {
-        let mut next: Vec<FloatPoint> = Vec::with_capacity(points.len() - 1);
-        for i in 0..points.len() - 1 {
-            next.push(FloatPoint {
-                column: (1.0 - t) * points[i].column + t * points[i + 1].column,
-                row: (1.0 - t) * points[i].row + t * points[i + 1].row,
-            });
+    points.push(end);
+    let mut remaining = points.len();
+    while remaining > 1 {
+        for i in 0..remaining - 1 {
+            points[i] = points[i].interpolate(points[i + 1], t);
         }
-        points = next;
+        remaining -= 1;
     }
     Coord::new(round_half_even(points[0].column), round_half_even(points[0].row))
 }

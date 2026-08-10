@@ -1,6 +1,8 @@
 //! Color, ColorPair, and Gradient, ported from utils/graphics.py.
 
 use std::collections::HashMap;
+use std::fmt;
+use std::ops::Deref;
 
 use crate::utils::geometry::{self, Coord};
 use crate::utils::hexterm;
@@ -10,19 +12,86 @@ use crate::utils::rng::Rng;
 /// The original constructor argument, preserved because upstream `Color.__eq__`
 /// and `__hash__` compare `color_arg` — `Color(255) != Color("ffffff")` even
 /// when they resolve to the same RGB. Dict/set keying depends on this.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ColorArg {
     Xterm(u8),
-    Hex(String), // stored stripped of '#', case preserved (upstream strips '#' only)
+    Hex(RgbString), // stored stripped of '#', case preserved (upstream strips '#' only)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct RgbString {
+    bytes: [u8; 7],
+    len: u8,
+}
+
+impl RgbString {
+    fn new(value: &str) -> Self {
+        debug_assert!(value.len() <= 7);
+        let mut bytes = [0; 7];
+        bytes[..value.len()].copy_from_slice(value.as_bytes());
+        RgbString {
+            bytes,
+            len: value.len() as u8,
+        }
+    }
+}
+
+impl Deref for RgbString {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        std::str::from_utf8(&self.bytes[..self.len as usize]).unwrap()
+    }
+}
+
+impl AsRef<str> for RgbString {
+    fn as_ref(&self) -> &str {
+        self
+    }
+}
+
+impl std::borrow::Borrow<str> for RgbString {
+    fn borrow(&self) -> &str {
+        self
+    }
+}
+
+impl std::hash::Hash for RgbString {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::hash::Hash::hash(&**self, state);
+    }
+}
+
+impl fmt::Display for RgbString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self)
+    }
+}
+
+impl fmt::Debug for RgbString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct Color {
     pub color_arg: ColorArg,
     /// Some(code) when constructed from an xterm int, None for hex strings.
     pub xterm_color: Option<u8>,
     /// hex string without '#'
-    pub rgb_color: String,
+    pub rgb_color: RgbString,
+    rgb: [u8; 3],
+}
+
+impl fmt::Debug for Color {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Color")
+            .field("color_arg", &self.color_arg)
+            .field("xterm_color", &self.xterm_color)
+            .field("rgb_color", &self.rgb_color)
+            .finish()
+    }
 }
 
 impl PartialEq for Color {
@@ -39,10 +108,12 @@ impl std::hash::Hash for Color {
 
 impl Color {
     pub fn from_xterm(code: u8) -> Self {
+        let rgb_color = RgbString::new(hexterm::xterm_to_hex(code));
         Color {
             color_arg: ColorArg::Xterm(code),
             xterm_color: Some(code),
-            rgb_color: hexterm::xterm_to_hex(code).to_string(),
+            rgb: Self::parse_rgb(&rgb_color),
+            rgb_color,
         }
     }
 
@@ -56,24 +127,29 @@ impl Color {
                     .to_string(),
             );
         }
+        let rgb_color = RgbString::new(stripped);
         Ok(Color {
-            color_arg: ColorArg::Hex(stripped.to_string()),
+            color_arg: ColorArg::Hex(rgb_color),
             xterm_color: None,
-            rgb_color: stripped.to_string(),
+            rgb: Self::parse_rgb(&rgb_color),
+            rgb_color,
         })
     }
 
     pub fn rgb_ints(&self) -> (u8, u8, u8) {
-        let s = &self.rgb_color;
-        (
+        (self.rgb[0], self.rgb[1], self.rgb[2])
+    }
+
+    fn parse_rgb(s: &str) -> [u8; 3] {
+        [
             u8::from_str_radix(&s[0..2], 16).unwrap(),
             u8::from_str_radix(&s[2..4], 16).unwrap(),
             u8::from_str_radix(&s[4..6], 16).unwrap(),
-        )
+        ]
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct ColorPair {
     pub fg_color: Option<Color>,
     pub bg_color: Option<Color>,
@@ -296,4 +372,28 @@ pub fn shift_color_towards(color: &Color, target_color: &Color, factor: f64) -> 
         py_hex(interpolate(cb, tb, factor))
     );
     Color::from_hex(&hex)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::Color;
+
+    #[test]
+    fn rgb_string_borrowed_lookup_matches_str_hash() {
+        let rgb = Color::from_hex("12AbEf7").unwrap().rgb_color;
+        let mut colors = HashMap::new();
+        colors.insert(rgb, 1);
+        assert_eq!(colors.get("12AbEf7"), Some(&1));
+    }
+
+    #[test]
+    fn color_debug_hides_the_cached_representation() {
+        let color = Color::from_hex("12AbEf7").unwrap();
+        assert_eq!(
+            format!("{color:?}"),
+            "Color { color_arg: Hex(\"12AbEf7\"), xterm_color: None, rgb_color: \"12AbEf7\" }"
+        );
+    }
 }

@@ -226,29 +226,29 @@ impl Effect for Sweep {
 
     fn next_frame(&mut self, ctx: &mut EngineCtx) -> Option<String> {
         if !ctx.active_characters.is_empty() || !self.complete {
-            self.easer.as_mut().unwrap().step();
-            let added = self.easer.as_ref().unwrap().added.clone();
-            for group in added {
-                for &id in &group {
+            let mut easer = self.easer.take().unwrap();
+            let step = easer.step();
+            for group in step.added {
+                for &id in group {
                     if self.first_phase {
                         ctx.terminal.set_character_visibility(id, true);
                     }
                     let scene_id = if self.first_phase { "initial_sweep" } else { "second_sweep" };
                     ctx.activate_scene(self, id, scene_id);
                 }
-                for id in group {
+                for &id in group {
                     ctx.active_characters.insert(id);
                 }
             }
-            let easer_complete = self.easer.as_ref().unwrap().is_complete();
+            let easer_complete = easer.is_complete();
             if easer_complete && self.first_phase {
-                let easer = self.easer.as_mut().unwrap();
                 easer.sequence = std::mem::take(&mut self.groups_second_sweep);
                 easer.reset();
                 self.first_phase = false;
             } else if easer_complete && !self.first_phase {
                 self.complete = true;
             }
+            self.easer = Some(easer);
             ctx.update(self);
             return Some(ctx.frame());
         }

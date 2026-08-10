@@ -1,3 +1,4 @@
+pub mod active_characters;
 pub mod animation;
 pub mod canvas;
 pub mod character;

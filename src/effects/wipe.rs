@@ -153,19 +153,17 @@ impl Effect for Wipe {
         let easer_complete = self.easer.as_ref().unwrap().is_complete();
         if !ctx.active_characters.is_empty() || !easer_complete {
             if self.wipe_delay == 0 {
-                let easer = self.easer.as_mut().unwrap();
-                easer.step();
-                let added = easer.added.clone();
-                let removed = easer.removed.clone();
-                for group in added {
-                    for id in group {
+                let mut easer = self.easer.take().unwrap();
+                let step = easer.step();
+                for group in step.added {
+                    for &id in group {
                         ctx.activate_scene(self, id, "wipe");
                         ctx.terminal.set_character_visibility(id, true);
                         ctx.active_characters.insert(id);
                     }
                 }
-                for group in removed {
-                    for id in group {
+                for group in step.removed {
+                    for &id in group {
                         ctx.deactivate_scene(id, None);
                         ctx.terminal.arena[id.0 as usize]
                             .animation
@@ -176,6 +174,7 @@ impl Effect for Wipe {
                         ctx.terminal.set_character_visibility(id, false);
                     }
                 }
+                self.easer = Some(easer);
                 self.wipe_delay = self.config.wipe_delay;
             } else {
                 self.wipe_delay -= 1;

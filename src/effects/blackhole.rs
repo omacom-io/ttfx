@@ -588,7 +588,7 @@ impl Effect for Blackhole {
                         self.awaiting_consumption_chars.clear();
                     } else {
                         let blackhole_set: HashSet<CharId> = self.blackhole_chars.iter().copied().collect();
-                        if ctx.active_characters.iter().all(|id| blackhole_set.contains(id)) {
+                        if ctx.active_characters.iter().all(|id| blackhole_set.contains(&id)) {
                             self.phase = Phase::Collapsing;
                         }
                     }

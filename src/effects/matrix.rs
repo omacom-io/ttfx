@@ -286,24 +286,57 @@ impl RainColumn {
         }
 
         // randomly change the symbol and/or color of the characters
-        let visible_snapshot = self.visible_characters.clone();
-        for character in visible_snapshot {
+        for &character in &self.visible_characters {
+            // Draw both chances (and any resulting choices) in upstream order,
+            // but leave the cached visual alone when neither value changes.
             let next_symbol = if ctx.rng.random() < config.symbol_swap_chance {
-                ctx.rng.choice(&config.rain_symbols).clone()
+                Some(ctx.rng.choice(&config.rain_symbols).as_str())
             } else {
-                ctx.terminal.arena[character.0 as usize].animation.current_character_visual.symbol.clone()
+                None
             };
-            let next_color: Option<Color> = if ctx.rng.random() < config.color_swap_chance {
-                Some(ctx.rng.choice(rain_colors).clone())
+            let next_color = if ctx.rng.random() < config.color_swap_chance {
+                Some(ctx.rng.choice(rain_colors))
             } else {
-                ctx.terminal.arena[character.0 as usize]
-                    .animation
-                    .current_character_visual
-                    .colors
-                    .as_ref()
-                    .and_then(|colors| colors.fg_color.clone())
+                None
             };
-            set_appearance(ctx, character, &next_symbol, ColorPair::new(next_color, None));
+            if next_symbol.is_none() && next_color.is_none() {
+                continue;
+            }
+
+            let values_unchanged = {
+                let visual = &ctx.terminal.arena[character.0 as usize].animation.current_character_visual;
+                next_symbol.is_none_or(|symbol| symbol == visual.symbol)
+                    && next_color.is_none_or(|color| {
+                        visual.colors.as_ref().and_then(|colors| colors.fg_color.as_ref()) == Some(color)
+                    })
+            };
+            if values_unchanged {
+                continue;
+            }
+
+            match (next_symbol, next_color) {
+                (Some(symbol), Some(color)) => {
+                    set_appearance(ctx, character, symbol, ColorPair::new(Some(color.clone()), None));
+                }
+                (Some(symbol), None) => {
+                    let color = ctx.terminal.arena[character.0 as usize]
+                        .animation
+                        .current_character_visual
+                        .colors
+                        .as_ref()
+                        .and_then(|colors| colors.fg_color.clone());
+                    set_appearance(ctx, character, symbol, ColorPair::new(color, None));
+                }
+                (None, Some(color)) => {
+                    let symbol = ctx.terminal.arena[character.0 as usize]
+                        .animation
+                        .current_character_visual
+                        .symbol
+                        .clone();
+                    set_appearance(ctx, character, &symbol, ColorPair::new(Some(color.clone()), None));
+                }
+                (None, None) => unreachable!("no-change case returned above"),
+            }
         }
     }
 }

@@ -159,15 +159,15 @@ impl Effect for Highlight {
     fn next_frame(&mut self, ctx: &mut EngineCtx) -> Option<String> {
         let easer_complete = self.easer.as_ref().unwrap().is_complete();
         if !ctx.active_characters.is_empty() || !easer_complete {
-            let easer = self.easer.as_mut().unwrap();
-            easer.step();
-            let added = easer.added.clone();
-            for group in added {
-                for id in group {
+            let mut easer = self.easer.take().unwrap();
+            let step = easer.step();
+            for group in step.added {
+                for &id in group {
                     ctx.activate_scene(self, id, "highlight");
                     ctx.active_characters.insert(id);
                 }
             }
+            self.easer = Some(easer);
             ctx.update(self);
             return Some(ctx.frame());
         }

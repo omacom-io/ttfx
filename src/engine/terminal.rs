@@ -139,6 +139,33 @@ pub struct Terminal {
     last_time_printed: Instant,
 }
 
+fn ordered_buckets(
+    characters: Vec<CharId>,
+    first_key: i64,
+    last_key: i64,
+    mut key: impl FnMut(CharId) -> i64,
+) -> Vec<Vec<CharId>> {
+    if first_key > last_key {
+        return Vec::new();
+    }
+    let bucket_count = last_key
+        .checked_sub(first_key)
+        .and_then(|span| span.checked_add(1))
+        .and_then(|span| usize::try_from(span).ok())
+        .expect("terminal canvas is too large");
+    let expected_bucket_len = characters.len() / bucket_count;
+    let mut buckets: Vec<Vec<CharId>> = (0..bucket_count)
+        .map(|_| Vec::with_capacity(expected_bucket_len))
+        .collect();
+    for id in characters {
+        let character_key = key(id);
+        if first_key <= character_key && character_key <= last_key {
+            buckets[(character_key - first_key) as usize].push(id);
+        }
+    }
+    buckets.into_iter().filter(|bucket| !bucket.is_empty()).collect()
+}
+
 impl Terminal {
     pub fn new(input_data: &str, config: TerminalConfig) -> Result<Self, EngineError> {
         let input_data = if input_data.is_empty() { "No Input." } else { input_data };
@@ -334,7 +361,11 @@ impl Terminal {
     }
 
     pub fn collect_characters(&self, filter: CharacterFilter) -> Vec<CharId> {
-        let mut all: Vec<CharId> = Vec::new();
+        let capacity = if filter.input_chars { self.input_characters.len() } else { 0 }
+            + if filter.inner_fill_chars { self.inner_fill_characters.len() } else { 0 }
+            + if filter.outer_fill_chars { self.outer_fill_characters.len() } else { 0 }
+            + if filter.added_chars { self.added_characters.len() } else { 0 };
+        let mut all: Vec<CharId> = Vec::with_capacity(capacity);
         if filter.input_chars {
             all.extend(&self.input_characters);
         }
@@ -399,91 +430,88 @@ impl Terminal {
         let coord = |id: &CharId| self.arena[id.0 as usize].input_coord;
         match grouping {
             CharacterGroup::ColumnLeftToRight | CharacterGroup::ColumnRightToLeft => {
-                let mut columns: Vec<Vec<CharId>> = Vec::new();
-                for column_index in 0..=self.canvas.right {
-                    let in_column: Vec<CharId> =
-                        all.iter().copied().filter(|id| coord(id).column == column_index).collect();
-                    if !in_column.is_empty() {
-                        columns.push(in_column);
-                    }
-                }
+                let mut columns = ordered_buckets(all, 0, self.canvas.right, |id| coord(&id).column);
                 if grouping == CharacterGroup::ColumnRightToLeft {
                     columns.reverse();
                 }
                 columns
             }
             CharacterGroup::RowBottomToTop | CharacterGroup::RowTopToBottom => {
-                let mut rows: Vec<Vec<CharId>> = Vec::new();
-                for row_index in 0..=self.canvas.top {
-                    let in_row: Vec<CharId> = all.iter().copied().filter(|id| coord(id).row == row_index).collect();
-                    if !in_row.is_empty() {
-                        rows.push(in_row);
-                    }
-                }
+                let mut rows = ordered_buckets(all, 0, self.canvas.top, |id| coord(&id).row);
                 if grouping == CharacterGroup::RowTopToBottom {
                     rows.reverse();
                 }
                 rows
             }
             CharacterGroup::DiagonalBottomLeftToTopRight | CharacterGroup::DiagonalTopRightToBottomLeft => {
-                let mut diagonals: Vec<Vec<CharId>> = Vec::new();
-                for diagonal_index in 0..=(self.canvas.top + self.canvas.right) {
-                    let in_diag: Vec<CharId> = all
-                        .iter()
-                        .copied()
-                        .filter(|id| coord(id).row + coord(id).column == diagonal_index)
-                        .collect();
-                    if !in_diag.is_empty() {
-                        diagonals.push(in_diag);
-                    }
-                }
+                let mut diagonals = ordered_buckets(all, 0, self.canvas.top + self.canvas.right, |id| {
+                    let c = coord(&id);
+                    c.row + c.column
+                });
                 if grouping == CharacterGroup::DiagonalTopRightToBottomLeft {
                     diagonals.reverse();
                 }
                 diagonals
             }
             CharacterGroup::DiagonalTopLeftToBottomRight | CharacterGroup::DiagonalBottomRightToTopLeft => {
-                let mut diagonals: Vec<Vec<CharId>> = Vec::new();
-                for diagonal_index in (self.canvas.left - self.canvas.top)..=(self.canvas.right - self.canvas.bottom) {
-                    let in_diag: Vec<CharId> = all
-                        .iter()
-                        .copied()
-                        .filter(|id| coord(id).column - coord(id).row == diagonal_index)
-                        .collect();
-                    if !in_diag.is_empty() {
-                        diagonals.push(in_diag);
-                    }
-                }
+                let mut diagonals = ordered_buckets(
+                    all,
+                    self.canvas.left - self.canvas.top,
+                    self.canvas.right - self.canvas.bottom,
+                    |id| {
+                        let c = coord(&id);
+                        c.column - c.row
+                    },
+                );
                 if grouping == CharacterGroup::DiagonalBottomRightToTopLeft {
                     diagonals.reverse();
                 }
                 diagonals
             }
             CharacterGroup::CenterToOutside | CharacterGroup::OutsideToCenter => {
-                // insertion-ordered distance map (Python dict semantics)
-                let mut distances: Vec<(i64, Vec<CharId>)> = Vec::new();
-                for &id in &all {
-                    let c = coord(&id);
-                    let distance = (c.column - self.canvas.text_center.column).abs()
-                        + (c.row - self.canvas.text_center.row).abs();
-                    if let Some(entry) = distances.iter_mut().find(|(d, _)| *d == distance) {
-                        entry.1.push(id);
-                    } else {
-                        distances.push((distance, Vec::from([id])));
+                let max_distance = all
+                    .iter()
+                    .map(|&id| {
+                        let c = coord(&id);
+                        (c.column - self.canvas.text_center.column).abs()
+                            + (c.row - self.canvas.text_center.row).abs()
+                    })
+                    .max();
+                let dense_limit = all.len().saturating_mul(4).max(256);
+                let mut groups = if max_distance
+                    .and_then(|distance| usize::try_from(distance).ok())
+                    .is_some_and(|distance| distance <= dense_limit)
+                {
+                    ordered_buckets(all, 0, max_distance.unwrap(), |id| {
+                        let c = coord(&id);
+                        (c.column - self.canvas.text_center.column).abs()
+                            + (c.row - self.canvas.text_center.row).abs()
+                    })
+                } else {
+                    // Out-of-canvas added characters can have sparse, arbitrarily
+                    // large distances; avoid allocating through the largest key.
+                    let mut distances: HashMap<i64, Vec<CharId>> = HashMap::new();
+                    for id in all {
+                        let c = coord(&id);
+                        let distance = (c.column - self.canvas.text_center.column).abs()
+                            + (c.row - self.canvas.text_center.row).abs();
+                        distances.entry(distance).or_default().push(id);
                     }
-                }
-                distances.sort_by_key(|&(d, _)| d);
+                    let mut distances: Vec<(i64, Vec<CharId>)> = distances.into_iter().collect();
+                    distances.sort_by_key(|&(distance, _)| distance);
+                    distances.into_iter().map(|(_, group)| group).collect()
+                };
                 if grouping == CharacterGroup::OutsideToCenter {
-                    distances.reverse();
+                    groups.reverse();
                 }
-                distances.into_iter().map(|(_, group)| group).collect()
+                groups
             }
         }
     }
 
-    /// Terminal._update_terminal_state: full repaint, painter's algorithm by
-    /// (layer, character_id) — the canonical deterministic order (plan.md §4.3).
-    pub fn update_terminal_state(&mut self) {
+    /// Paint the visible characters into the reusable cell buffer using the
+    /// canonical (layer, character_id) painter order (plan.md §4.3).
+    fn update_render_cells(&mut self) -> (usize, usize) {
         let width = self.visible_right.max(0) as usize;
         let height = self.visible_top.max(0) as usize;
         let cell_count = width.checked_mul(height).expect("terminal canvas is too large");
@@ -515,6 +543,15 @@ impl Terminal {
             }
         }
 
+        (width, height)
+    }
+
+    /// Terminal._update_terminal_state: materialize the row-oriented state
+    /// exposed by the upstream API. Frame output uses the cell buffer directly
+    /// so the hot path does not copy every rendered byte through these rows.
+    pub fn update_terminal_state(&mut self) {
+        let (width, height) = self.update_render_cells();
+
         self.terminal_state.resize_with(height, String::new);
         self.terminal_state.truncate(height);
         let arena = &self.arena;
@@ -533,21 +570,30 @@ impl Terminal {
         }
     }
 
-    /// get_formatted_output_string: refresh + join top row first.
+    /// get_formatted_output_string: refresh + emit top row first.
     pub fn get_formatted_output_string(&mut self) -> String {
-        self.update_terminal_state();
-        let content_len: usize = self.terminal_state.iter().map(String::len).sum();
-        let required_capacity = content_len + self.terminal_state.len().saturating_sub(1);
+        let (width, height) = self.update_render_cells();
+        let minimum_capacity = width
+            .checked_mul(height)
+            .and_then(|cells| cells.checked_add(height.saturating_sub(1)))
+            .expect("terminal canvas is too large");
         let mut out = std::mem::take(&mut self.output_buffer);
         out.clear();
-        if out.capacity() < required_capacity {
-            out.reserve(required_capacity);
+        if out.capacity() < minimum_capacity {
+            out.reserve(minimum_capacity);
         }
-        for (i, row) in self.terminal_state.iter().rev().enumerate() {
-            if i > 0 {
+        let arena = &self.arena;
+        for row_index in (0..height).rev() {
+            if row_index + 1 < height {
                 out.push('\n');
             }
-            out.push_str(row);
+            for &cell in &self.render_cells[row_index * width..(row_index + 1) * width] {
+                if cell == EMPTY_RENDER_CELL {
+                    out.push(' ');
+                } else {
+                    out.push_str(&arena[cell as usize].animation.current_character_visual.formatted_symbol);
+                }
+            }
         }
         out
     }
