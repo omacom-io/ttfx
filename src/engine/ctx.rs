@@ -291,22 +291,28 @@ impl EngineCtx {
 
     /// Path.step on the given path of `id`. Index-based segment walk with
     /// re-borrow per access so reentrant mutation behaves like Python.
+    ///
+    /// The path's slot is resolved once and re-resolved after every emission,
+    /// since only a reentrant action can move or drop it.
     fn path_step(&mut self, hooks: &mut dyn EffectHooks, id: CharId, path_id: &str) -> Coord {
+        let mut slot =
+            self.terminal.arena[id.0 as usize].motion.paths.slot(path_id).expect("path_step: path removed mid-step");
         macro_rules! path {
             () => {
-                self.terminal.arena[id.0 as usize]
-                    .motion
-                    .paths
-                    .get(path_id)
-                    .expect("path_step: path removed mid-step")
+                self.terminal.arena[id.0 as usize].motion.paths.at(slot)
             };
         }
         macro_rules! path_mut {
             () => {
-                self.terminal.arena[id.0 as usize]
+                self.terminal.arena[id.0 as usize].motion.paths.at_mut(slot)
+            };
+        }
+        macro_rules! resolve_slot {
+            () => {
+                slot = self.terminal.arena[id.0 as usize]
                     .motion
                     .paths
-                    .get_mut(path_id)
+                    .slot(path_id)
                     .expect("path_step: path removed mid-step")
             };
         }
@@ -345,6 +351,7 @@ impl EngineCtx {
                         let seg_end_key = path!().segments[i].end.key();
                         path_mut!().segments[i].enter_event_triggered = true;
                         self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key));
+                        resolve_slot!();
                     } else {
                         path_mut!().segments[i].enter_event_triggered = true;
                     }
@@ -364,10 +371,12 @@ impl EngineCtx {
                     if !enter_triggered {
                         path_mut!().segments[i].enter_event_triggered = true;
                         self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
+                        resolve_slot!();
                     }
                     if !exit_triggered {
                         path_mut!().segments[i].exit_event_triggered = true;
                         self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+                        resolve_slot!();
                     }
                 }
             }
@@ -426,12 +435,9 @@ impl EngineCtx {
             .active_path
             .clone()
             .expect("active path cleared mid-move (would be an upstream crash)");
+        let slot = self.terminal.arena[id.0 as usize].motion.paths.slot(&active_path_id).expect("active path missing");
         let (current_step, max_steps, hold_time, hold_time_remaining, loop_, segment_count) = {
-            let p = self.terminal.arena[id.0 as usize]
-                .motion
-                .paths
-                .get(&active_path_id)
-                .expect("active path missing");
+            let p = self.terminal.arena[id.0 as usize].motion.paths.at(slot);
             (p.current_step, p.max_steps, p.hold_time, p.hold_time_remaining, p.loop_, p.segments.len())
         };
         if current_step == max_steps {
@@ -448,12 +454,7 @@ impl EngineCtx {
                 return;
             }
             if hold_time_remaining != 0 {
-                self.terminal.arena[id.0 as usize]
-                    .motion
-                    .paths
-                    .get_mut(&active_path_id)
-                    .unwrap()
-                    .hold_time_remaining -= 1;
+                self.terminal.arena[id.0 as usize].motion.paths.at_mut(slot).hold_time_remaining -= 1;
                 return;
             }
             if loop_ && segment_count > 1 {
@@ -534,39 +535,44 @@ impl EngineCtx {
     }
 
     /// Animation.step_animation.
+    ///
+    /// Nothing between here and complete_scene_if_finished can add or remove a
+    /// scene, so the active scene's slot is resolved once and reused instead of
+    /// looking the id up again at every step.
     pub fn step_animation(&mut self, hooks: &mut dyn EffectHooks, id: CharId) {
-        let Some(scene_id) = ({
+        let Some(scene_slot) = ({
             let anim = &self.terminal.arena[id.0 as usize].animation;
             match &anim.active_scene {
-                Some(sid) if !anim.scenes.get(sid).expect("active scene missing").frames.is_empty() => {
-                    Some(sid.clone())
+                Some(sid) => {
+                    let slot = anim.scenes.slot(sid).expect("active scene missing");
+                    (!anim.scenes.at(slot).frames.is_empty()).then_some(slot)
                 }
-                _ => None,
+                None => None,
             }
         }) else {
             return;
         };
 
         let (sync, ease) = {
-            let scene = self.terminal.arena[id.0 as usize].animation.scenes.get(&scene_id).unwrap();
+            let scene = self.terminal.arena[id.0 as usize].animation.scenes.at(scene_slot);
             (scene.sync, scene.ease)
         };
 
         if sync.is_some() {
-            self.step_synced_scene(id, &scene_id, sync.unwrap());
+            self.step_synced_scene(id, scene_slot, sync.unwrap());
         } else if ease.is_some() {
-            self.step_eased_scene(id, &scene_id, ease.unwrap());
+            self.step_eased_scene(id, scene_slot, ease.unwrap());
         } else {
             let ch = &mut self.terminal.arena[id.0 as usize];
-            let visual = ch.animation.scenes.get_mut(&scene_id).unwrap().get_next_visual();
+            let visual = ch.animation.scenes.at_mut(scene_slot).get_next_visual();
             ch.animation.current_character_visual = visual;
         }
 
-        self.complete_scene_if_finished(hooks, id, &scene_id);
+        self.complete_scene_if_finished(hooks, id, scene_slot);
     }
 
     /// Animation._step_synced_scene + _synced_scene_frame_index.
-    fn step_synced_scene(&mut self, id: CharId, scene_id: &str, sync: SyncMetric) {
+    fn step_synced_scene(&mut self, id: CharId, scene_slot: usize, sync: SyncMetric) {
         let active_path_state = {
             let ch = &self.terminal.arena[id.0 as usize];
             ch.motion.active_path.as_ref().map(|pid| {
@@ -575,7 +581,7 @@ impl EngineCtx {
             })
         };
         let ch = &mut self.terminal.arena[id.0 as usize];
-        let scene = ch.animation.scenes.get_mut(scene_id).unwrap();
+        let scene = ch.animation.scenes.at_mut(scene_slot);
         match active_path_state {
             None => {
                 // no active path: jump to final frame and force-complete
@@ -605,9 +611,9 @@ impl EngineCtx {
     }
 
     /// Animation._step_eased_scene (+ _ease_animation).
-    fn step_eased_scene(&mut self, id: CharId, scene_id: &str, ease: crate::utils::easing::Easing) {
+    fn step_eased_scene(&mut self, id: CharId, scene_slot: usize, ease: crate::utils::easing::Easing) {
         let ch = &mut self.terminal.arena[id.0 as usize];
-        let scene = ch.animation.scenes.get_mut(scene_id).unwrap();
+        let scene = ch.animation.scenes.at_mut(scene_slot);
         let elapsed_step_ratio = scene.easing_current_step as f64 / scene.easing_total_steps as f64;
         let easing_factor = ease.ease(elapsed_step_ratio);
         let final_frame_index = (scene.easing_total_steps - 1).max(0);
@@ -630,26 +636,27 @@ impl EngineCtx {
 
     /// Animation._complete_scene_if_finished: fires SCENE_COMPLETE every tick
     /// for looping scenes, faithfully.
-    fn complete_scene_if_finished(&mut self, hooks: &mut dyn EffectHooks, id: CharId, scene_id: &str) {
+    fn complete_scene_if_finished(&mut self, hooks: &mut dyn EffectHooks, id: CharId, scene_slot: usize) {
         {
+            // The stepping above cannot clear active_scene, so the slot still
+            // holds it and active_scene_is_complete reduces to its scene test.
             let anim = &self.terminal.arena[id.0 as usize].animation;
-            if !anim.active_scene_is_complete() {
+            let scene = anim.scenes.at(scene_slot);
+            if !(scene.frames.is_empty() || scene.is_looping) {
                 return;
             }
         }
-        let is_looping = {
+        {
             let anim = &mut self.terminal.arena[id.0 as usize].animation;
-            let scene = anim.scenes.get_mut(scene_id).unwrap();
-            let looping = scene.is_looping;
-            if !looping {
+            let scene = anim.scenes.at_mut(scene_slot);
+            if !scene.is_looping {
                 scene.reset_scene();
                 anim.active_scene = None;
             }
-            looping
-        };
-        let _ = is_looping;
+        }
         if self.observes_event(id, Event::SceneComplete) {
-            self.handle_event(hooks, id, Event::SceneComplete, &CallerKey::Scene(scene_id.to_string()));
+            let scene_id = self.terminal.arena[id.0 as usize].animation.scenes.key_at(scene_slot).to_string();
+            self.handle_event(hooks, id, Event::SceneComplete, &CallerKey::Scene(scene_id));
         }
     }
 

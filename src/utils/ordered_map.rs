@@ -86,6 +86,24 @@ impl<V> OrderedMap<V> {
         self.position(key).map(|position| Rc::clone(&self.entries[position].0))
     }
 
+    /// Entry slot for `key`, for callers that read the same entry several times
+    /// in a row. Slots stay valid until an entry is removed.
+    pub fn slot(&self, key: &str) -> Option<usize> {
+        self.position(key)
+    }
+
+    pub fn at(&self, slot: usize) -> &V {
+        &self.entries[slot].1
+    }
+
+    pub fn at_mut(&mut self, slot: usize) -> &mut V {
+        &mut self.entries[slot].1
+    }
+
+    pub fn key_at(&self, slot: usize) -> &Rc<str> {
+        &self.entries[slot].0
+    }
+
     pub fn values(&self) -> impl Iterator<Item = &V> {
         self.entries.iter().map(|(_, v)| v)
     }
