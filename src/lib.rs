@@ -14,10 +14,7 @@ static TERMINAL_RESIZED: AtomicBool = AtomicBool::new(false);
 pub fn install_sigint_handler() {
     // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
-        libc::signal(
-            libc::SIGINT,
-            handle_sigint as *const () as libc::sighandler_t,
-        );
+        libc_signal(SIGINT, handle_sigint as *const () as usize);
     }
 }
 
@@ -34,10 +31,7 @@ pub fn interrupted() -> bool {
 pub fn install_sigwinch_handler() {
     // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
-        libc::signal(
-            libc::SIGWINCH,
-            handle_sigwinch as *const () as libc::sighandler_t,
-        );
+        libc_signal(SIGWINCH, handle_sigwinch as *const () as usize);
     }
 }
 
@@ -58,7 +52,44 @@ pub(crate) fn terminal_resize_pending() -> bool {
 /// tool instead of panicking on a broken pipe (Rust ignores SIGPIPE by default).
 pub fn restore_sigpipe() {
     unsafe {
-        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+        libc_signal(SIGPIPE, SIG_DFL);
+    }
+}
+
+const SIGINT: i32 = 2;
+const SIGPIPE: i32 = 13;
+/// 28 on Linux and on the BSDs, macOS included.
+const SIGWINCH: i32 = 28;
+const SIG_DFL: usize = 0;
+
+unsafe fn libc_signal(signum: i32, handler: usize) {
+    unsafe extern "C" {
+        fn signal(signum: i32, handler: usize) -> usize;
+    }
+    unsafe {
+        signal(signum, handler);
+    }
+}
+
+/// Wait for the window to stop changing size before acting on a resize.
+/// Dragging a window edge emits a SIGWINCH per step; rebuilding for each one
+/// pins the animation at its opening frames for the whole drag and then starts
+/// it over on release.
+pub fn wait_for_resize_to_settle() {
+    use std::time::{Duration, Instant};
+    const QUIET: Duration = Duration::from_millis(40);
+    const LIMIT: Duration = Duration::from_secs(2);
+
+    let deadline = Instant::now() + LIMIT;
+    let mut last = crate::engine::terminal::get_terminal_dimensions();
+    while Instant::now() < deadline && !interrupted() {
+        std::thread::sleep(QUIET);
+        take_terminal_resize();
+        let current = crate::engine::terminal::get_terminal_dimensions();
+        if current == last {
+            break;
+        }
+        last = current;
     }
 }
 
@@ -69,7 +100,7 @@ mod tests {
     #[test]
     fn terminal_resize_notifications_are_consumed() {
         take_terminal_resize();
-        handle_sigwinch(libc::SIGWINCH);
+        handle_sigwinch(SIGWINCH);
         assert!(terminal_resize_pending());
         assert!(take_terminal_resize());
         assert!(!terminal_resize_pending());

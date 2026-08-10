@@ -66,14 +66,14 @@ fn run_effect_inner(
         }
         Ok(())
     })();
-    let end_symbol = if outcome == RunOutcome::TerminalResized {
-        ""
+    if outcome == RunOutcome::TerminalResized {
+        // Leave the cursor hidden and parked at the top of the wiped area: the
+        // rebuild redraws in place, and showing the cursor here would strobe it
+        // dozens of times a second through a window drag.
+        ctx.terminal.reset_canvas_area(&mut out).map_err(io_err)?;
     } else {
-        "\n"
-    };
-    ctx.terminal
-        .restore_cursor(&mut out, end_symbol)
-        .map_err(io_err)?;
+        ctx.terminal.restore_cursor(&mut out, "\n").map_err(io_err)?;
+    }
     out.flush().ok();
     result.map(|_| outcome)
 }
@@ -83,7 +83,7 @@ fn requested_stop(ctx: &EngineCtx, stop_on_resize: bool) -> Option<RunOutcome> {
         Some(RunOutcome::Interrupted)
     } else if stop_on_resize
         && crate::take_terminal_resize()
-        && ctx.terminal.dimensions_changed()
+        && ctx.terminal.layout_changed()
     {
         Some(RunOutcome::TerminalResized)
     } else {

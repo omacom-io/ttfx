@@ -7,6 +7,7 @@ pub const DEC_RESTORE_CURSOR: &str = "\x1b8";
 pub const HIDE_CURSOR: &str = "\x1b[?25l";
 pub const SHOW_CURSOR: &str = "\x1b[?25h";
 pub const RESET_ALL: &str = "\x1b[0m";
+pub const CLEAR_TO_END_OF_SCREEN: &str = "\x1b[0J";
 pub const BOLD: &str = "\x1b[1m";
 pub const DIM: &str = "\x1b[2m";
 pub const ITALIC: &str = "\x1b[3m";

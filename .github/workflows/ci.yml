@@ -29,6 +29,8 @@ jobs:
         run: ./tools/parity/tty_compare.sh
       - name: CLI contract corpus
         run: ./tools/tests/cli_corpus.sh
+      - name: Resize behavior on a pty
+        run: python3 tools/tests/resize_behavior.py
 
   test-macos:
     name: Tests (macOS)

@@ -25,6 +25,18 @@ fn get_piped_input() -> String {
     }
 }
 
+/// Skip the arena teardown on the way out. Output is already flushed and
+/// nothing in the engine has a Drop impl that does work, so freeing tens of
+/// thousands of characters — each with its own scenes, paths and frames — one
+/// by one is pure exit latency; on binarypath it is ~4% of the run.
+///
+/// Only the exit paths come through here. A resize rebuild drops its engine
+/// normally, so a long session of resizes does not accumulate them.
+fn forget_engine<E, C>(effect: E, ctx: C) {
+    std::mem::forget(effect);
+    std::mem::forget(ctx);
+}
+
 fn main() -> ExitCode {
     ttfx::restore_sigpipe();
     let cli = cli::Cli::parse();
@@ -110,8 +122,15 @@ fn main() -> ExitCode {
     };
 
     let mut config = cli.terminal_config();
+    // SIGWINCH is delivered to every process in the terminal's foreground group,
+    // whatever its stdout points at. Reacting to it when the animation is being
+    // redirected would leave a truncated first run followed by a complete second
+    // one in the file, so the resize path is tty-only.
+    let resize_aware = !cli.parity_dump && std::io::stdout().is_terminal();
     if !cli.parity_dump {
         ttfx::install_sigint_handler();
+    }
+    if resize_aware {
         ttfx::install_sigwinch_handler();
     }
 
@@ -140,28 +159,37 @@ fn main() -> ExitCode {
         let mut effect = effect_command.build_effect();
 
         if cli.parity_dump {
-            break ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
+            let dumped = ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
                 .map(|_| ());
+            forget_engine(effect, ctx);
+            break dumped;
         }
 
-        match ttfx::engine::effect::run_effect_resize_aware(effect.as_mut(), &mut ctx) {
+        let outcome = if resize_aware {
+            ttfx::engine::effect::run_effect_resize_aware(effect.as_mut(), &mut ctx)
+        } else {
+            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
+                .map(|_| ttfx::engine::effect::RunOutcome::Complete)
+        };
+        match outcome {
             Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
-                // The current output area is already allocated. Reuse it when
-                // rebuilding at the new dimensions instead of scrolling a
-                // second canvas into the terminal.
-                config.reuse_canvas = true;
+                // run_effect_resize_aware wiped the old area and left the cursor
+                // at its top, so the rebuild lays out from here. Reusing the
+                // canvas would restore a DEC anchor that no longer applies.
+                config.reuse_canvas = false;
                 rng = ctx.rng;
+                ttfx::wait_for_resize_to_settle();
             }
-            Ok(_) => break Ok(()),
-            Err(e) => break Err(e),
+            Ok(_) => {
+                forget_engine(effect, ctx);
+                break Ok(());
+            }
+            Err(e) => {
+                forget_engine(effect, ctx);
+                break Err(e);
+            }
         }
     };
-    // Output is already flushed, and nothing in the engine has a Drop impl that
-    // does work. Freeing an arena of tens of thousands of characters, each with
-    // its own scenes, paths and frames, is pure exit latency — on binarypath it
-    // is ~4% of the run. Hand it to the kernel instead.
-    std::mem::forget(effect);
-    std::mem::forget(ctx);
     std::mem::forget(input_data);
 
     match result {
