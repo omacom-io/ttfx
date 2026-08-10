@@ -54,11 +54,22 @@ fn easing_matches_python_bit_exactly() {
             offset += 8;
             let p = i as f64 / 1000.0;
             let actual = easing.ease(p);
-            // CubicBezier tolerates 1 ulp: in optimized builds LLVM
-            // const-folds some powf calls, which can differ from runtime libm
-            // by an ulp (plan.md §5.20). Quantized effect parity is unaffected.
-            let tolerance = if matches!(easing, Easing::CubicBezier(..)) { 1 } else { 0 };
-            if actual.to_bits().abs_diff(expected.to_bits()) > tolerance {
+            // Bit-exactness is only promised on the pinned parity platform
+            // (Linux/glibc — plan.md §9 "pin the parity platform"). Elsewhere
+            // the system libm rounds sin/cos/pow a last-ulp differently
+            // (measured max 2.3e-16 absolute on macOS), so other platforms get
+            // the boundary-tolerant assertion instead. Quantized effect output
+            // absorbs this either way.
+            let within_tolerance = if cfg!(target_os = "linux") {
+                // CubicBezier tolerates 1 ulp even here: in optimized builds
+                // LLVM const-folds some powf calls, which can differ from
+                // runtime libm by an ulp.
+                let tolerance = if matches!(easing, Easing::CubicBezier(..)) { 1 } else { 0 };
+                actual.to_bits().abs_diff(expected.to_bits()) <= tolerance
+            } else {
+                (actual - expected).abs() <= 1e-15
+            };
+            if !within_tolerance {
                 if mismatches < 5 {
                     eprintln!(
                         "{easing:?} at p={p}: expected {expected:?} ({:016x}), got {actual:?} ({:016x})",

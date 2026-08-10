@@ -96,8 +96,11 @@ Upstream is not vendored here — the harness fetches it, because it's their cod
 
 ## Scope
 
-Linux only, built for [Omarchy](https://omarchy.org). The engine is portable and nothing
-targets a specific libc, but nothing else is tested.
+Linux and macOS. Built for [Omarchy](https://omarchy.org) originally; nothing targets a
+specific libc, and CI runs the tests and CLI corpus on both platforms. The byte-exact
+parity suites stay pinned to Linux/glibc — Apple's libm rounds a few transcendentals a
+last-ulp differently, which quantization hides in real frames but a bit-exact comparison
+would surface.
 
 ## License
 
