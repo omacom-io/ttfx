@@ -20,6 +20,13 @@ pub enum Event {
     SceneComplete,
 }
 
+impl Event {
+    #[inline]
+    fn bit(self) -> u8 {
+        1 << (self as u8)
+    }
+}
+
 /// Waypoint identity for event keying: upstream Waypoint is a frozen dataclass
 /// hashed/compared by ALL fields (id, coord, bezier controls) — two waypoints
 /// with identical fields in different paths collide, faithfully.
@@ -72,9 +79,15 @@ pub enum EventAction {
 }
 
 /// Per-character event table: insertion-ordered (event, caller) -> actions.
+///
+/// `subscribed` mirrors the table as a bitmask of registered event kinds. Most
+/// characters register a handful of events while the engine emits thousands,
+/// so callers test it first and skip building the (allocating) CallerKey when
+/// nothing could match.
 #[derive(Debug, Clone, Default)]
 pub struct EventHandler {
-    pub registered_events: Vec<((Event, CallerKey), Vec<EventAction>)>,
+    registered_events: Vec<((Event, CallerKey), Vec<EventAction>)>,
+    subscribed: u8,
 }
 
 impl EventHandler {
@@ -91,10 +104,32 @@ impl EventHandler {
         } else {
             self.registered_events.push((key, vec![action]));
         }
+        self.subscribed |= event.bit();
         Ok(())
     }
 
+    /// True when at least one action is registered for this event kind, for any
+    /// caller. A false answer means `actions_index` cannot match.
+    #[inline]
+    pub fn subscribes(&self, event: Event) -> bool {
+        self.subscribed & event.bit() != 0
+    }
+
+    #[inline]
     pub fn actions_index(&self, event: Event, caller: &CallerKey) -> Option<usize> {
+        if !self.subscribes(event) {
+            return None;
+        }
         self.registered_events.iter().position(|((e, c), _)| *e == event && c == caller)
+    }
+
+    #[inline]
+    pub fn actions(&self, index: usize) -> &[EventAction] {
+        &self.registered_events[index].1
+    }
+
+    pub fn clear(&mut self) {
+        self.registered_events.clear();
+        self.subscribed = 0;
     }
 }

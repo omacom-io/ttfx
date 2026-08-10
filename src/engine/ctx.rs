@@ -122,6 +122,13 @@ impl EngineCtx {
     /// Execute all actions registered for (event, caller) on `id`, in
     /// registration order, inline and reentrantly. The action list is indexed
     /// per iteration because a callback may append more actions to it.
+    /// Whether an emission of `event` on `id` can have any observable effect —
+    /// false lets hot emission sites skip building the CallerKey entirely.
+    #[inline]
+    fn observes_event(&self, id: CharId, event: Event) -> bool {
+        self.event_log.is_some() || self.terminal.arena[id.0 as usize].event_handler.subscribes(event)
+    }
+
     pub fn handle_event(
         &mut self,
         hooks: &mut dyn EffectHooks,
@@ -157,7 +164,7 @@ impl EngineCtx {
         loop {
             let action = {
                 let handler = &self.terminal.arena[id.0 as usize].event_handler;
-                let actions = &handler.registered_events[entry_index].1;
+                let actions = handler.actions(entry_index);
                 if action_index >= actions.len() {
                     break;
                 }
@@ -278,7 +285,9 @@ impl EngineCtx {
         if let Some(layer) = layer {
             self.terminal.arena[id.0 as usize].layer = layer;
         }
-        self.handle_event(hooks, id, Event::PathActivated, &CallerKey::Path(path_id.to_string()));
+        if self.observes_event(id, Event::PathActivated) {
+            self.handle_event(hooks, id, Event::PathActivated, &CallerKey::Path(path_id.to_string()));
+        }
     }
 
     /// Path.step on the given path of `id`. Index-based segment walk with
@@ -333,22 +342,34 @@ impl EngineCtx {
             if distance_to_travel <= seg_distance {
                 active_segment_index = Some(i);
                 if !enter_triggered {
-                    let seg_end_key = path!().segments[i].end.key();
-                    path_mut!().segments[i].enter_event_triggered = true;
-                    self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key));
+                    if self.observes_event(id, Event::SegmentEntered) {
+                        let seg_end_key = path!().segments[i].end.key();
+                        path_mut!().segments[i].enter_event_triggered = true;
+                        self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key));
+                    } else {
+                        path_mut!().segments[i].enter_event_triggered = true;
+                    }
                 }
                 break;
             }
             distance_to_travel -= seg_distance;
             if !enter_triggered || !exit_triggered {
-                let seg_end_key = path!().segments[i].end.key();
-                if !enter_triggered {
-                    path_mut!().segments[i].enter_event_triggered = true;
-                    self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
-                }
-                if !exit_triggered {
-                    path_mut!().segments[i].exit_event_triggered = true;
-                    self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+                let observes = self.observes_event(id, Event::SegmentEntered)
+                    || self.observes_event(id, Event::SegmentExited);
+                if !observes {
+                    let seg = &mut path_mut!().segments[i];
+                    seg.enter_event_triggered = true;
+                    seg.exit_event_triggered = true;
+                } else {
+                    let seg_end_key = path!().segments[i].end.key();
+                    if !enter_triggered {
+                        path_mut!().segments[i].enter_event_triggered = true;
+                        self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
+                    }
+                    if !exit_triggered {
+                        path_mut!().segments[i].exit_event_triggered = true;
+                        self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+                    }
                 }
             }
             i += 1;
@@ -416,7 +437,9 @@ impl EngineCtx {
         };
         if current_step == max_steps {
             if hold_time != 0 && hold_time_remaining == hold_time {
-                self.handle_event(hooks, id, Event::PathHolding, &CallerKey::Path(active_path_id.to_string()));
+                if self.observes_event(id, Event::PathHolding) {
+                    self.handle_event(hooks, id, Event::PathHolding, &CallerKey::Path(active_path_id.to_string()));
+                }
                 self.terminal.arena[id.0 as usize]
                     .motion
                     .paths
@@ -443,7 +466,9 @@ impl EngineCtx {
                     motion.completed_path = Some(active_path_id.clone());
                     motion.deactivate_path(Some(&active_path_id));
                 }
-                self.handle_event(hooks, id, Event::PathComplete, &CallerKey::Path(active_path_id.to_string()));
+                if self.observes_event(id, Event::PathComplete) {
+                    self.handle_event(hooks, id, Event::PathComplete, &CallerKey::Path(active_path_id.to_string()));
+                }
             }
         }
     }
@@ -491,7 +516,9 @@ impl EngineCtx {
             ch.animation.active_scene_current_step = 0;
             ch.animation.current_character_visual = visual;
         }
-        self.handle_event(hooks, id, Event::SceneActivated, &CallerKey::Scene(scene_id.to_string()));
+        if self.observes_event(id, Event::SceneActivated) {
+            self.handle_event(hooks, id, Event::SceneActivated, &CallerKey::Scene(scene_id.to_string()));
+        }
     }
 
     /// Animation.deactivate_scene.
@@ -622,7 +649,9 @@ impl EngineCtx {
             looping
         };
         let _ = is_looping;
-        self.handle_event(hooks, id, Event::SceneComplete, &CallerKey::Scene(scene_id.to_string()));
+        if self.observes_event(id, Event::SceneComplete) {
+            self.handle_event(hooks, id, Event::SceneComplete, &CallerKey::Scene(scene_id.to_string()));
+        }
     }
 
     // ------------------------------------------------------------------

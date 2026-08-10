@@ -330,7 +330,7 @@ impl Thunderstorm {
         let strike_char = self.available_strike_chars.pop().unwrap();
         let ch = &mut ctx.terminal.arena[strike_char.0 as usize];
         ch.animation.scenes.clear();
-        ch.event_handler.registered_events.clear();
+        ch.event_handler.clear();
         strike_char
     }
 
