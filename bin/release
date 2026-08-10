@@ -1,0 +1,194 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+PKGS="${OMARCHY_PKGS:-$HOME/Work/omacom/omarchy-pkgs}"
+SKIP_PKGS=0
+VERSION=""
+
+usage() {
+  cat <<'EOF'
+Usage: bin/release [version] [--skip-pkgs]
+
+Cuts a ttfx release: runs the tests, bumps Cargo.toml, tags and pushes, creates
+the GitHub release with generated notes, then points the omarchy-pkgs PKGBUILD
+at the new tarball.
+
+  version      0.4.0 or v0.4.0. Defaults to bumping the last tag's patch number.
+  --skip-pkgs  Leave omarchy-pkgs alone. Implied when it isn't checked out.
+
+OMARCHY_PKGS overrides where omarchy-pkgs lives
+(default: $HOME/Work/omacom/omarchy-pkgs).
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --skip-pkgs) SKIP_PKGS=1 ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  -*)
+    echo "Unknown option: $1" >&2
+    usage >&2
+    exit 1
+    ;;
+  *)
+    if [ -n "$VERSION" ]; then
+      echo "Unexpected argument: $1" >&2
+      exit 1
+    fi
+    VERSION="$1"
+    ;;
+  esac
+  shift
+done
+
+for tool in cargo git gh curl sha256sum tar awk; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "$tool is required to release ttfx." >&2
+    exit 1
+  fi
+done
+
+cd "$ROOT"
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "Working tree is dirty; commit or stash before releasing." >&2
+  exit 1
+fi
+
+PREV="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+
+if [ -z "$VERSION" ]; then
+  if [ -z "$PREV" ]; then
+    echo "No v* tag to bump from; pass a version explicitly." >&2
+    exit 1
+  fi
+  VERSION="$(echo "${PREV#v}" | awk -F. -v OFS=. '{ $NF += 1; print }')"
+fi
+
+VERSION="${VERSION#v}"
+TAG="v$VERSION"
+
+case "$VERSION" in
+[0-9]*.[0-9]*.[0-9]*) ;;
+*)
+  echo "Version must look like 0.4.0; got '$VERSION'." >&2
+  exit 1
+  ;;
+esac
+
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "Tag $TAG already exists." >&2
+  exit 1
+fi
+
+if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
+  echo "Tag $TAG already exists on origin." >&2
+  exit 1
+fi
+
+if ! gh auth status >/dev/null 2>&1; then
+  echo "gh is not authenticated; run: gh auth login" >&2
+  exit 1
+fi
+
+echo "Releasing ttfx $TAG (previous: ${PREV:-none})"
+
+"$ROOT/bin/test"
+
+# From here until the commit lands, put Cargo.toml back if anything fails.
+trap 'git -C "$ROOT" checkout -- Cargo.toml Cargo.lock 2>/dev/null || true' EXIT
+
+awk -v v="$VERSION" '
+  !bumped && /^version = "/ { sub(/"[^"]*"/, "\"" v "\""); bumped = 1 }
+  { print }
+' Cargo.toml >Cargo.toml.new && mv Cargo.toml.new Cargo.toml
+
+if ! grep -q "^version = \"$VERSION\"$" Cargo.toml; then
+  echo "Failed to set version in Cargo.toml." >&2
+  exit 1
+fi
+
+# Also refreshes Cargo.lock, so both go into the bump commit.
+"$ROOT/bin/build"
+
+BUILT="$("$ROOT/target/release/ttfx" --version)"
+if [ "$BUILT" != "ttfx $VERSION" ]; then
+  echo "Built binary reports '$BUILT', expected 'ttfx $VERSION'." >&2
+  exit 1
+fi
+
+git add Cargo.toml Cargo.lock
+git commit -m "Bump to $VERSION"
+trap - EXIT
+
+git push
+git tag "$TAG"
+git push origin "$TAG"
+
+RELEASE_URL="$(gh release create "$TAG" --title "$TAG" --generate-notes)"
+
+PKGBUILD="$PKGS/pkgbuilds/ttfx/PKGBUILD"
+SHA=""
+
+if [ "$SKIP_PKGS" -eq 1 ]; then
+  echo "Skipping omarchy-pkgs (--skip-pkgs)."
+elif [ ! -f "$PKGBUILD" ]; then
+  echo "Skipping omarchy-pkgs: no PKGBUILD at $PKGBUILD."
+else
+  TMP="$(mktemp -d)"
+  trap 'rm -rf "$TMP"' EXIT
+
+  TARBALL="$TMP/ttfx-$VERSION.tar.gz"
+  URL="https://github.com/omacom-io/ttfx/archive/refs/tags/$TAG.tar.gz"
+
+  # GitHub can lag a few seconds behind the tag push.
+  attempt=1
+  while ! curl -fsSL -o "$TARBALL" "$URL"; do
+    if [ "$attempt" -ge 5 ]; then
+      echo "Could not download $URL" >&2
+      exit 1
+    fi
+    echo "  tarball not ready yet, retrying"
+    sleep 3
+    attempt=$((attempt + 1))
+  done
+
+  if ! tar tzf "$TARBALL" | grep -q "^ttfx-$VERSION/"; then
+    echo "Tarball doesn't contain ttfx-$VERSION/." >&2
+    exit 1
+  fi
+
+  SHA="$(sha256sum "$TARBALL" | cut -d' ' -f1)"
+
+  # Only the first sha256sums entry is the tarball; later ones are local files.
+  awk -v v="$VERSION" -v sha="$SHA" -v q="'" '
+    /^pkgver=/ { print "pkgver=" v; next }
+    /^pkgrel=/ { print "pkgrel=1"; next }
+    !hashed && /^sha256sums=/ { sub(q "[^" q "]*" q, q sha q); hashed = 1 }
+    { print }
+  ' "$PKGBUILD" >"$PKGBUILD.new" && mv "$PKGBUILD.new" "$PKGBUILD"
+
+  if ! grep -q "^pkgver=$VERSION$" "$PKGBUILD" || ! grep -q "$SHA" "$PKGBUILD"; then
+    echo "PKGBUILD was not updated as expected; leaving it for you to inspect." >&2
+    exit 1
+  fi
+
+  if command -v bash >/dev/null 2>&1; then
+    bash -n "$PKGBUILD"
+  fi
+
+  git -C "$PKGS" add pkgbuilds/ttfx
+  git -C "$PKGS" commit -m "Update ttfx to $TAG"
+  git -C "$PKGS" push
+fi
+
+echo
+echo "Released ttfx $TAG"
+echo "  $RELEASE_URL"
+if [ -n "$SHA" ]; then
+  echo "  omarchy-pkgs updated to $SHA"
+fi
