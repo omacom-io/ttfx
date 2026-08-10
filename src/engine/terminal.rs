@@ -116,6 +116,7 @@ pub struct Terminal {
     pub arena: Vec<EffectCharacter>,
     next_character_id: u32,
     pub input_colors_frequency: ColorFrequency,
+    terminal_dimensions: (i64, i64),
     pub canvas_column_offset: i64,
     pub canvas_row_offset: i64,
     pub visible_top: i64,
@@ -180,6 +181,7 @@ impl Terminal {
         .preprocess(input_data)?;
 
         let (mut terminal_width, mut terminal_height) = get_terminal_dimensions();
+        let terminal_dimensions = (terminal_width, terminal_height);
         let (canvas_height, canvas_width) =
             get_canvas_dimensions(&config, &preprocessed_lines, terminal_width, terminal_height);
         let mut canvas = Canvas::new(canvas_height, canvas_width);
@@ -224,6 +226,7 @@ impl Terminal {
             arena,
             next_character_id,
             input_colors_frequency,
+            terminal_dimensions,
             canvas_column_offset,
             canvas_row_offset,
             visible_top,
@@ -607,7 +610,7 @@ impl Terminal {
     /// definition, even if the surrounding tty changes size.
     pub fn dimensions_changed(&self) -> bool {
         !self.config.ignore_terminal_dimensions
-            && get_terminal_dimensions() != (self.terminal_width, self.terminal_height)
+            && get_terminal_dimensions() != self.terminal_dimensions
     }
 
     // --- tty side (upstream's second Terminal instance) ---
@@ -654,9 +657,34 @@ impl Terminal {
         let frame_delay = 1.0 / self.frame_rate as f64;
         let elapsed = self.last_time_printed.elapsed().as_secs_f64();
         if elapsed < frame_delay {
-            std::thread::sleep(std::time::Duration::from_secs_f64(frame_delay - elapsed));
+            sleep_until_signal(std::time::Duration::from_secs_f64(frame_delay - elapsed));
         }
         self.last_time_printed = Instant::now();
+    }
+}
+
+/// Sleep for frame pacing, but return promptly when one of the installed
+/// process handlers records an interrupt or terminal resize.
+fn sleep_until_signal(duration: std::time::Duration) {
+    let mut requested = libc::timespec {
+        tv_sec: duration.as_secs() as libc::time_t,
+        tv_nsec: duration.subsec_nanos() as libc::c_long,
+    };
+    loop {
+        let mut remaining = std::mem::MaybeUninit::<libc::timespec>::uninit();
+        // SAFETY: both pointers refer to valid timespec storage for the call.
+        let result = unsafe { libc::nanosleep(&requested, remaining.as_mut_ptr()) };
+        if result == 0 {
+            break;
+        }
+        if std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+            break;
+        }
+        if crate::interrupted() || crate::terminal_resize_pending() {
+            break;
+        }
+        // SAFETY: POSIX requires nanosleep to initialize `remaining` on EINTR.
+        requested = unsafe { remaining.assume_init() };
     }
 }
 

@@ -14,7 +14,10 @@ static TERMINAL_RESIZED: AtomicBool = AtomicBool::new(false);
 pub fn install_sigint_handler() {
     // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
-        libc_signal(2 /* SIGINT */, handle_sigint as *const () as usize);
+        libc::signal(
+            libc::SIGINT,
+            handle_sigint as *const () as libc::sighandler_t,
+        );
     }
 }
 
@@ -29,10 +32,12 @@ pub fn interrupted() -> bool {
 /// Record terminal resizes so the CLI can rebuild effects whose canvas and
 /// character positions were derived from the previous dimensions.
 pub fn install_sigwinch_handler() {
-    // SIGWINCH is 28 on both supported targets (Linux and macOS). The handler
-    // is signal-safe: like SIGINT above, it only stores an atomic flag.
+    // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
-        libc_signal(28 /* SIGWINCH */, handle_sigwinch as *const () as usize);
+        libc::signal(
+            libc::SIGWINCH,
+            handle_sigwinch as *const () as libc::sighandler_t,
+        );
     }
 }
 
@@ -45,20 +50,15 @@ pub fn take_terminal_resize() -> bool {
     TERMINAL_RESIZED.swap(false, Ordering::SeqCst)
 }
 
+pub(crate) fn terminal_resize_pending() -> bool {
+    TERMINAL_RESIZED.load(Ordering::SeqCst)
+}
+
 /// Restore default SIGPIPE so `ttfx ... | head` dies quietly like any Unix
 /// tool instead of panicking on a broken pipe (Rust ignores SIGPIPE by default).
 pub fn restore_sigpipe() {
     unsafe {
-        libc_signal(13 /* SIGPIPE */, 0 /* SIG_DFL */);
-    }
-}
-
-unsafe fn libc_signal(signum: i32, handler: usize) {
-    unsafe extern "C" {
-        fn signal(signum: i32, handler: usize) -> usize;
-    }
-    unsafe {
-        signal(signum, handler);
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 }
 
@@ -69,8 +69,10 @@ mod tests {
     #[test]
     fn terminal_resize_notifications_are_consumed() {
         take_terminal_resize();
-        handle_sigwinch(28);
+        handle_sigwinch(libc::SIGWINCH);
+        assert!(terminal_resize_pending());
         assert!(take_terminal_resize());
+        assert!(!terminal_resize_pending());
         assert!(!take_terminal_resize());
     }
 }

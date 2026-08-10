@@ -48,17 +48,16 @@ fn run_effect_inner(
     ctx.terminal.prep_canvas(&mut out).map_err(io_err)?;
     let mut outcome = RunOutcome::Complete;
     let result = (|| {
-        while let Some(frame) = effect.next_frame(ctx) {
-            if crate::interrupted() {
-                outcome = RunOutcome::Interrupted;
-                ctx.terminal.recycle_output_string(frame);
+        loop {
+            if let Some(stop) = requested_stop(ctx, stop_on_resize) {
+                outcome = stop;
                 break;
             }
-            if stop_on_resize
-                && crate::take_terminal_resize()
-                && ctx.terminal.dimensions_changed()
-            {
-                outcome = RunOutcome::TerminalResized;
+            let Some(frame) = effect.next_frame(ctx) else {
+                break;
+            };
+            if let Some(stop) = requested_stop(ctx, stop_on_resize) {
+                outcome = stop;
                 ctx.terminal.recycle_output_string(frame);
                 break;
             }
@@ -77,6 +76,19 @@ fn run_effect_inner(
         .map_err(io_err)?;
     out.flush().ok();
     result.map(|_| outcome)
+}
+
+fn requested_stop(ctx: &EngineCtx, stop_on_resize: bool) -> Option<RunOutcome> {
+    if crate::interrupted() {
+        Some(RunOutcome::Interrupted)
+    } else if stop_on_resize
+        && crate::take_terminal_resize()
+        && ctx.terminal.dimensions_changed()
+    {
+        Some(RunOutcome::TerminalResized)
+    } else {
+        None
+    }
 }
 
 /// Parity mode: write length-prefixed frames to stdout, no tty escapes.
