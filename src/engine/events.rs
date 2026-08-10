@@ -49,6 +49,28 @@ pub enum CallerKey {
     Waypoint(WaypointKey),
 }
 
+/// A caller identity borrowed for the duration of a lookup. Emission sites
+/// already hold the id they are firing for, so matching against the table costs
+/// nothing — building an owned CallerKey per emission did.
+#[derive(Debug, Clone, Copy)]
+pub enum CallerRef<'a> {
+    Scene(&'a str),
+    Path(&'a str),
+    Waypoint(&'a WaypointKey),
+}
+
+impl CallerKey {
+    #[inline]
+    fn matches(&self, caller: CallerRef<'_>) -> bool {
+        match (self, caller) {
+            (CallerKey::Scene(a), CallerRef::Scene(b)) => **a == *b,
+            (CallerKey::Path(a), CallerRef::Path(b)) => **a == *b,
+            (CallerKey::Waypoint(a), CallerRef::Waypoint(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
 /// Typed payload values for effect callbacks (upstream Callback *args).
 #[derive(Debug, Clone, PartialEq)]
 pub enum CallbackValue {
@@ -120,11 +142,11 @@ impl EventHandler {
     }
 
     #[inline]
-    pub fn actions_index(&self, event: Event, caller: &CallerKey) -> Option<usize> {
+    pub fn actions_index(&self, event: Event, caller: CallerRef<'_>) -> Option<usize> {
         if !self.subscribes(event) {
             return None;
         }
-        self.registered_events.iter().position(|((e, c), _)| *e == event && c == caller)
+        self.registered_events.iter().position(|((e, c), _)| *e == event && c.matches(caller))
     }
 
     #[inline]

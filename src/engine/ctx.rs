@@ -16,7 +16,7 @@ use crate::engine::active_characters::ActiveCharacters;
 use crate::engine::animation::SyncMetric;
 use crate::engine::character::CharId;
 use crate::engine::error::EngineError;
-use crate::engine::events::{CallerKey, EffectCallback, Event, EventAction};
+use crate::engine::events::{CallerKey, CallerRef, EffectCallback, Event, EventAction};
 use crate::engine::motion::Segment;
 use crate::engine::motion::Waypoint;
 use crate::engine::terminal::{Terminal, TerminalConfig};
@@ -139,7 +139,7 @@ impl EngineCtx {
         hooks: &mut dyn EffectHooks,
         id: CharId,
         event: Event,
-        caller: &CallerKey,
+        caller: CallerRef<'_>,
     ) {
         if self.event_log.is_some() {
             let character_id = self.terminal.arena[id.0 as usize].character_id;
@@ -153,9 +153,9 @@ impl EngineCtx {
                 Event::SceneComplete => "SCENE_COMPLETE",
             };
             let caller_label = match caller {
-                CallerKey::Path(pid) => format!("path:{pid}"),
-                CallerKey::Waypoint(wp) => format!("wp:{}", wp.waypoint_id),
-                CallerKey::Scene(sid) => format!("scene:{sid}"),
+                CallerRef::Path(pid) => format!("path:{pid}"),
+                CallerRef::Waypoint(wp) => format!("wp:{}", wp.waypoint_id),
+                CallerRef::Scene(sid) => format!("scene:{sid}"),
             };
             self.event_log
                 .as_mut()
@@ -291,7 +291,7 @@ impl EngineCtx {
             self.terminal.arena[id.0 as usize].layer = layer;
         }
         if self.observes_event(id, Event::PathActivated) {
-            self.handle_event(hooks, id, Event::PathActivated, &CallerKey::Path(path_id.to_string()));
+            self.handle_event(hooks, id, Event::PathActivated, CallerRef::Path(path_id));
         }
     }
 
@@ -356,7 +356,7 @@ impl EngineCtx {
                     if self.observes_event(id, Event::SegmentEntered) {
                         let seg_end_key = path!().segments[i].end.key();
                         path_mut!().segments[i].enter_event_triggered = true;
-                        self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key));
+                        self.handle_event(hooks, id, Event::SegmentEntered, CallerRef::Waypoint(&seg_end_key));
                         resolve_slot!();
                     } else {
                         path_mut!().segments[i].enter_event_triggered = true;
@@ -376,12 +376,12 @@ impl EngineCtx {
                     let seg_end_key = path!().segments[i].end.key();
                     if !enter_triggered {
                         path_mut!().segments[i].enter_event_triggered = true;
-                        self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
+                        self.handle_event(hooks, id, Event::SegmentEntered, CallerRef::Waypoint(&seg_end_key));
                         resolve_slot!();
                     }
                     if !exit_triggered {
                         path_mut!().segments[i].exit_event_triggered = true;
-                        self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+                        self.handle_event(hooks, id, Event::SegmentExited, CallerRef::Waypoint(&seg_end_key));
                         resolve_slot!();
                     }
                 }
@@ -449,7 +449,7 @@ impl EngineCtx {
         if current_step == max_steps {
             if hold_time != 0 && hold_time_remaining == hold_time {
                 if self.observes_event(id, Event::PathHolding) {
-                    self.handle_event(hooks, id, Event::PathHolding, &CallerKey::Path(active_path_id.to_string()));
+                    self.handle_event(hooks, id, Event::PathHolding, CallerRef::Path(&active_path_id));
                 }
                 self.terminal.arena[id.0 as usize]
                     .motion
@@ -473,7 +473,7 @@ impl EngineCtx {
                     motion.deactivate_path(Some(&active_path_id));
                 }
                 if self.observes_event(id, Event::PathComplete) {
-                    self.handle_event(hooks, id, Event::PathComplete, &CallerKey::Path(active_path_id.to_string()));
+                    self.handle_event(hooks, id, Event::PathComplete, CallerRef::Path(&active_path_id));
                 }
             }
         }
@@ -523,7 +523,7 @@ impl EngineCtx {
             ch.animation.current_character_visual = visual;
         }
         if self.observes_event(id, Event::SceneActivated) {
-            self.handle_event(hooks, id, Event::SceneActivated, &CallerKey::Scene(scene_id.to_string()));
+            self.handle_event(hooks, id, Event::SceneActivated, CallerRef::Scene(scene_id));
         }
     }
 
@@ -661,8 +661,8 @@ impl EngineCtx {
             }
         }
         if self.observes_event(id, Event::SceneComplete) {
-            let scene_id = self.terminal.arena[id.0 as usize].animation.scenes.key_at(scene_slot).to_string();
-            self.handle_event(hooks, id, Event::SceneComplete, &CallerKey::Scene(scene_id));
+            let scene_id = Rc::clone(self.terminal.arena[id.0 as usize].animation.scenes.key_at(scene_slot));
+            self.handle_event(hooks, id, Event::SceneComplete, CallerRef::Scene(&scene_id));
         }
     }
 
