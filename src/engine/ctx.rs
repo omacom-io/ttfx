@@ -9,6 +9,7 @@
 //! by id after every emission point, and segment walks are index-based so
 //! reentrant list mutation behaves like Python list iteration.
 
+use std::rc::Rc;
 use std::time::Instant;
 
 use crate::engine::active_characters::ActiveCharacters;
@@ -22,6 +23,11 @@ use crate::engine::terminal::{Terminal, TerminalConfig};
 use crate::utils::geometry::{self, Coord};
 use crate::utils::pycompat::round_half_even;
 use crate::utils::rng::Rng;
+
+thread_local! {
+    /// The synthetic origin waypoint's id, shared by every activation.
+    static ORIGIN_WAYPOINT_ID: Rc<str> = Rc::from("origin");
+}
 
 /// Virtual/real clock (plan.md §4.7). Matrix reads wall time, thunderstorm
 /// reads monotonic time; the parity harness swaps in the virtual variant.
@@ -256,7 +262,7 @@ impl EngineCtx {
             None => geometry::find_length_of_line(current_coord, first_waypoint.coord, true),
         };
         let new_origin_segment = Segment::new(
-            Waypoint { waypoint_id: "origin".to_string(), coord: current_coord, bezier_control: None },
+            Waypoint { waypoint_id: ORIGIN_WAYPOINT_ID.with(Rc::clone), coord: current_coord, bezier_control: None },
             first_waypoint,
             distance_to_first_waypoint,
         );

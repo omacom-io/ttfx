@@ -37,8 +37,8 @@ impl Event {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WaypointKey {
     pub coord: Coord,
-    pub waypoint_id: String,
-    pub bezier_control: Option<Vec<Coord>>,
+    pub waypoint_id: std::rc::Rc<str>,
+    pub bezier_control: Option<std::rc::Rc<[Coord]>>,
 }
 
 /// Event caller identity. Scene/Path compare by id (their upstream __eq__).
