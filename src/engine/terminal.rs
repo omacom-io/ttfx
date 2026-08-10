@@ -602,6 +602,14 @@ impl Terminal {
         }
     }
 
+    /// Whether a SIGWINCH corresponds to dimensions that would change this
+    /// terminal's layout. Explicitly ignored dimensions remain fixed by
+    /// definition, even if the surrounding tty changes size.
+    pub fn dimensions_changed(&self) -> bool {
+        !self.config.ignore_terminal_dimensions
+            && get_terminal_dimensions() != (self.terminal_width, self.terminal_height)
+    }
+
     // --- tty side (upstream's second Terminal instance) ---
 
     pub fn prep_canvas(&mut self, out: &mut impl Write) -> std::io::Result<()> {

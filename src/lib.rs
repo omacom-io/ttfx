@@ -6,6 +6,7 @@ pub mod utils;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+static TERMINAL_RESIZED: AtomicBool = AtomicBool::new(false);
 
 /// SIGINT is recorded and checked from the run loop so teardown (cursor
 /// restore) happens through normal control flow — Drop alone would not run on
@@ -25,6 +26,25 @@ pub fn interrupted() -> bool {
     INTERRUPTED.load(Ordering::SeqCst)
 }
 
+/// Record terminal resizes so the CLI can rebuild effects whose canvas and
+/// character positions were derived from the previous dimensions.
+pub fn install_sigwinch_handler() {
+    // SIGWINCH is 28 on both supported targets (Linux and macOS). The handler
+    // is signal-safe: like SIGINT above, it only stores an atomic flag.
+    unsafe {
+        libc_signal(28 /* SIGWINCH */, handle_sigwinch as *const () as usize);
+    }
+}
+
+extern "C" fn handle_sigwinch(_: i32) {
+    TERMINAL_RESIZED.store(true, Ordering::SeqCst);
+}
+
+/// Consume a pending terminal resize notification.
+pub fn take_terminal_resize() -> bool {
+    TERMINAL_RESIZED.swap(false, Ordering::SeqCst)
+}
+
 /// Restore default SIGPIPE so `ttfx ... | head` dies quietly like any Unix
 /// tool instead of panicking on a broken pipe (Rust ignores SIGPIPE by default).
 pub fn restore_sigpipe() {
@@ -39,5 +59,18 @@ unsafe fn libc_signal(signum: i32, handler: usize) {
     }
     unsafe {
         signal(signum, handler);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn terminal_resize_notifications_are_consumed() {
+        take_terminal_resize();
+        handle_sigwinch(28);
+        assert!(take_terminal_resize());
+        assert!(!take_terminal_resize());
     }
 }

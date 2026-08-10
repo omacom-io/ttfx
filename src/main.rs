@@ -109,32 +109,52 @@ fn main() -> ExitCode {
         }
     };
 
-    let config = cli.terminal_config();
-    let clock = if cli.parity_dump || cli.virtual_clock {
-        ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
-    } else {
-        ttfx::engine::ctx::Clock::real()
-    };
-    let frame_rate = config.frame_rate;
-    let mut ctx = match ttfx::engine::ctx::EngineCtx::new(&input_data, config, rng, clock) {
-        Ok(ctx) => ctx,
-        Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
-            eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
-            return ExitCode::from(1);
-        }
-        Err(e) => {
-            eprintln!("Error: {e}");
-            return ExitCode::from(1);
-        }
-    };
-    let _ = frame_rate;
-    let mut effect = effect_command.build_effect();
-
-    let result = if cli.parity_dump {
-        ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames).map(|_| ())
-    } else {
+    let mut config = cli.terminal_config();
+    if !cli.parity_dump {
         ttfx::install_sigint_handler();
-        ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
+        ttfx::install_sigwinch_handler();
+    }
+
+    let result = loop {
+        let clock = if cli.parity_dump || cli.virtual_clock {
+            ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
+        } else {
+            ttfx::engine::ctx::Clock::real()
+        };
+        let mut ctx = match ttfx::engine::ctx::EngineCtx::new(
+            &input_data,
+            config.clone(),
+            rng,
+            clock,
+        ) {
+            Ok(ctx) => ctx,
+            Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
+                eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
+                return ExitCode::from(1);
+            }
+            Err(e) => {
+                eprintln!("Error: {e}");
+                return ExitCode::from(1);
+            }
+        };
+        let mut effect = effect_command.build_effect();
+
+        if cli.parity_dump {
+            break ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
+                .map(|_| ());
+        }
+
+        match ttfx::engine::effect::run_effect_resize_aware(effect.as_mut(), &mut ctx) {
+            Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
+                // The current output area is already allocated. Reuse it when
+                // rebuilding at the new dimensions instead of scrolling a
+                // second canvas into the terminal.
+                config.reuse_canvas = true;
+                rng = ctx.rng;
+            }
+            Ok(_) => break Ok(()),
+            Err(e) => break Err(e),
+        }
     };
     // Output is already flushed, and nothing in the engine has a Drop impl that
     // does work. Freeing an arena of tens of thousands of characters, each with
