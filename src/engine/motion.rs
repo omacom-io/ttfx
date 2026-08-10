@@ -10,18 +10,21 @@ use crate::utils::geometry::{self, Coord};
 use crate::utils::ordered_map::OrderedMap;
 use crate::utils::pycompat::round_half_even;
 
+/// Waypoints are cloned constantly — into segments, into origin segments on
+/// every path activation, and into event keys — so both owned fields are
+/// reference counted and a clone is two refcount bumps.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Waypoint {
-    pub waypoint_id: String,
+    pub waypoint_id: Rc<str>,
     pub coord: Coord,
-    pub bezier_control: Option<Vec<Coord>>,
+    pub bezier_control: Option<Rc<[Coord]>>,
 }
 
 impl Waypoint {
     pub fn key(&self) -> WaypointKey {
         WaypointKey {
-            waypoint_id: self.waypoint_id.clone(),
             coord: self.coord,
+            waypoint_id: self.waypoint_id.clone(),
             bezier_control: self.bezier_control.clone(),
         }
     }
@@ -99,23 +102,23 @@ impl Path {
         bezier_control: Option<Vec<Coord>>,
         waypoint_id: &str,
     ) -> Result<Waypoint, String> {
-        let waypoint_id = if waypoint_id.is_empty() {
+        let waypoint_id: Rc<str> = if waypoint_id.is_empty() {
             let mut current_id = self.waypoints.len();
             loop {
                 let candidate = current_id.to_string();
-                if !self.waypoints.iter().any(|w| w.waypoint_id == candidate) {
-                    break candidate;
+                if !self.waypoints.iter().any(|w| *w.waypoint_id == *candidate) {
+                    break Rc::from(candidate);
                 }
                 current_id += 1;
             }
         } else {
-            if self.waypoints.iter().any(|w| w.waypoint_id == waypoint_id) {
+            if self.waypoints.iter().any(|w| *w.waypoint_id == *waypoint_id) {
                 return Err(format!("duplicate waypoint id: {waypoint_id}"));
             }
-            waypoint_id.to_string()
+            Rc::from(waypoint_id)
         };
         // Python: empty tuple bezier_control is falsy -> None
-        let bezier_control = bezier_control.filter(|v| !v.is_empty());
+        let bezier_control = bezier_control.filter(|v| !v.is_empty()).map(Rc::from);
         let waypoint = Waypoint { waypoint_id, coord, bezier_control };
         self.add_waypoint_to_path(waypoint.clone());
         Ok(waypoint)
@@ -141,7 +144,7 @@ impl Path {
     pub fn query_waypoint(&self, waypoint_id: &str) -> Result<&Waypoint, String> {
         self.waypoints
             .iter()
-            .find(|w| w.waypoint_id == waypoint_id)
+            .find(|w| *w.waypoint_id == *waypoint_id)
             .ok_or_else(|| format!("waypoint not found: {waypoint_id}"))
     }
 }

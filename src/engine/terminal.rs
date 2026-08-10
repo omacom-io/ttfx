@@ -560,7 +560,7 @@ impl Terminal {
                 if cell == EMPTY_RENDER_CELL {
                     row.push(' ');
                 } else {
-                    row.push_str(&arena[cell as usize].animation.current_character_visual.formatted_symbol);
+                    row.push_str(arena[cell as usize].animation.current_character_visual.formatted_symbol.as_str());
                 }
             }
         }
@@ -573,7 +573,7 @@ impl Terminal {
             .checked_mul(height)
             .and_then(|cells| cells.checked_add(height.saturating_sub(1)))
             .expect("terminal canvas is too large");
-        let mut out = std::mem::take(&mut self.output_buffer);
+        let mut out = std::mem::take(&mut self.output_buffer).into_bytes();
         out.clear();
         if out.capacity() < minimum_capacity {
             out.reserve(minimum_capacity);
@@ -581,17 +581,18 @@ impl Terminal {
         let arena = &self.arena;
         for row_index in (0..height).rev() {
             if row_index + 1 < height {
-                out.push('\n');
+                out.push(b'\n');
             }
             for &cell in &self.render_cells[row_index * width..(row_index + 1) * width] {
                 if cell == EMPTY_RENDER_CELL {
-                    out.push(' ');
+                    out.push(b' ');
                 } else {
-                    out.push_str(&arena[cell as usize].animation.current_character_visual.formatted_symbol);
+                    arena[cell as usize].animation.current_character_visual.formatted_symbol.append_to(&mut out);
                 }
             }
         }
-        out
+        // SAFETY: every appended run is a whole formatted symbol, which is UTF-8.
+        unsafe { String::from_utf8_unchecked(out) }
     }
 
     pub(crate) fn recycle_output_string(&mut self, mut output: String) {

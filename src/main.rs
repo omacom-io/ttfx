@@ -136,6 +136,14 @@ fn main() -> ExitCode {
         ttfx::install_sigint_handler();
         ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx)
     };
+    // Output is already flushed, and nothing in the engine has a Drop impl that
+    // does work. Freeing an arena of tens of thousands of characters, each with
+    // its own scenes, paths and frames, is pure exit latency — on binarypath it
+    // is ~4% of the run. Hand it to the kernel instead.
+    std::mem::forget(effect);
+    std::mem::forget(ctx);
+    std::mem::forget(input_data);
+
     match result {
         Ok(()) => {
             if ttfx::interrupted() {

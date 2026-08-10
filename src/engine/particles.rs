@@ -122,7 +122,7 @@ impl ParticlePool {
             ch.animation.scenes.clear();
         }
         if reset.clear_events {
-            ch.event_handler.registered_events.clear();
+            ch.event_handler.clear();
         }
         if reset.reset_appearance {
             let input_symbol = ch.input_symbol.clone();

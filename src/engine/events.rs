@@ -20,14 +20,25 @@ pub enum Event {
     SceneComplete,
 }
 
+impl Event {
+    #[inline]
+    fn bit(self) -> u8 {
+        1 << (self as u8)
+    }
+}
+
 /// Waypoint identity for event keying: upstream Waypoint is a frozen dataclass
 /// hashed/compared by ALL fields (id, coord, bezier controls) — two waypoints
 /// with identical fields in different paths collide, faithfully.
+///
+/// Field order is load-bearing for speed, not for meaning: the derived
+/// comparison short-circuits in declaration order, and `coord` rejects
+/// non-matches with two integer compares instead of a string memcmp.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WaypointKey {
-    pub waypoint_id: String,
     pub coord: Coord,
-    pub bezier_control: Option<Vec<Coord>>,
+    pub waypoint_id: std::rc::Rc<str>,
+    pub bezier_control: Option<std::rc::Rc<[Coord]>>,
 }
 
 /// Event caller identity. Scene/Path compare by id (their upstream __eq__).
@@ -36,6 +47,65 @@ pub enum CallerKey {
     Scene(String),
     Path(String),
     Waypoint(WaypointKey),
+}
+
+/// A caller identity borrowed for the duration of a lookup. Emission sites
+/// already hold the id they are firing for, so matching against the table costs
+/// nothing — building an owned CallerKey per emission did.
+#[derive(Debug, Clone, Copy)]
+pub enum CallerRef<'a> {
+    Scene(&'a str),
+    Path(&'a str),
+    Waypoint(&'a WaypointKey),
+}
+
+/// FNV-1a over a byte run, seeded so the three caller kinds cannot collide.
+#[inline]
+fn fnv(mut hash: u32, bytes: &[u8]) -> u32 {
+    for &byte in bytes {
+        hash ^= byte as u32;
+        hash = hash.wrapping_mul(16_777_619);
+    }
+    hash
+}
+
+impl CallerRef<'_> {
+    /// A cheap digest of the caller's identity. Registered entries store theirs,
+    /// so a lookup hashes once and then rejects candidates with an integer
+    /// compare instead of a string compare each.
+    #[inline]
+    fn fingerprint(self) -> u32 {
+        match self {
+            CallerRef::Scene(id) => fnv(0x0100_0193, id.as_bytes()),
+            CallerRef::Path(id) => fnv(0x0200_0193, id.as_bytes()),
+            CallerRef::Waypoint(key) => {
+                let hash = fnv(0x0300_0193, &key.coord.column.to_le_bytes());
+                let hash = fnv(hash, &key.coord.row.to_le_bytes());
+                fnv(hash, key.waypoint_id.as_bytes())
+            }
+        }
+    }
+}
+
+impl CallerKey {
+    #[inline]
+    fn as_ref(&self) -> CallerRef<'_> {
+        match self {
+            CallerKey::Scene(id) => CallerRef::Scene(id),
+            CallerKey::Path(id) => CallerRef::Path(id),
+            CallerKey::Waypoint(key) => CallerRef::Waypoint(key),
+        }
+    }
+
+    #[inline]
+    fn matches(&self, caller: CallerRef<'_>) -> bool {
+        match (self, caller) {
+            (CallerKey::Scene(a), CallerRef::Scene(b)) => **a == *b,
+            (CallerKey::Path(a), CallerRef::Path(b)) => **a == *b,
+            (CallerKey::Waypoint(a), CallerRef::Waypoint(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 /// Typed payload values for effect callbacks (upstream Callback *args).
@@ -72,9 +142,23 @@ pub enum EventAction {
 }
 
 /// Per-character event table: insertion-ordered (event, caller) -> actions.
+///
+/// `subscribed` mirrors the table as a bitmask of registered event kinds. Most
+/// characters register a handful of events while the engine emits thousands,
+/// so callers test it first and skip building the (allocating) CallerKey when
+/// nothing could match.
 #[derive(Debug, Clone, Default)]
 pub struct EventHandler {
-    pub registered_events: Vec<((Event, CallerKey), Vec<EventAction>)>,
+    registered_events: Vec<RegisteredEvent>,
+    subscribed: u8,
+}
+
+#[derive(Debug, Clone)]
+struct RegisteredEvent {
+    event: Event,
+    fingerprint: u32,
+    caller: CallerKey,
+    actions: Vec<EventAction>,
 }
 
 impl EventHandler {
@@ -82,19 +166,59 @@ impl EventHandler {
     /// DuplicateEventRegistrationError). Caller/target id resolution and type
     /// validation happen in EngineCtx::register_event, which has arena access.
     pub fn push(&mut self, event: Event, caller: CallerKey, action: EventAction) -> Result<(), String> {
-        let key = (event, caller);
-        if let Some(entry) = self.registered_events.iter_mut().find(|(k, _)| *k == key) {
-            if entry.1.contains(&action) {
-                return Err(format!("duplicate event registration: {:?} {:?}", entry.0, action));
+        let fingerprint = caller.as_ref().fingerprint();
+        let existing = self.registered_events.iter_mut().find(|entry| {
+            entry.event == event && entry.fingerprint == fingerprint && entry.caller == caller
+        });
+        if let Some(entry) = existing {
+            if entry.actions.contains(&action) {
+                return Err(format!(
+                    "duplicate event registration: {:?} {:?}",
+                    (entry.event, &entry.caller),
+                    action
+                ));
             }
-            entry.1.push(action);
+            entry.actions.push(action);
         } else {
-            self.registered_events.push((key, vec![action]));
+            self.registered_events.push(RegisteredEvent { event, fingerprint, caller, actions: vec![action] });
         }
+        self.subscribed |= event.bit();
         Ok(())
     }
 
-    pub fn actions_index(&self, event: Event, caller: &CallerKey) -> Option<usize> {
-        self.registered_events.iter().position(|((e, c), _)| *e == event && c == caller)
+    /// True when at least one action is registered for this event kind, for any
+    /// caller. A false answer means `actions_index` cannot match.
+    #[inline]
+    pub fn subscribes(&self, event: Event) -> bool {
+        self.subscribed & event.bit() != 0
+    }
+
+    #[inline]
+    pub fn actions_index(&self, event: Event, caller: CallerRef<'_>) -> Option<usize> {
+        if !self.subscribes(event) {
+            return None;
+        }
+        // Hashing the query only pays once there is a run of candidates to
+        // reject; a table with a couple of entries compares them directly.
+        if self.registered_events.len() <= 2 {
+            return self
+                .registered_events
+                .iter()
+                .position(|entry| entry.event == event && entry.caller.matches(caller));
+        }
+        let fingerprint = caller.fingerprint();
+        self.registered_events.iter().position(|entry| {
+            entry.event == event && entry.fingerprint == fingerprint && entry.caller.matches(caller)
+        })
+    }
+
+    #[inline]
+    pub fn actions(&self, index: usize) -> &[EventAction] {
+        &self.registered_events[index].actions
+    }
+
+    pub fn clear(&mut self) {
+        self.registered_events.clear();
+        self.subscribed = 0;
     }
 }
