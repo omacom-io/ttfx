@@ -481,9 +481,9 @@ impl Terminal {
         }
     }
 
-    /// Terminal._update_terminal_state: full repaint, painter's algorithm by
-    /// (layer, character_id) — the canonical deterministic order (plan.md §4.3).
-    pub fn update_terminal_state(&mut self) {
+    /// Paint the visible characters into the reusable cell buffer using the
+    /// canonical (layer, character_id) painter order (plan.md §4.3).
+    fn update_render_cells(&mut self) -> (usize, usize) {
         let width = self.visible_right.max(0) as usize;
         let height = self.visible_top.max(0) as usize;
         let cell_count = width.checked_mul(height).expect("terminal canvas is too large");
@@ -515,6 +515,15 @@ impl Terminal {
             }
         }
 
+        (width, height)
+    }
+
+    /// Terminal._update_terminal_state: materialize the row-oriented state
+    /// exposed by the upstream API. Frame output uses the cell buffer directly
+    /// so the hot path does not copy every rendered byte through these rows.
+    pub fn update_terminal_state(&mut self) {
+        let (width, height) = self.update_render_cells();
+
         self.terminal_state.resize_with(height, String::new);
         self.terminal_state.truncate(height);
         let arena = &self.arena;
@@ -533,21 +542,30 @@ impl Terminal {
         }
     }
 
-    /// get_formatted_output_string: refresh + join top row first.
+    /// get_formatted_output_string: refresh + emit top row first.
     pub fn get_formatted_output_string(&mut self) -> String {
-        self.update_terminal_state();
-        let content_len: usize = self.terminal_state.iter().map(String::len).sum();
-        let required_capacity = content_len + self.terminal_state.len().saturating_sub(1);
+        let (width, height) = self.update_render_cells();
+        let minimum_capacity = width
+            .checked_mul(height)
+            .and_then(|cells| cells.checked_add(height.saturating_sub(1)))
+            .expect("terminal canvas is too large");
         let mut out = std::mem::take(&mut self.output_buffer);
         out.clear();
-        if out.capacity() < required_capacity {
-            out.reserve(required_capacity);
+        if out.capacity() < minimum_capacity {
+            out.reserve(minimum_capacity);
         }
-        for (i, row) in self.terminal_state.iter().rev().enumerate() {
-            if i > 0 {
+        let arena = &self.arena;
+        for row_index in (0..height).rev() {
+            if row_index + 1 < height {
                 out.push('\n');
             }
-            out.push_str(row);
+            for &cell in &self.render_cells[row_index * width..(row_index + 1) * width] {
+                if cell == EMPTY_RENDER_CELL {
+                    out.push(' ');
+                } else {
+                    out.push_str(&arena[cell as usize].animation.current_character_visual.formatted_symbol);
+                }
+            }
         }
         out
     }
