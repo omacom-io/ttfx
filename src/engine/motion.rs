@@ -20,8 +20,8 @@ pub struct Waypoint {
 impl Waypoint {
     pub fn key(&self) -> WaypointKey {
         WaypointKey {
-            waypoint_id: self.waypoint_id.clone(),
             coord: self.coord,
+            waypoint_id: self.waypoint_id.clone(),
             bezier_control: self.bezier_control.clone(),
         }
     }

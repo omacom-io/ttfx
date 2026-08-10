@@ -30,10 +30,14 @@ impl Event {
 /// Waypoint identity for event keying: upstream Waypoint is a frozen dataclass
 /// hashed/compared by ALL fields (id, coord, bezier controls) — two waypoints
 /// with identical fields in different paths collide, faithfully.
+///
+/// Field order is load-bearing for speed, not for meaning: the derived
+/// comparison short-circuits in declaration order, and `coord` rejects
+/// non-matches with two integer compares instead of a string memcmp.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WaypointKey {
-    pub waypoint_id: String,
     pub coord: Coord,
+    pub waypoint_id: String,
     pub bezier_control: Option<Vec<Coord>>,
 }
 
