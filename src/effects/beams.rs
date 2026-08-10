@@ -226,7 +226,8 @@ impl Effect for Beams {
         for column in ctx.terminal.get_characters_grouped(all_chars_filter, CharacterGroup::ColumnLeftToRight) {
             groups.push(self.make_group(ctx, column, Direction::Column));
         }
-        for group in &groups {
+        // Rows and columns contain the same characters; initialize each character's scenes only once.
+        for group in groups.iter().filter(|group| group.direction == Direction::Row) {
             for &id in &group.characters {
                 let (input_symbol, uses_pre) = {
                     let ch = &ctx.terminal.arena[id.0 as usize];
