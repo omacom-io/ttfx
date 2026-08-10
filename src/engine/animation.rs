@@ -2,6 +2,9 @@
 //! Scene/Animation stepping that fires events lives on EngineCtx (ctx.rs);
 //! everything here is state plus event-free logic.
 
+use std::collections::VecDeque;
+use std::rc::Rc;
+
 use crate::utils::ansi::{self, ColorCode};
 use crate::utils::easing::Easing;
 use crate::utils::graphics::{Color, ColorPair, Gradient};
@@ -124,7 +127,7 @@ impl CharacterVisual {
 /// upstream object-identity semantics of frame_index_map.
 #[derive(Debug, Clone)]
 pub struct Frame {
-    pub character_visual: CharacterVisual,
+    pub character_visual: Rc<CharacterVisual>,
     pub duration: i64,
     pub ticks_elapsed: i64,
 }
@@ -141,9 +144,9 @@ pub struct Scene {
     /// Stable frame storage; never reordered.
     pub all_frames: Vec<Frame>,
     /// Remaining frame queue (indices into all_frames).
-    pub frames: Vec<usize>,
+    pub frames: VecDeque<usize>,
     /// Played frames (indices into all_frames).
-    pub played_frames: Vec<usize>,
+    pub played_frames: VecDeque<usize>,
     /// Tick index -> frame index (upstream frame_index_map).
     pub frame_index_map: Vec<usize>,
     pub easing_total_steps: i64,
@@ -169,8 +172,8 @@ impl Scene {
             no_color,
             use_xterm_colors,
             all_frames: Vec::new(),
-            frames: Vec::new(),
-            played_frames: Vec::new(),
+            frames: VecDeque::new(),
+            played_frames: VecDeque::new(),
             frame_index_map: Vec::new(),
             easing_total_steps: 0,
             easing_current_step: 0,
@@ -215,8 +218,8 @@ impl Scene {
         }
         let visual = CharacterVisual::new(symbol, params);
         let frame_index = self.all_frames.len();
-        self.all_frames.push(Frame { character_visual: visual, duration, ticks_elapsed: 0 });
-        self.frames.push(frame_index);
+        self.all_frames.push(Frame { character_visual: Rc::new(visual), duration, ticks_elapsed: 0 });
+        self.frames.push_back(frame_index);
         for _ in 0..duration {
             self.frame_index_map.push(frame_index);
             self.easing_total_steps += 1;
@@ -225,8 +228,8 @@ impl Scene {
     }
 
     /// Scene.activate: first frame's visual, error when empty.
-    pub fn activate(&self) -> Result<CharacterVisual, String> {
-        match self.frames.first() {
+    pub fn activate(&self) -> Result<Rc<CharacterVisual>, String> {
+        match self.frames.front() {
             Some(&idx) => Ok(self.all_frames[idx].character_visual.clone()),
             None => Err(format!("Scene {} has no frames.", self.scene_id)),
         }
@@ -234,13 +237,13 @@ impl Scene {
 
     /// Scene.get_next_visual: tick the head frame, retiring it (and looping)
     /// exactly as upstream.
-    pub fn get_next_visual(&mut self) -> CharacterVisual {
+    pub fn get_next_visual(&mut self) -> Rc<CharacterVisual> {
         let head = self.frames[0];
         let next_visual = self.all_frames[head].character_visual.clone();
         self.all_frames[head].ticks_elapsed += 1;
         if self.all_frames[head].ticks_elapsed == self.all_frames[head].duration {
             self.all_frames[head].ticks_elapsed = 0;
-            self.played_frames.push(self.frames.remove(0));
+            self.played_frames.push_back(self.frames.pop_front().unwrap());
             if self.is_looping && self.frames.is_empty() {
                 self.frames.append(&mut self.played_frames);
             }
@@ -342,7 +345,7 @@ impl Scene {
         let remaining: Vec<usize> = self.frames.drain(..).collect();
         for &idx in &remaining {
             self.all_frames[idx].ticks_elapsed = 0;
-            self.played_frames.push(idx);
+            self.played_frames.push_back(idx);
         }
         self.frames.extend(self.played_frames.drain(..));
         self.easing_current_step = 0;
@@ -353,7 +356,7 @@ impl Scene {
 #[derive(Debug, Clone)]
 pub struct Animation {
     pub scenes: OrderedMap<Scene>,
-    pub active_scene: Option<String>,
+    pub active_scene: Option<Rc<str>>,
     pub use_xterm_colors: bool,
     pub no_color: bool,
     pub existing_color_handling: ExistingColorHandling,
@@ -361,7 +364,7 @@ pub struct Animation {
     pub input_bg_color: Option<Color>,
     pub input_bold: bool,
     pub active_scene_current_step: i64,
-    pub current_character_visual: CharacterVisual,
+    pub current_character_visual: Rc<CharacterVisual>,
 }
 
 impl Animation {
@@ -376,7 +379,7 @@ impl Animation {
             input_bg_color: None,
             input_bold: false,
             active_scene_current_step: 0,
-            current_character_visual: CharacterVisual::plain(input_symbol),
+            current_character_visual: Rc::new(CharacterVisual::plain(input_symbol)),
         }
     }
 
@@ -462,7 +465,7 @@ impl Animation {
         }
         let fg_code = self.get_color_code(colors.fg_color.as_ref());
         let bg_code = self.get_color_code(colors.bg_color.as_ref());
-        self.current_character_visual = CharacterVisual::new(
+        self.current_character_visual = Rc::new(CharacterVisual::new(
             symbol,
             VisualParams {
                 bold,
@@ -471,7 +474,7 @@ impl Animation {
                 bg_color_code: bg_code,
                 ..Default::default()
             },
-        );
+        ));
     }
 
     /// Animation.adjust_color_brightness: hand-rolled RGB->HSL->RGB with

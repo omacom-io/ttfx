@@ -269,7 +269,7 @@ impl Rings {
                 (motion.active_path.clone(), motion.current_coord)
             };
             let last = match active_path {
-                Some(path_id) => path_id,
+                Some(path_id) => path_id.to_string(),
                 None => "0".to_string(),
             };
             ring.character_last_ring_path.insert(id, last);

@@ -27,6 +27,7 @@ pub fn run_effect(effect: &mut dyn Effect, ctx: &mut EngineCtx) -> Result<(), En
                 break;
             }
             ctx.terminal.print_frame(&mut out, &frame).map_err(io_err)?;
+            ctx.terminal.recycle_output_string(frame);
         }
         Ok(())
     })();
@@ -47,9 +48,10 @@ pub fn dump_effect(
     let mut count: u64 = 0;
     while let Some(frame) = effect.next_frame(ctx) {
         let data = frame.as_bytes();
-        out.write_all(format!("{}\n", data.len()).as_bytes()).map_err(io_err)?;
+        writeln!(out, "{}", data.len()).map_err(io_err)?;
         out.write_all(data).map_err(io_err)?;
         out.write_all(b"\n").map_err(io_err)?;
+        ctx.terminal.recycle_output_string(frame);
         count += 1;
         if max_frames.is_some_and(|m| count >= m) {
             break;

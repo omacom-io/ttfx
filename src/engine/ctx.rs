@@ -10,6 +10,7 @@
 //! reentrant list mutation behaves like Python list iteration.
 
 use std::collections::BTreeSet;
+use std::rc::Rc;
 use std::time::Instant;
 
 use crate::engine::animation::SyncMetric;
@@ -90,6 +91,7 @@ pub struct EngineCtx {
     /// BaseEffectIterator.active_characters — canonical ascending-id order
     /// (CharId order == character_id order by construction).
     pub active_characters: BTreeSet<CharId>,
+    active_character_scratch: Vec<CharId>,
     pub preexisting_colors_present: bool,
     /// When Some, every event emission appends a trace line (test harness).
     pub event_log: Option<Vec<String>>,
@@ -107,6 +109,7 @@ impl EngineCtx {
             rng,
             clock,
             active_characters: BTreeSet::new(),
+            active_character_scratch: Vec::new(),
             preexisting_colors_present,
             event_log: None,
         })
@@ -253,7 +256,7 @@ impl EngineCtx {
         );
         let layer = {
             let ch = &mut self.terminal.arena[id.0 as usize];
-            ch.motion.active_path = Some(path_id.to_string());
+            ch.motion.active_path = Some(Rc::from(path_id));
             let path = ch.motion.paths.get_mut(path_id).unwrap();
             path.total_distance += distance_to_first_waypoint;
             if let Some(origin) = &path.origin_segment {
@@ -300,52 +303,53 @@ impl EngineCtx {
             };
         }
 
-        {
-            let p = path!();
+        let mut distance_to_travel = {
+            let p = path_mut!();
             if p.max_steps == 0 || p.current_step >= p.max_steps || p.total_distance == 0.0 {
                 return p.segments.last().expect("path has no segments").end.coord;
             }
-        }
-        let (distance_factor, total_distance) = {
-            let p = path_mut!();
             p.current_step += 1;
             let ratio = p.current_step as f64 / p.max_steps as f64;
-            let factor = match &p.ease {
+            let distance_factor = match &p.ease {
                 Some(ease) => ease.ease(ratio),
                 None => ratio,
             };
-            (factor, p.total_distance)
+            let distance = distance_factor * p.total_distance;
+            p.last_distance_reached = distance;
+            distance
         };
-        let mut distance_to_travel = distance_factor * total_distance;
-        path_mut!().last_distance_reached = distance_to_travel;
 
         let mut active_segment_index: Option<usize> = None;
         let mut i = 0usize;
         loop {
-            let (seg_distance, seg_end_key, enter_triggered, exit_triggered) = {
+            let (seg_distance, enter_triggered, exit_triggered) = {
                 let p = path!();
                 if i >= p.segments.len() {
                     break;
                 }
                 let seg = &p.segments[i];
-                (seg.distance, seg.end.key(), seg.enter_event_triggered, seg.exit_event_triggered)
+                (seg.distance, seg.enter_event_triggered, seg.exit_event_triggered)
             };
             if distance_to_travel <= seg_distance {
                 active_segment_index = Some(i);
                 if !enter_triggered {
+                    let seg_end_key = path!().segments[i].end.key();
                     path_mut!().segments[i].enter_event_triggered = true;
                     self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key));
                 }
                 break;
             }
             distance_to_travel -= seg_distance;
-            if !enter_triggered {
-                path_mut!().segments[i].enter_event_triggered = true;
-                self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
-            }
-            if !exit_triggered {
-                path_mut!().segments[i].exit_event_triggered = true;
-                self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+            if !enter_triggered || !exit_triggered {
+                let seg_end_key = path!().segments[i].end.key();
+                if !enter_triggered {
+                    path_mut!().segments[i].enter_event_triggered = true;
+                    self.handle_event(hooks, id, Event::SegmentEntered, &CallerKey::Waypoint(seg_end_key.clone()));
+                }
+                if !exit_triggered {
+                    path_mut!().segments[i].exit_event_triggered = true;
+                    self.handle_event(hooks, id, Event::SegmentExited, &CallerKey::Waypoint(seg_end_key));
+                }
             }
             i += 1;
         }
@@ -361,21 +365,19 @@ impl EngineCtx {
             }
         };
 
-        let (seg_distance, seg_start_coord, seg_end_coord, seg_bezier, has_ease) = {
-            let p = path!();
-            let seg = &p.segments[active_segment_index];
-            (seg.distance, seg.start.coord, seg.end.coord, seg.end.bezier_control.clone(), p.ease.is_some())
-        };
+        let p = path!();
+        let seg = &p.segments[active_segment_index];
+        let seg_distance = seg.distance;
         let t = if seg_distance == 0.0 {
             0.0
-        } else if has_ease {
+        } else if p.ease.is_some() {
             distance_to_travel / seg_distance // unclamped: eased overshoot goes past the waypoint
         } else {
             (distance_to_travel / seg_distance).min(1.0)
         };
-        match seg_bezier {
-            Some(control) => geometry::find_coord_on_bezier_curve(seg_start_coord, &control, seg_end_coord, t),
-            None => geometry::find_coord_on_line(seg_start_coord, seg_end_coord, t),
+        match &seg.end.bezier_control {
+            Some(control) => geometry::find_coord_on_bezier_curve(seg.start.coord, control, seg.end.coord, t),
+            None => geometry::find_coord_on_line(seg.start.coord, seg.end.coord, t),
         }
     }
 
@@ -414,7 +416,7 @@ impl EngineCtx {
         };
         if current_step == max_steps {
             if hold_time != 0 && hold_time_remaining == hold_time {
-                self.handle_event(hooks, id, Event::PathHolding, &CallerKey::Path(active_path_id.clone()));
+                self.handle_event(hooks, id, Event::PathHolding, &CallerKey::Path(active_path_id.to_string()));
                 self.terminal.arena[id.0 as usize]
                     .motion
                     .paths
@@ -441,7 +443,7 @@ impl EngineCtx {
                     motion.completed_path = Some(active_path_id.clone());
                     motion.deactivate_path(Some(&active_path_id));
                 }
-                self.handle_event(hooks, id, Event::PathComplete, &CallerKey::Path(active_path_id));
+                self.handle_event(hooks, id, Event::PathComplete, &CallerKey::Path(active_path_id.to_string()));
             }
         }
     }
@@ -485,7 +487,7 @@ impl EngineCtx {
                 .expect("activate_scene: scene not found")
                 .activate()
                 .expect("activate_scene: empty scene");
-            ch.animation.active_scene = Some(scene_id.to_string());
+            ch.animation.active_scene = Some(Rc::from(scene_id));
             ch.animation.active_scene_current_step = 0;
             ch.animation.current_character_visual = visual;
         }
@@ -551,7 +553,7 @@ impl EngineCtx {
         match active_path_state {
             None => {
                 // no active path: jump to final frame and force-complete
-                let last = *scene.frames.last().unwrap();
+                let last = *scene.frames.back().unwrap();
                 ch.animation.current_character_visual = scene.all_frames[last].character_visual.clone();
                 let drained: Vec<usize> = scene.frames.drain(..).collect();
                 scene.played_frames.extend(drained);
@@ -636,19 +638,17 @@ impl EngineCtx {
     /// BaseEffectIterator.update: tick a snapshot of active characters in
     /// canonical ascending-id order, then prune the not-is_active ones.
     pub fn update(&mut self, hooks: &mut dyn EffectHooks) {
-        let snapshot: Vec<CharId> = self.active_characters.iter().copied().collect();
-        for id in snapshot {
+        let mut snapshot = std::mem::take(&mut self.active_character_scratch);
+        snapshot.clear();
+        snapshot.extend(self.active_characters.iter().copied());
+        for &id in &snapshot {
             self.tick(hooks, id);
         }
-        let inactive: Vec<CharId> = self
-            .active_characters
-            .iter()
-            .copied()
-            .filter(|&id| !self.terminal.arena[id.0 as usize].is_active())
-            .collect();
-        for id in inactive {
-            self.active_characters.remove(&id);
-        }
+        snapshot.clear();
+        self.active_character_scratch = snapshot;
+
+        let arena = &self.terminal.arena;
+        self.active_characters.retain(|id| arena[id.0 as usize].is_active());
     }
 
     /// BaseEffectIterator.frame: enforce framerate (real clock only), then the

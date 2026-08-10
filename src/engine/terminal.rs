@@ -2,7 +2,7 @@
 //! Ported from engine/terminal.py. Unlike upstream (which builds two Terminals
 //! per run), this single Terminal owns both the simulation and the tty side.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::io::Write;
 use std::time::Instant;
 
@@ -15,6 +15,9 @@ use crate::utils::ansi;
 use crate::utils::geometry::Coord;
 use crate::utils::graphics::Color;
 use crate::utils::rng::Rng;
+
+const EMPTY_RENDER_CELL: u32 = u32::MAX;
+const NOT_VISIBLE: usize = usize::MAX;
 
 #[derive(Debug, Clone)]
 pub struct TerminalConfig {
@@ -126,8 +129,12 @@ pub struct Terminal {
     pub character_by_input_coord: HashMap<Coord, CharId>,
     pub inner_fill_characters: Vec<CharId>,
     pub outer_fill_characters: Vec<CharId>,
-    visible_characters: HashSet<CharId>,
+    visible_characters: Vec<CharId>,
+    visible_positions: Vec<usize>,
+    render_cells: Vec<u32>,
     pub terminal_state: Vec<String>,
+    output_buffer: String,
+    move_cursor_to_top: String,
     frame_rate: i64,
     last_time_printed: Instant,
 }
@@ -179,6 +186,13 @@ impl Terminal {
         }
 
         let frame_rate = config.frame_rate;
+        let arena_len = arena.len();
+        let move_cursor_to_top = format!(
+            "{}{}{}",
+            ansi::DEC_RESTORE_CURSOR,
+            ansi::DEC_SAVE_CURSOR,
+            ansi::move_cursor_up(visible_top.max(0) as usize)
+        );
         let mut terminal = Terminal {
             config,
             canvas,
@@ -198,8 +212,12 @@ impl Terminal {
             character_by_input_coord,
             inner_fill_characters: Vec::new(),
             outer_fill_characters: Vec::new(),
-            visible_characters: HashSet::new(),
+            visible_characters: Vec::new(),
+            visible_positions: vec![NOT_VISIBLE; arena_len],
+            render_cells: Vec::new(),
             terminal_state: Vec::new(),
+            output_buffer: String::new(),
+            move_cursor_to_top,
             frame_rate,
             last_time_printed: Instant::now(),
         };
@@ -275,11 +293,22 @@ impl Terminal {
     }
 
     pub fn set_character_visibility(&mut self, id: CharId, is_visible: bool) {
-        self.arena[id.0 as usize].is_visible = is_visible;
+        let arena_index = id.0 as usize;
+        if self.arena[arena_index].is_visible == is_visible {
+            return;
+        }
+        self.arena[arena_index].is_visible = is_visible;
+        self.visible_positions.resize(self.arena.len(), NOT_VISIBLE);
         if is_visible {
-            self.visible_characters.insert(id);
+            self.visible_positions[arena_index] = self.visible_characters.len();
+            self.visible_characters.push(id);
         } else {
-            self.visible_characters.remove(&id);
+            let position = std::mem::replace(&mut self.visible_positions[arena_index], NOT_VISIBLE);
+            self.visible_characters.swap_remove(position);
+            if position < self.visible_characters.len() {
+                let moved = self.visible_characters[position];
+                self.visible_positions[moved.0 as usize] = position;
+            }
         }
     }
 
@@ -457,13 +486,15 @@ impl Terminal {
     pub fn update_terminal_state(&mut self) {
         let width = self.visible_right.max(0) as usize;
         let height = self.visible_top.max(0) as usize;
-        let mut rows: Vec<Vec<&str>> = vec![vec![" "; width]; height];
-        let mut visible: Vec<CharId> = self.visible_characters.iter().copied().collect();
-        visible.sort_by_key(|&id| {
-            let ch = &self.arena[id.0 as usize];
-            (ch.layer, ch.character_id)
-        });
-        for id in visible {
+        let cell_count = width.checked_mul(height).expect("terminal canvas is too large");
+        self.render_cells.resize(cell_count, EMPTY_RENDER_CELL);
+        self.render_cells.fill(EMPTY_RENDER_CELL);
+
+        // The old implementation sorted every visible character by painter
+        // order and overwrote cells in that order.  A cell only needs the
+        // maximum key, so select that winner directly and avoid the per-frame
+        // allocation and O(n log n) sort.
+        for &id in &self.visible_characters {
             let ch = &self.arena[id.0 as usize];
             let row = ch.motion.current_coord.row + self.canvas_row_offset;
             let column = ch.motion.current_coord.column + self.canvas_column_offset;
@@ -472,17 +503,46 @@ impl Terminal {
                 && self.visible_left <= column
                 && column <= self.visible_right
             {
-                rows[(row - 1) as usize][(column - 1) as usize] =
-                    &ch.animation.current_character_visual.formatted_symbol;
+                let cell = &mut self.render_cells[(row - 1) as usize * width + (column - 1) as usize];
+                if *cell == EMPTY_RENDER_CELL {
+                    *cell = id.0;
+                } else {
+                    let painted = &self.arena[*cell as usize];
+                    if (ch.layer, ch.character_id) > (painted.layer, painted.character_id) {
+                        *cell = id.0;
+                    }
+                }
             }
         }
-        self.terminal_state = rows.into_iter().map(|row| row.concat()).collect();
+
+        self.terminal_state.resize_with(height, String::new);
+        self.terminal_state.truncate(height);
+        let arena = &self.arena;
+        for (row_index, row) in self.terminal_state.iter_mut().enumerate() {
+            row.clear();
+            if row.capacity() < width {
+                row.reserve(width);
+            }
+            for &cell in &self.render_cells[row_index * width..(row_index + 1) * width] {
+                if cell == EMPTY_RENDER_CELL {
+                    row.push(' ');
+                } else {
+                    row.push_str(&arena[cell as usize].animation.current_character_visual.formatted_symbol);
+                }
+            }
+        }
     }
 
     /// get_formatted_output_string: refresh + join top row first.
     pub fn get_formatted_output_string(&mut self) -> String {
         self.update_terminal_state();
-        let mut out = String::new();
+        let content_len: usize = self.terminal_state.iter().map(String::len).sum();
+        let required_capacity = content_len + self.terminal_state.len().saturating_sub(1);
+        let mut out = std::mem::take(&mut self.output_buffer);
+        out.clear();
+        if out.capacity() < required_capacity {
+            out.reserve(required_capacity);
+        }
         for (i, row) in self.terminal_state.iter().rev().enumerate() {
             if i > 0 {
                 out.push('\n');
@@ -490,6 +550,13 @@ impl Terminal {
             out.push_str(row);
         }
         out
+    }
+
+    pub(crate) fn recycle_output_string(&mut self, mut output: String) {
+        output.clear();
+        if output.capacity() > self.output_buffer.capacity() {
+            self.output_buffer = output;
+        }
     }
 
     // --- tty side (upstream's second Terminal instance) ---
@@ -524,10 +591,7 @@ impl Terminal {
     }
 
     fn write_move_cursor_to_top(&self, out: &mut impl Write) -> std::io::Result<()> {
-        out.write_all(ansi::DEC_RESTORE_CURSOR.as_bytes())?;
-        out.write_all(ansi::DEC_SAVE_CURSOR.as_bytes())?;
-        out.write_all(ansi::move_cursor_up(self.visible_top.max(0) as usize).as_bytes())?;
-        Ok(())
+        out.write_all(self.move_cursor_to_top.as_bytes())
     }
 
     /// Terminal.enforce_framerate: sleep off the remainder; timestamp taken
