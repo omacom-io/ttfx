@@ -6,6 +6,7 @@ pub mod utils;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
+static TERMINATED: AtomicBool = AtomicBool::new(false);
 static TERMINAL_RESIZED: AtomicBool = AtomicBool::new(false);
 
 /// SIGINT is recorded and checked from the run loop so teardown (cursor
@@ -24,6 +25,23 @@ extern "C" fn handle_sigint(_: i32) {
 
 pub fn interrupted() -> bool {
     INTERRUPTED.load(Ordering::SeqCst)
+}
+
+/// SIGTERM takes the normal output teardown path when stdout is a tty, so a
+/// process supervisor cannot leave the cursor hidden.
+pub fn install_sigterm_handler() {
+    // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
+    unsafe {
+        libc_signal(SIGTERM, handle_sigterm as *const () as usize);
+    }
+}
+
+extern "C" fn handle_sigterm(_: i32) {
+    TERMINATED.store(true, Ordering::SeqCst);
+}
+
+pub fn terminated() -> bool {
+    TERMINATED.load(Ordering::SeqCst)
 }
 
 /// Record terminal resizes so the CLI can rebuild effects whose canvas and
@@ -53,6 +71,7 @@ pub fn restore_sigpipe() {
 }
 
 const SIGINT: i32 = 2;
+const SIGTERM: i32 = 15;
 const SIGPIPE: i32 = 13;
 /// 28 on Linux and on the BSDs, macOS included.
 const SIGWINCH: i32 = 28;

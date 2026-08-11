@@ -125,12 +125,14 @@ fn main() -> ExitCode {
     // SIGWINCH is delivered to every process in the terminal's foreground group,
     // whatever its stdout points at. Reacting to it when the animation is being
     // redirected would leave a truncated first run followed by a complete second
-    // one in the file, so the resize path is tty-only.
-    let resize_aware = !cli.parity_dump && std::io::stdout().is_terminal();
+    // one in the file. SIGTERM teardown is tty-only for the same reason: a pipe
+    // keeps the default signal semantics and receives no extra teardown bytes.
+    let tty_output = !cli.parity_dump && std::io::stdout().is_terminal();
     if !cli.parity_dump {
         ttfx::install_sigint_handler();
     }
-    if resize_aware {
+    if tty_output {
+        ttfx::install_sigterm_handler();
         ttfx::install_sigwinch_handler();
     }
 
@@ -162,7 +164,7 @@ fn main() -> ExitCode {
             ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
                 .map(|_| ttfx::engine::effect::RunOutcome::Complete)
         } else {
-            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, resize_aware)
+            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, tty_output)
         };
         match outcome {
             Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
@@ -184,7 +186,9 @@ fn main() -> ExitCode {
 
     match result {
         Ok(()) => {
-            if ttfx::interrupted() {
+            if ttfx::terminated() {
+                ExitCode::from(143)
+            } else if ttfx::interrupted() {
                 ExitCode::from(1)
             } else {
                 ExitCode::SUCCESS

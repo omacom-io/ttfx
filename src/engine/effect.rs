@@ -17,6 +17,7 @@ pub trait Effect: EffectHooks {
 pub enum RunOutcome {
     Complete,
     Interrupted,
+    Terminated,
     TerminalResized,
 }
 
@@ -70,6 +71,8 @@ pub fn run_effect(
 fn requested_stop(ctx: &mut EngineCtx, stop_on_resize: bool) -> Option<RunOutcome> {
     if crate::interrupted() {
         Some(RunOutcome::Interrupted)
+    } else if crate::terminated() {
+        Some(RunOutcome::Terminated)
     } else if stop_on_resize && ctx.terminal.resize_settled() {
         Some(RunOutcome::TerminalResized)
     } else {
