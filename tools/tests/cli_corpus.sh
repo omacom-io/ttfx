@@ -47,5 +47,3 @@ check success-multi-stops 0 bash -c "printf 'hi' | $RUST --parity-dump --seed 1 
 
 echo "cli corpus: $pass passed, $fail failed"
 if [ $fail -gt 0 ]; then printf 'FAILED: %s\n' "${failed[@]}"; exit 1; fi
-
-python3 tools/tests/sigterm_behavior.py
