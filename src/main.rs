@@ -125,8 +125,9 @@ fn main() -> ExitCode {
     // SIGWINCH is delivered to every process in the terminal's foreground group,
     // whatever its stdout points at. Reacting to it when the animation is being
     // redirected would leave a truncated first run followed by a complete second
-    // one in the file. SIGTERM teardown is tty-only for the same reason: a pipe
-    // keeps the default signal semantics and receives no extra teardown bytes.
+    // one in the file. SIGTERM teardown is tty-only for the same reason: a
+    // redirected stream must not gain teardown bytes. Only the teardown differs
+    // — the tty run re-raises afterwards, so both die from the signal.
     let tty_output = !cli.parity_dump && std::io::stdout().is_terminal();
     if !cli.parity_dump {
         ttfx::install_sigint_handler();
@@ -187,8 +188,9 @@ fn main() -> ExitCode {
     match result {
         Ok(()) => {
             if ttfx::terminated() {
-                ExitCode::from(143)
-            } else if ttfx::interrupted() {
+                ttfx::die_from_sigterm();
+            }
+            if ttfx::interrupted() {
                 ExitCode::from(1)
             } else {
                 ExitCode::SUCCESS

@@ -27,8 +27,9 @@ pub fn interrupted() -> bool {
     INTERRUPTED.load(Ordering::SeqCst)
 }
 
-/// SIGTERM takes the normal output teardown path when stdout is a tty, so a
-/// process supervisor cannot leave the cursor hidden.
+/// SIGTERM is recorded like SIGINT so a supervisor killing an animation gets
+/// the normal teardown instead of a hidden cursor. `die_from_sigterm` then
+/// finishes the job the handler deferred.
 pub fn install_sigterm_handler() {
     // SAFETY: signal(2) with a signal-safe handler that only stores a flag.
     unsafe {
@@ -42,6 +43,21 @@ extern "C" fn handle_sigterm(_: i32) {
 
 pub fn terminated() -> bool {
     TERMINATED.load(Ordering::SeqCst)
+}
+
+/// Finish the SIGTERM we deferred: the cursor is back, so hand the signal to
+/// the default action and die from it. A supervisor then sees a terminated
+/// child, exactly as it would from the redirected run that never installs a
+/// handler at all. SIGINT does not go through here — upstream exits 1 on
+/// KeyboardInterrupt and parity outranks the convention (plan.md §8).
+pub fn die_from_sigterm() -> ! {
+    // SAFETY: restoring the default action and re-raising is the documented
+    // way to exit with a signal's status; raise(2) here does not return.
+    unsafe {
+        libc_signal(SIGTERM, SIG_DFL);
+        libc_raise(SIGTERM);
+    }
+    unreachable!("SIGTERM with the default action terminates the process");
 }
 
 /// Record terminal resizes so the CLI can rebuild effects whose canvas and
@@ -83,6 +99,15 @@ unsafe fn libc_signal(signum: i32, handler: usize) {
     }
     unsafe {
         signal(signum, handler);
+    }
+}
+
+unsafe fn libc_raise(signum: i32) {
+    unsafe extern "C" {
+        fn raise(signum: i32) -> i32;
+    }
+    unsafe {
+        raise(signum);
     }
 }
 
