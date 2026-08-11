@@ -359,17 +359,17 @@ impl Thunderstorm {
                 let neighbor_symbol = ctx.terminal.arena[neighbor.0 as usize].input_symbol.clone();
                 if neighbor_symbol == "/" {
                     column += 1;
-                    symbol = ctx.rng.choice(&["|", "\\"]);
+                    symbol = *ctx.rng.choice(&["|", "\\"]);
                 } else if neighbor_symbol == "\\" {
                     column -= 1;
-                    symbol = ctx.rng.choice(&["|", "/"]);
+                    symbol = *ctx.rng.choice(&["|", "/"]);
                 } else {
                     let delta = *ctx.rng.choice(&[-1i64, 1]);
                     column += delta;
                     symbol = if delta == 1 { "\\" } else { "/" };
                 }
             } else {
-                symbol = ctx.rng.choice(&["\\", "/", "|"]);
+                symbol = *ctx.rng.choice(&["\\", "/", "|"]);
             }
 
             let strike_char = self.get_next_strike_char(ctx);
