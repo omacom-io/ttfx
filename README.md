@@ -92,7 +92,10 @@ mechanically in CI against a pinned upstream checkout (v0.15.0), not by eyeballi
 | `tools/parity/run_suite.sh` | 354 | every effect's frame stream, byte for byte, across configs and seeds |
 | `tools/parity/tty_compare.sh` | 41 | the full terminal byte stream — canvas prep, cursor moves, teardown |
 | `tools/tests/cli_corpus.sh` | 19 | exit codes and stdout/stderr routing |
+| `tools/tests/*_behavior.py` | pty | what only a real terminal shows: resize restarts, signal teardown |
 | `cargo test` | goldens + traces | easing/geometry/gradient values and engine state machines |
+
+`./bin/test` runs the lot, which is all CI does.
 
 Making that possible meant reproducing upstream's quirks deliberately, not "fixing" them:
 Python's banker's rounding, gradients built from integer floor division rather than float
@@ -129,11 +132,11 @@ cargo build --release
 cargo build --release --target x86_64-unknown-linux-musl   # static, ~3.3 MB
 ```
 
-Running the parity suites needs python3 and a copy of upstream:
+`./bin/test` runs every suite. It needs python3, and the parity half needs a copy of
+upstream, which it clones at the pinned commit on first run:
 
 ```sh
-./tools/parity/fetch_reference.sh   # clones TTE at the pinned commit
-./tools/parity/run_suite.sh
+./tools/parity/fetch_reference.sh   # what bin/test calls; safe to run by hand
 ```
 
 Upstream is not vendored here — the harness fetches it, because it's their code.

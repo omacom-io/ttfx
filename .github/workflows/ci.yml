@@ -17,42 +17,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch pinned TTE reference
-        run: ./tools/parity/fetch_reference.sh
-      - name: Unit + golden + trace tests
-        run: cargo test --release
-      - name: Build release binary
-        run: cargo build --release
-      - name: Effect frame parity vs pinned reference
-        run: ./tools/parity/run_suite.sh
-      - name: Full tty byte-stream parity
-        run: ./tools/parity/tty_compare.sh
-      - name: CLI contract corpus
-        run: ./tools/tests/cli_corpus.sh
-      - name: Resize behavior on a pty
-        run: python3 tools/tests/resize_behavior.py
-      - name: SIGTERM behavior on a pty
-        run: python3 tools/tests/sigterm_behavior.py
+      - run: ./bin/test
 
   test-macos:
     name: Tests (macOS)
-    # No parity suites here: bit-exact parity is pinned to Linux/glibc.
-    # This job proves the port builds, tests green (with the boundary-tolerant
-    # easing assertion for Apple's libm), and honors the CLI contract on macOS.
+    # bin/test skips the parity suites off Linux, so what's left here proves the
+    # port builds, tests green (with the boundary-tolerant easing assertion for
+    # Apple's libm), and honors the CLI and signal contracts on macOS.
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Unit + golden + trace tests
-        run: cargo test --release
-      - name: Build release binary
-        run: cargo build --release
-      - name: CLI contract corpus
-        run: ./tools/tests/cli_corpus.sh
-      # Signal delivery and pty teardown are where the BSDs drift from Linux,
-      # so this one pty suite is worth running on both.
-      - name: SIGTERM behavior on a pty
-        run: python3 tools/tests/sigterm_behavior.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: ./bin/test
       - uses: actions/upload-artifact@v4
         with:
           name: ttfx-aarch64-apple-darwin

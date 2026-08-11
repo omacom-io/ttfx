@@ -1,12 +1,30 @@
 #!/usr/bin/env sh
+# Everything CI runs, in one command. Nothing here is optional: if it passes
+# locally it passes on the runner, and the workflow is just a call to this.
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
-if ! command -v cargo >/dev/null 2>&1; then
-  echo "cargo is required to run the ttfx tests." >&2
-  exit 1
-fi
+for tool in cargo python3; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "$tool is required to run the ttfx tests." >&2
+    exit 1
+  fi
+done
 
 cd "$ROOT"
-cargo test "$@"
+
+cargo test --release
+"$ROOT/bin/build"
+./tools/tests/cli_corpus.sh
+python3 tools/tests/sigterm_behavior.py
+
+# Bit-exact parity is pinned to Linux/glibc (plan.md §5.20) — elsewhere the
+# reference was never promised to match. The resize suite goes with it: its
+# timings are calibrated on that runner, so a slower one would only flake.
+if [ "$(uname -s)" = "Linux" ]; then
+  ./tools/parity/fetch_reference.sh
+  ./tools/parity/run_suite.sh
+  ./tools/parity/tty_compare.sh
+  python3 tools/tests/resize_behavior.py
+fi
