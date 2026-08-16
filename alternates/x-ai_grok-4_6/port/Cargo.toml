@@ -1,0 +1,11 @@
+[package]
+name = "ttfx"
+version = "0.1.0"
+edition = "2021"
+description = "Pixel-perfect Rust port of TerminalTextEffects"
+license = "MIT"
+publish = false
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
+crossterm = "0.28.1"

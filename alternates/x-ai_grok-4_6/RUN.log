@@ -1,0 +1,134 @@
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $10.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.10s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.10s
+core: $0.3274 | 0 files
+core repair 1: $0.3288 | still failing
+core repair 2: $0.0438 | still failing
+core repair 3: $0.3288 | still failing
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $0.4714 | 12 files
+core repair 1: $0.4776 | still failing
+core repair 2: $0.4739 | still failing
+core repair 3: $0.4739 | still failing
+core repair 4: $0.4739 | still failing
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+core: resumed ($0) · 0 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.10s
+[ 1/37] beams              $0.1731 OK        tot $0.1731 · 13 files · 3158 lines
+[ 2/37] binarypath         $0.1000 reverted  tot $0.2731 · 13 files · 3158 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $30.0 ===
+resume: dropped 1 unstyled effects (render gate)
+core: resumed ($0) · 0 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $12.0 ===
+resume: dropped 1 unstyled effects (render gate)
+core: resumed ($0) · 0 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $8.0 ===
+resume: dropped 1 unstyled effects (render gate)
+core: resumed ($0) · 0 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.08s
+[ 1/37] beams              $1.0021 reverted  tot $1.0021 · 13 files · 3158 lines
+[ 2/37] binarypath         $0.2041 reverted  tot $1.2062 · 13 files · 3158 lines
+[ 3/37] blackhole          $0.2770 reverted  tot $1.4832 · 13 files · 3158 lines
+[ 4/37] bouncyballs        $0.6333 reverted  tot $2.1166 · 13 files · 3158 lines
+[ 5/37] bubbles            $0.6546 reverted  tot $2.7712 · 13 files · 3158 lines
+[ 6/37] burn               $0.6081 reverted  tot $3.3793 · 13 files · 3158 lines
+[ 7/37] colorshift         $0.3854 reverted  tot $3.7647 · 13 files · 3158 lines
+[ 8/37] crumble            $0.6774 reverted  tot $4.4421 · 13 files · 3158 lines
+[ 9/37] decrypt            $0.0996 reverted  tot $4.5416 · 13 files · 3158 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $15.0 ===
+resume: dropped 1 unstyled effects (render gate)
+core: resumed ($0) · 0 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.08s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $15.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $0.3703 | 14 files
+
+=== 37 effects to port ===
+[ 1/37] beams              $0.1740 OK        tot $0.5442 · 14 files · 2690 lines
+[ 2/37] binarypath         $0.1433 OK        tot $0.6876 · 15 files · 2950 lines
+[ 3/37] blackhole          $0.1860 OK        tot $0.8736 · 16 files · 3518 lines
+[ 4/37] bouncyballs        $0.1380 OK        tot $1.0115 · 17 files · 3778 lines
+[ 5/37] bubbles            $0.1548 OK        tot $1.1663 · 18 files · 4161 lines
+[ 6/37] burn               $0.1297 OK        tot $1.2960 · 19 files · 4371 lines
+[ 7/37] colorshift         $0.1167 OK        tot $1.4126 · 20 files · 4482 lines
+[ 8/37] crumble            $0.1545 OK        tot $1.5671 · 21 files · 4816 lines
+[ 9/37] decrypt            $0.1450 OK        tot $1.7121 · 22 files · 5136 lines
+[10/37] errorcorrect       $0.1541 OK        tot $1.8662 · 23 files · 5507 lines
+[11/37] expand             $0.1163 OK        tot $1.9825 · 24 files · 5627 lines
+[12/37] fireworks          $0.1663 OK        tot $2.1488 · 25 files · 6052 lines
+[13/37] highlight          $0.1229 OK        tot $2.2717 · 26 files · 6218 lines
+[14/37] laseretch          $0.1504 OK        tot $2.4221 · 27 files · 6553 lines
+[15/37] matrix             $0.1517 OK        tot $2.5738 · 28 files · 6913 lines
+[16/37] middleout          $0.1292 OK        tot $2.7030 · 29 files · 7124 lines
+[17/37] orbittingvolley    $0.3771 reverted  tot $3.0801 · 29 files · 7124 lines
+[18/37] overflow           $0.1379 OK        tot $3.2180 · 30 files · 7374 lines
+[19/37] pour               $0.3774 OK        tot $3.5954 · 31 files · 7968 lines
+[20/37] print              $0.1546 OK        tot $3.7500 · 32 files · 8320 lines
+[21/37] rain               $0.1371 OK        tot $3.8871 · 33 files · 8580 lines
+[22/37] random_sequence    $0.4837 reverted  tot $4.3709 · 33 files · 8580 lines
+[23/37] rings              $0.1454 OK        tot $4.5163 · 34 files · 8856 lines
+[24/37] scattered          $0.1262 OK        tot $4.6425 · 35 files · 9023 lines
+[25/37] slice              $0.1208 OK        tot $4.7632 · 36 files · 9157 lines
+[26/37] slide              $0.1264 OK        tot $4.8896 · 37 files · 9340 lines
+[27/37] smoke              $0.1381 OK        tot $5.0277 · 38 files · 9573 lines
+[ask_or] TimeoutError: The read operation timed out
+[28/37] spotlights         $0.1538 reverted  tot $5.1815 · 38 files · 9573 lines
+[29/37] spray              $0.3222 reverted  tot $5.5037 · 38 files · 9573 lines
+[30/37] swarm              $0.1656 OK        tot $5.6694 · 39 files · 10012 lines
+[31/37] sweep              $0.1133 OK        tot $5.7827 · 40 files · 10103 lines
+[32/37] synthgrid          $0.1735 OK        tot $5.9562 · 41 files · 10651 lines
+[33/37] thunderstorm       $0.3623 reverted  tot $6.3185 · 41 files · 10651 lines
+[34/37] unstable           $0.1493 OK        tot $6.4678 · 42 files · 10986 lines
+[35/37] vhstape            $0.1445 OK        tot $6.6123 · 43 files · 11298 lines
+[36/37] waves              $0.1376 OK        tot $6.7499 · 44 files · 11561 lines
+[37/37] wipe               $0.1321 OK        tot $6.8819 · 45 files · 11773 lines
+
+=== $6.8819 billed (OR-direct equiv $6.8819) · 291.0m · 45 files · 11773 lines (54.6% of the 21,565-line reference) · 32 effects kept, 5 dropped ===
+[grok] gap-fill: 5 to retry
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/5] orbittingvolley    $0.1476 OK        tot $0.1476 · 46 files · 12091 lines
+[ 2/5] random_sequence    $0.4331 reverted  tot $0.5807 · 46 files · 12091 lines
+[ 3/5] spotlights         $0.3981 reverted  tot $0.9788 · 46 files · 12091 lines
+[ 4/5] spray              $0.3191 reverted  tot $1.2979 · 46 files · 12091 lines
+[ 5/5] thunderstorm       $0.1921 OK        tot $1.4900 · 47 files · 12654 lines
+
+=== $1.4900 billed (OR-direct equiv $1.4900) · 68.5m · 47 files · 12654 lines (58.7% of the 21,565-line reference) · 34 effects kept, 3 dropped ===
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · x-ai/grok-4.6 · ctx local · cap $6.0 ===
+core: resumed ($0) · 34 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[22/37] random_sequence    $0.4344 reverted  tot $0.4344 · 47 files · 12654 lines
