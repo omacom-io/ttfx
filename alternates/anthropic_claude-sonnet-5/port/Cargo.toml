@@ -1,0 +1,17 @@
+[package]
+name = "ttfx"
+version = "0.1.0"
+edition = "2021"
+description = "Rust port core (skeleton) of TerminalTextEffects"
+
+[[bin]]
+name = "ttfx"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+crossterm = "0.27"
+
+[profile.release]
+opt-level = 3
+lto = true

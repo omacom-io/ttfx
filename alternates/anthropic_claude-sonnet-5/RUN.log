@@ -1,0 +1,118 @@
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+[local-recall] 2224 chunks indexed in 0.12s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+core: $0.1809 | 11 files
+core repair 1: $0.1819 | still failing
+core repair 2: $0.1808 | still failing
+core repair 3: $0.1808 | still failing
+core repair 4: $0.1806 | still failing
+core repair 5: $0.1806 | still failing
+core repair 6: $0.1806 | still failing
+core never compiled — stopping rather than stacking effects on sand
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $0.1809 | 0 files
+  missing-file ask easing: $0.0804
+  missing-file ask graphics: $0.0805
+core repair 1: $0.1806 | still failing
+  missing-file ask easing: $0.0804
+  missing-file ask graphics: $0.0805
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $0.1953 | 14 files
+core repair 1: $0.1150 | still failing
+  missing-file ask cli: $0.1476
+core repair 2: $0.0914 | OK
+
+=== 37 effects to port ===
+[ 1/37] beams              $0.1158 OK        tot $0.6651 · 17 files · 1680 lines
+[ 2/37] binarypath         $0.1330 OK        tot $0.7981 · 18 files · 1809 lines
+[ 3/37] blackhole          $0.1136 OK        tot $0.9117 · 19 files · 1937 lines
+[ 4/37] bouncyballs        $0.2692 OK        tot $1.1810 · 20 files · 2089 lines
+[ 5/37] bubbles            $0.1426 OK        tot $1.3235 · 21 files · 2208 lines
+[ 6/37] burn               $0.1237 OK        tot $1.4473 · 22 files · 2311 lines
+[ 7/37] colorshift         $0.0854 OK        tot $1.5326 · 23 files · 2382 lines
+[ 8/37] crumble            $0.2401 OK        tot $1.7728 · 24 files · 2597 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $20.0 ===
+resume: dropped 2 unstyled effects (render gate)
+core: resumed ($0) · 6 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.07s
+[ 2/37] binarypath         $0.3013 reverted  tot $0.3013 · 24 files · 2593 lines
+[ 4/37] bouncyballs        $0.5078 reverted  tot $0.8091 · 24 files · 2593 lines
+[ 9/37] decrypt            $0.0966 OK        tot $0.9058 · 25 files · 2707 lines
+[10/37] errorcorrect       $0.2886 reverted  tot $1.1944 · 25 files · 2707 lines
+[11/37] expand             $0.4417 reverted  tot $1.6361 · 25 files · 2707 lines
+[12/37] fireworks          $0.2721 OK        tot $1.9081 · 26 files · 3019 lines
+[13/37] highlight          $0.0960 OK        tot $2.0041 · 27 files · 3105 lines
+[14/37] laseretch          $0.1124 OK        tot $2.1165 · 28 files · 3195 lines
+[15/37] matrix             $0.2067 OK        tot $2.3232 · 29 files · 3341 lines
+[16/37] middleout          $0.3582 reverted  tot $2.6814 · 29 files · 3341 lines
+[17/37] orbittingvolley    $0.3648 reverted  tot $3.0462 · 29 files · 3341 lines
+[18/37] overflow           $0.4135 reverted  tot $3.4598 · 29 files · 3341 lines
+[19/37] pour               $0.3859 reverted  tot $3.8456 · 29 files · 3341 lines
+[20/37] print              $0.2681 OK        tot $4.1137 · 30 files · 3449 lines
+[21/37] rain               $0.4211 reverted  tot $4.5348 · 30 files · 3449 lines
+[22/37] random_sequence    $0.4099 reverted  tot $4.9447 · 30 files · 3449 lines
+[23/37] rings              $0.1127 OK        tot $5.0574 · 31 files · 3581 lines
+[24/37] scattered          $0.4059 reverted  tot $5.4633 · 31 files · 3581 lines
+[25/37] slice              $0.3987 reverted  tot $5.8620 · 31 files · 3581 lines
+[26/37] slide              $0.4406 reverted  tot $6.3026 · 31 files · 3581 lines
+[27/37] smoke              $0.1545 OK        tot $6.4571 · 32 files · 3708 lines
+[28/37] spotlights         $0.1305 OK        tot $6.5876 · 33 files · 3888 lines
+[29/37] spray              $0.1915 OK        tot $6.7791 · 34 files · 4098 lines
+[30/37] swarm              $0.3982 reverted  tot $7.1773 · 34 files · 4098 lines
+[31/37] sweep              $0.1679 OK        tot $7.3452 · 35 files · 4213 lines
+[32/37] synthgrid          $0.1046 OK        tot $7.4499 · 36 files · 4317 lines
+[33/37] thunderstorm       $0.1374 OK        tot $7.5872 · 37 files · 4457 lines
+[34/37] unstable           $0.2527 OK        tot $7.8399 · 38 files · 4619 lines
+[35/37] vhstape            $0.0922 OK        tot $7.9321 · 39 files · 4725 lines
+[36/37] waves              $0.1805 OK        tot $8.1126 · 40 files · 4826 lines
+[37/37] wipe               $0.1316 OK        tot $8.2441 · 41 files · 4940 lines
+
+=== $8.2441 billed (OR-direct equiv $24.7324) · 105.3m · 41 files · 4940 lines (22.9% of the 21,565-line reference) · 23 effects kept, 14 dropped ===
+gap-fill: 14 dropped effects get a second chance: ['binarypath', 'bouncyballs', 'errorcorrect', 'expand', 'middleout', 'orbittingvolley', 'overflow', 'pour', 'rain', 'random_sequence', 'scattered', 'slice', 'slide', 'swarm']
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/14] binarypath         $0.2764 OK        tot $0.2764 · 41 files · 5041 lines
+[ 2/14] bouncyballs        $0.2067 OK        tot $0.4831 · 41 files · 5020 lines
+[ 3/14] errorcorrect       $0.2286 OK        tot $0.7117 · 42 files · 5190 lines
+[ 4/14] expand             $0.2742 reverted  tot $0.9859 · 42 files · 5190 lines
+[ 5/14] middleout          $0.4293 reverted  tot $1.4152 · 42 files · 5190 lines
+[ 6/14] orbittingvolley    $0.3667 reverted  tot $1.7819 · 42 files · 5190 lines
+[ 7/14] overflow           $0.4771 reverted  tot $2.2590 · 42 files · 5190 lines
+[ 8/14] pour               $0.4698 reverted  tot $2.7288 · 42 files · 5190 lines
+[ 9/14] rain               $0.4625 reverted  tot $3.1913 · 42 files · 5190 lines
+[10/14] random_sequence    $0.4275 reverted  tot $3.6188 · 42 files · 5190 lines
+[11/14] scattered          $0.3826 reverted  tot $4.0014 · 42 files · 5190 lines
+[12/14] slice              $0.4100 reverted  tot $4.4115 · 42 files · 5190 lines
+[13/14] slide              $0.2356 OK        tot $4.6470 · 43 files · 5336 lines
+[14/14] swarm              $0.2856 OK        tot $4.9326 · 44 files · 5547 lines
+
+=== $4.9326 billed (OR-direct equiv $14.7978) · 66.2m · 44 files · 5547 lines (25.7% of the 21,565-line reference) · 28 effects kept, 9 dropped ===
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-sonnet-5 · ctx local · cap $8.0 ===
+core: resumed ($0) · 28 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[11/37] expand             $0.1552 OK        tot $0.1552 · 45 files · 5658 lines
+[16/37] middleout          $0.1922 OK        tot $0.3474 · 46 files · 5771 lines
+[17/37] orbittingvolley    $0.1855 OK        tot $0.5329 · 47 files · 5870 lines
+[18/37] overflow           $0.1411 OK        tot $0.6740 · 48 files · 5975 lines
+[19/37] pour               $0.2162 OK        tot $0.8902 · 49 files · 6106 lines
+[21/37] rain               $0.2064 OK        tot $1.0965 · 50 files · 6251 lines
+[22/37] random_sequence    $0.2445 OK        tot $1.3410 · 51 files · 6397 lines
+[24/37] scattered          $0.1468 OK        tot $1.4879 · 52 files · 6542 lines
+[25/37] slice              $0.1877 OK        tot $1.6755 · 53 files · 6664 lines
+
+=== $1.6755 billed (OR-direct equiv $5.0266) · 20.8m · 53 files · 6664 lines (30.9% of the 21,565-line reference) · 37 effects kept, 0 dropped ===
