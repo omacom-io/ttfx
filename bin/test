@@ -18,6 +18,7 @@ cargo test --release
 "$ROOT/bin/build"
 ./tools/tests/cli_corpus.sh
 python3 tools/tests/sigterm_behavior.py
+python3 tools/tests/terminal_close_behavior.py
 
 # Bit-exact parity is pinned to Linux/glibc (plan.md §5.20) — elsewhere the
 # reference was never promised to match. The resize suite goes with it: its
