@@ -1,0 +1,9 @@
+[package]
+name = "ttfx"
+version = "0.1.0"
+edition = "2021"
+description = "Rust port of TerminalTextEffects (core engine)"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+crossterm = "0.28"

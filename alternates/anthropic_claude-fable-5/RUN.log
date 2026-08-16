@@ -1,0 +1,195 @@
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $35.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+[local-recall] 2224 chunks indexed in 0.10s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+[local-recall] 2224 chunks indexed in 0.10s
+core: $0.9045 | 2 files
+core repair 1: $0.6487 | OK
+core widen 1: $0.9040 | 7 files | broken
+core widen 2: $0.9040 | 11 files | broken
+core stayed thin/broken — refusing to fake a port against a scaffold
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+[local-recall] 2224 chunks indexed in 0.10s
+core: $0.9045 | 9 files
+core repair 1: $0.2200 | still failing
+core repair 2: $0.9015 | still failing
+core repair 3: $0.9015 | still failing
+core repair 4: $0.9015 | still failing
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $1.2348 | 14 files
+core repair 1: $0.1795 | OK
+
+=== 37 effects to port ===
+[ 1/37] beams              $0.6319 reverted  tot $2.0462 · 16 files · 1638 lines
+[ 2/37] binarypath         $0.6320 reverted  tot $2.6782 · 16 files · 1638 lines
+[ 3/37] blackhole          $0.6320 reverted  tot $3.3103 · 16 files · 1638 lines
+[ 4/37] bouncyballs        $0.6322 reverted  tot $3.9424 · 16 files · 1638 lines
+[ 5/37] bubbles            $0.6320 reverted  tot $4.5745 · 16 files · 1638 lines
+[ 6/37] burn               $0.6319 reverted  tot $5.2064 · 16 files · 1638 lines
+[ 7/37] colorshift         $0.4869 OK        tot $5.6933 · 17 files · 1801 lines
+[ 8/37] crumble            $0.6321 reverted  tot $6.3254 · 17 files · 1801 lines
+[ 9/37] decrypt            $0.6322 reverted  tot $6.9576 · 17 files · 1801 lines
+[10/37] errorcorrect       $0.6323 reverted  tot $7.5899 · 17 files · 1801 lines
+[11/37] expand             $0.4530 OK        tot $8.0429 · 18 files · 1933 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $80.0 ===
+core: resumed ($0) · 2 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.08s
+[ 1/37] beams              $0.6322 reverted  tot $0.6322 · 18 files · 1933 lines
+[ 2/37] binarypath         $0.6323 reverted  tot $1.2644 · 18 files · 1933 lines
+[ 3/37] blackhole          $0.6323 reverted  tot $1.8967 · 18 files · 1933 lines
+[ 4/37] bouncyballs        $0.6324 reverted  tot $2.5291 · 18 files · 1933 lines
+[ 5/37] bubbles            $0.6323 reverted  tot $3.1614 · 18 files · 1933 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $35.0 ===
+core: resumed ($0) · 2 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $17.0 ===
+core: resumed ($0) · 2 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.08s
+[ 1/37] beams              $0.6322 reverted  tot $0.6322 · 18 files · 1933 lines
+[ 2/37] binarypath         $0.6323 reverted  tot $1.2644 · 18 files · 1933 lines
+[ 3/37] blackhole          $0.6323 reverted  tot $1.8967 · 18 files · 1933 lines
+[ 4/37] bouncyballs        $0.6324 reverted  tot $2.5291 · 18 files · 1933 lines
+[ 5/37] bubbles            $0.6323 reverted  tot $3.1614 · 18 files · 1933 lines
+[ 6/37] burn               $0.6322 reverted  tot $3.7936 · 18 files · 1933 lines
+[ 8/37] crumble            $0.6322 reverted  tot $4.4258 · 18 files · 1933 lines
+[ 9/37] decrypt            $0.6323 reverted  tot $5.0581 · 18 files · 1933 lines
+[10/37] errorcorrect       $0.6324 reverted  tot $5.6905 · 18 files · 1933 lines
+[12/37] fireworks          $0.6323 reverted  tot $6.3227 · 18 files · 1933 lines
+[13/37] highlight          $0.6132 OK        tot $6.9360 · 19 files · 2088 lines
+[14/37] laseretch          $0.6324 reverted  tot $7.5684 · 19 files · 2088 lines
+[15/37] matrix             $0.6323 reverted  tot $8.2007 · 19 files · 2088 lines
+[16/37] middleout          $0.6323 reverted  tot $8.8330 · 19 files · 2088 lines
+[17/37] orbittingvolley    $0.6326 reverted  tot $9.4656 · 19 files · 2088 lines
+[18/37] overflow           $0.6323 reverted  tot $10.0980 · 19 files · 2088 lines
+[19/37] pour               $0.6323 reverted  tot $10.7302 · 19 files · 2088 lines
+[20/37] print              $0.6322 reverted  tot $11.3625 · 19 files · 2088 lines
+[21/37] rain               $0.6323 reverted  tot $11.9947 · 19 files · 2088 lines
+[22/37] random_sequence    $1.0599 reverted  tot $13.0547 · 19 files · 2088 lines
+[23/37] rings              $0.6323 reverted  tot $13.6869 · 19 files · 2088 lines
+[24/37] scattered          $0.6323 reverted  tot $14.3193 · 19 files · 2088 lines
+[25/37] slice              $0.6323 reverted  tot $14.9516 · 19 files · 2088 lines
+[26/37] slide              $0.6323 reverted  tot $15.5838 · 19 files · 2088 lines
+[27/37] smoke              $0.6323 reverted  tot $16.2162 · 19 files · 2088 lines
+[28/37] spotlights         $0.6324 reverted  tot $16.8486 · 19 files · 2088 lines
+[29/37] spray              $0.6323 reverted  tot $17.4809 · 19 files · 2088 lines
+[budget] stopping at $17.4809; 8 effects not attempted
+
+=== $17.4809 billed (OR-direct equiv $52.4426) · 44.0m · 19 files · 2088 lines (9.7% of the 21,565-line reference) · 3 effects kept, 26 dropped ===
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $30.0 ===
+[local-recall] 2224 chunks indexed in 0.09s
+core: $1.1699 | 14 files
+
+=== 37 effects to port ===
+[ 1/37] beams              $0.5948 reverted  tot $1.7647 · 13 files · 914 lines
+[ 2/37] binarypath         $0.5949 reverted  tot $2.3595 · 13 files · 914 lines
+[ 3/37] blackhole          $0.5949 reverted  tot $2.9544 · 13 files · 914 lines
+[ 4/37] bouncyballs        $0.5950 reverted  tot $3.5494 · 13 files · 914 lines
+[ 5/37] bubbles            $0.5949 reverted  tot $4.1443 · 13 files · 914 lines
+[ 6/37] burn               $0.5948 reverted  tot $4.7390 · 13 files · 914 lines
+[ 7/37] colorshift         $0.5949 reverted  tot $5.3339 · 13 files · 914 lines
+[ 8/37] crumble            $0.5948 reverted  tot $5.9287 · 13 files · 914 lines
+[ 9/37] decrypt            $0.5527 OK        tot $6.4815 · 14 files · 1104 lines
+[10/37] errorcorrect       $0.5951 reverted  tot $7.0766 · 14 files · 1104 lines
+[11/37] expand             $0.3800 OK        tot $7.4566 · 15 files · 1208 lines
+[12/37] fireworks          $0.5951 reverted  tot $8.0517 · 15 files · 1208 lines
+[13/37] highlight          $0.4776 OK        tot $8.5293 · 16 files · 1341 lines
+[14/37] laseretch          $0.5952 reverted  tot $9.1246 · 16 files · 1341 lines
+[15/37] matrix             $0.5952 reverted  tot $9.7198 · 16 files · 1341 lines
+[16/37] middleout          $0.5078 OK        tot $10.2276 · 17 files · 1511 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · anthropic/claude-fable-5 · ctx local · cap $85.0 ===
+core: resumed ($0) · 4 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/37] beams              $0.5952 reverted  tot $0.5952 · 17 files · 1511 lines
+[ 2/37] binarypath         $0.5954 reverted  tot $1.1906 · 17 files · 1511 lines
+[ 3/37] blackhole          $0.5954 reverted  tot $1.7860 · 17 files · 1511 lines
+[ 4/37] bouncyballs        $0.5955 reverted  tot $2.3814 · 17 files · 1511 lines
+[ 5/37] bubbles            $0.5954 reverted  tot $2.9768 · 17 files · 1511 lines
+[ 6/37] burn               $0.5952 reverted  tot $3.5720 · 17 files · 1511 lines
+[ 7/37] colorshift         $0.5954 reverted  tot $4.1674 · 17 files · 1511 lines
+[ 8/37] crumble            $0.5953 reverted  tot $4.7627 · 17 files · 1511 lines
+[10/37] errorcorrect       $0.5955 reverted  tot $5.3582 · 17 files · 1511 lines
+[12/37] fireworks          $0.5954 reverted  tot $5.9535 · 17 files · 1511 lines
+[14/37] laseretch          $0.5954 reverted  tot $6.5489 · 17 files · 1511 lines
+[15/37] matrix             $0.5953 reverted  tot $7.1442 · 17 files · 1511 lines
+[17/37] orbittingvolley    $0.5955 reverted  tot $7.7397 · 17 files · 1511 lines
+[18/37] overflow           $0.5953 reverted  tot $8.3350 · 17 files · 1511 lines
+[19/37] pour               $0.5952 reverted  tot $8.9303 · 17 files · 1511 lines
+[20/37] print              $0.5952 reverted  tot $9.5255 · 17 files · 1511 lines
+[21/37] rain               $0.5687 OK        tot $10.0942 · 18 files · 1709 lines
+[22/37] random_sequence    $0.3696 OK        tot $10.4638 · 19 files · 1880 lines
+[23/37] rings              $0.5959 reverted  tot $11.0597 · 19 files · 1880 lines
+[24/37] scattered          $0.4956 OK        tot $11.5553 · 20 files · 2036 lines
+[25/37] slice              $0.5079 OK        tot $12.0632 · 21 files · 2204 lines
+[26/37] slide              $0.5966 reverted  tot $12.6598 · 21 files · 2204 lines
+[27/37] smoke              $0.5498 OK        tot $13.2097 · 22 files · 2426 lines
+[28/37] spotlights         $0.5971 reverted  tot $13.8067 · 22 files · 2426 lines
+[29/37] spray              $0.5967 reverted  tot $14.4034 · 22 files · 2426 lines
+[30/37] swarm              $0.5968 reverted  tot $15.0002 · 22 files · 2426 lines
+[31/37] sweep              $0.4468 OK        tot $15.4471 · 23 files · 2553 lines
+[32/37] synthgrid          $0.5970 reverted  tot $16.0441 · 23 files · 2553 lines
+[33/37] thunderstorm       $0.5971 reverted  tot $16.6412 · 23 files · 2553 lines
+[34/37] unstable           $0.5969 reverted  tot $17.2381 · 23 files · 2553 lines
+[35/37] vhstape            $0.5970 reverted  tot $17.8350 · 23 files · 2553 lines
+[36/37] waves              $0.5968 reverted  tot $18.4319 · 23 files · 2553 lines
+[37/37] wipe               $0.4350 OK        tot $18.8669 · 24 files · 2703 lines
+
+=== $18.8669 billed (OR-direct equiv $56.6005) · 49.7m · 24 files · 2703 lines (12.5% of the 21,565-line reference) · 11 effects kept, 26 dropped ===
+[fable] gap-fill: 26 to retry
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/26] beams              $0.5970 reverted  tot $0.5970 · 24 files · 2703 lines
+[ 2/26] binarypath         $0.5971 reverted  tot $1.1940 · 24 files · 2703 lines
+[ 3/26] blackhole          $0.5971 reverted  tot $1.7911 · 24 files · 2703 lines
+[ 4/26] bouncyballs        $0.5972 reverted  tot $2.3883 · 24 files · 2703 lines
+[fable] gap-fill: 26 to retry
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/26] beams              $1.1652 OK        tot $1.1652 · 25 files · 3046 lines
+[ 2/26] binarypath         $0.8873 OK        tot $2.0526 · 26 files · 3322 lines
+[ 3/26] blackhole          $1.0011 OK        tot $3.0536 · 27 files · 3657 lines
+[ 4/26] bouncyballs        $0.8299 OK        tot $3.8836 · 28 files · 3916 lines
+[ 5/26] bubbles            $0.8724 OK        tot $4.7560 · 29 files · 4197 lines
+[ 6/26] burn               $1.1581 OK        tot $5.9141 · 30 files · 4469 lines
+[ 7/26] colorshift         $0.5760 OK        tot $6.4901 · 31 files · 4614 lines
+[ 8/26] crumble            $0.9667 OK        tot $7.4569 · 32 files · 4919 lines
+[ 9/26] errorcorrect       $1.0848 OK        tot $8.5417 · 33 files · 5261 lines
+[10/26] fireworks          $0.7606 OK        tot $9.3023 · 34 files · 5549 lines
+[11/26] laseretch          $1.0628 OK        tot $10.3651 · 35 files · 5849 lines
+[12/26] matrix             $0.9228 OK        tot $11.2879 · 36 files · 6116 lines
+[13/26] orbittingvolley    $0.6997 OK        tot $11.9876 · 37 files · 6332 lines
+[14/26] overflow           $1.3798 OK        tot $13.3674 · 38 files · 6634 lines
+[15/26] pour               $0.5954 OK        tot $13.9628 · 39 files · 6823 lines
+[16/26] print              $1.0963 OK        tot $15.0591 · 40 files · 7019 lines
+[17/26] rings              $1.1631 OK        tot $16.2222 · 41 files · 7336 lines
+[18/26] slide              $0.7051 OK        tot $16.9273 · 42 files · 7498 lines
+[19/26] spotlights         $0.7180 OK        tot $17.6454 · 43 files · 7834 lines
+[20/26] spray              $0.5585 OK        tot $18.2038 · 44 files · 8024 lines
+[21/26] swarm              $1.0118 OK        tot $19.2156 · 45 files · 8349 lines
+[22/26] synthgrid          $1.0392 OK        tot $20.2549 · 46 files · 8695 lines
+[23/26] thunderstorm       $0.6787 OK        tot $20.9336 · 47 files · 8922 lines
+[24/26] unstable           $0.7174 OK        tot $21.6510 · 48 files · 9170 lines
+[25/26] vhstape            $1.0901 OK        tot $22.7411 · 49 files · 9570 lines
+[26/26] waves              $0.5960 OK        tot $23.3371 · 50 files · 9745 lines
+
+=== $23.3371 billed (OR-direct equiv $70.0114) · 68.1m · 50 files · 9745 lines (45.2% of the 21,565-line reference) · 37 effects kept, 0 dropped ===
