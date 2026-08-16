@@ -6,9 +6,13 @@ every kept effect gated on **compiles AND emits ANSI-styled animation** — not 
 retrieved per-ask via leCore BM25 instead of carried in every prompt; measured
 saving vs carrying it: 8.6x.
 
-This is NOT byte-parity — that bar belongs to this repository. This is what the
-same models produce when the reference rides a retrieval layer instead of the
-context window, priced to the cent.
+Parity, measured on this repo's own pinned platform (Linux/glibc 2.35), against
+this repo's own fixtures: **13/13 implemented easing functions, 13,013/13,013
+samples, 100.00% bit-exact** (one $0.21 follow-up ask aligned the cubics to
+CPython's pow() evaluation order — it's on the ledger). The full 354-case suite
+remains this repository's bar; nothing beyond the measured subset is claimed.
+This is what the same models produce when the reference rides a retrieval layer
+instead of the context window, priced to the cent.
 
 Live run + receipts: https://ttfx.awesomemcp.fun · /mortem for the full
 self-audit · /show/sol to watch these effects animate from this exact binary.
