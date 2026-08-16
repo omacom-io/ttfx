@@ -1,0 +1,92 @@
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · deepseek/deepseek-v4-pro-0813 · ctx local · cap $5.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · deepseek/deepseek-v4-pro-0813 · ctx local · cap $5.0 ===
+[local-recall] 2224 chunks indexed in 0.12s
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · deepseek/deepseek-v4-pro-0813 · ctx local · cap $5.0 ===
+[local-recall] 2224 chunks indexed in 0.11s
+core: $0.1026 | 14 files
+
+=== 37 effects to port ===
+[ 1/37] beams              $0.1267 reverted  tot $0.2294 · 13 files · 862 lines
+[ 2/37] binarypath         $0.0775 OK        tot $0.3069 · 14 files · 1026 lines
+[ 3/37] blackhole          $0.1112 reverted  tot $0.4181 · 14 files · 1026 lines
+[ 4/37] bouncyballs        $0.1019 OK        tot $0.5200 · 15 files · 1188 lines
+[ 5/37] bubbles            $0.1112 reverted  tot $0.6311 · 15 files · 1188 lines
+[ 6/37] burn               $0.0578 OK        tot $0.6890 · 16 files · 1287 lines
+[ 7/37] colorshift         $0.0437 OK        tot $0.7327 · 17 files · 1366 lines
+[ 8/37] crumble            $0.0689 OK        tot $0.8015 · 18 files · 1482 lines
+[ 9/37] decrypt            $0.0275 OK        tot $0.8291 · 19 files · 1617 lines
+[10/37] errorcorrect       $0.0672 OK        tot $0.8963 · 20 files · 1747 lines
+[11/37] expand             $0.0317 OK        tot $0.9279 · 21 files · 1845 lines
+[12/37] fireworks          $0.1456 reverted  tot $1.0736 · 21 files · 1845 lines
+[13/37] highlight          $0.0359 OK        tot $1.1095 · 22 files · 1910 lines
+[14/37] laseretch          $0.0398 OK        tot $1.1493 · 23 files · 2098 lines
+[15/37] matrix             $0.0381 OK        tot $1.1873 · 24 files · 2230 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · deepseek/deepseek-v4-pro-0813 · ctx local · cap $8.0 ===
+resume: dropped 10 unstyled effects (render gate)
+core: resumed ($0) · 1 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.07s
+[ 1/37] beams              $0.1495 reverted  tot $0.1495 · 24 files · 2210 lines
+[ 2/37] binarypath         $0.1114 reverted  tot $0.2609 · 24 files · 2210 lines
+[ 3/37] blackhole          $0.1193 reverted  tot $0.3801 · 24 files · 2210 lines
+[ 4/37] bouncyballs        $0.0947 reverted  tot $0.4748 · 24 files · 2210 lines
+[ 5/37] bubbles            $0.0833 reverted  tot $0.5581 · 24 files · 2210 lines
+[ 6/37] burn               $0.1295 reverted  tot $0.6876 · 24 files · 2210 lines
+[ 7/37] colorshift         $0.0961 reverted  tot $0.7837 · 24 files · 2210 lines
+[ 8/37] crumble            $0.1195 reverted  tot $0.9032 · 24 files · 2210 lines
+[ 9/37] decrypt            $0.0847 reverted  tot $0.9879 · 24 files · 2210 lines
+[10/37] errorcorrect       $0.0742 reverted  tot $1.0621 · 24 files · 2210 lines
+[11/37] expand             $0.0714 reverted  tot $1.1335 · 24 files · 2210 lines
+[12/37] fireworks          $0.1428 reverted  tot $1.2763 · 24 files · 2210 lines
+[14/37] laseretch          $0.0789 reverted  tot $1.3552 · 24 files · 2210 lines
+[15/37] matrix             $0.1364 reverted  tot $1.4916 · 24 files · 2210 lines
+[16/37] middleout          $0.1194 reverted  tot $1.6110 · 24 files · 2210 lines
+[17/37] orbittingvolley    $0.0627 reverted  tot $1.6737 · 24 files · 2210 lines
+[18/37] overflow           $0.1073 reverted  tot $1.7810 · 24 files · 2210 lines
+[19/37] pour               $0.0906 reverted  tot $1.8716 · 24 files · 2210 lines
+[20/37] print              $0.0822 reverted  tot $1.9538 · 24 files · 2210 lines
+[21/37] rain               $0.0508 OK        tot $2.0046 · 25 files · 2375 lines
+[lane] local leCore recall + OpenRouter direct
+=== COMPLETE · deepseek/deepseek-v4-pro-0813 · ctx local · cap $12.0 ===
+core: resumed ($0) · 12 effects re-registered
+
+=== 37 effects to port ===
+[local-recall] 2224 chunks indexed in 0.08s
+[ 1/37] beams              $0.0604 OK        tot $0.0604 · 26 files · 2527 lines
+[ 3/37] blackhole          $0.0739 reverted  tot $0.1343 · 26 files · 2527 lines
+[ 5/37] bubbles            $0.0606 OK        tot $0.1949 · 27 files · 2686 lines
+[12/37] fireworks          $0.0481 OK        tot $0.2430 · 28 files · 2863 lines
+[16/37] middleout          $0.0521 OK        tot $0.2951 · 29 files · 2960 lines
+[17/37] orbittingvolley    $0.0545 OK        tot $0.3495 · 30 files · 3110 lines
+[18/37] overflow           $0.0436 OK        tot $0.3931 · 31 files · 3180 lines
+[19/37] pour               $0.0378 OK        tot $0.4310 · 32 files · 3255 lines
+[20/37] print              $0.0399 OK        tot $0.4709 · 33 files · 3279 lines
+[22/37] random_sequence    $0.0449 OK        tot $0.5158 · 34 files · 3391 lines
+[23/37] rings              $0.0565 OK        tot $0.5723 · 35 files · 3532 lines
+[24/37] scattered          $0.0316 OK        tot $0.6039 · 36 files · 3611 lines
+[25/37] slice              $0.0463 OK        tot $0.6502 · 37 files · 3751 lines
+[26/37] slide              $0.0476 OK        tot $0.6977 · 38 files · 3945 lines
+[27/37] smoke              $0.0569 OK        tot $0.7547 · 39 files · 4113 lines
+[28/37] spotlights         $0.0592 OK        tot $0.8139 · 40 files · 4283 lines
+[29/37] spray              $0.0388 OK        tot $0.8527 · 41 files · 4368 lines
+[30/37] swarm              $0.0556 OK        tot $0.9082 · 42 files · 4497 lines
+[31/37] sweep              $0.0273 OK        tot $0.9355 · 43 files · 4566 lines
+[32/37] synthgrid          $0.0461 OK        tot $0.9816 · 44 files · 4701 lines
+[33/37] thunderstorm       $0.0361 OK        tot $1.0177 · 45 files · 4895 lines
+[34/37] unstable           $0.0534 OK        tot $1.0711 · 46 files · 5105 lines
+[35/37] vhstape            $0.0393 OK        tot $1.1105 · 47 files · 5307 lines
+[36/37] waves              $0.0354 OK        tot $1.1459 · 48 files · 5383 lines
+[37/37] wipe               $0.0320 OK        tot $1.1779 · 49 files · 5443 lines
+
+=== $1.1779 billed (OR-direct equiv $1.3063) · 61.4m · 49 files · 5443 lines (25.2% of the 21,565-line reference) · 36 effects kept, 1 dropped ===
+[ds] gap-fill: 1 to retry
+[local-recall] 2224 chunks indexed in 0.09s
+[ 1/1] blackhole          $0.0568 OK        tot $0.0568 · 50 files · 5682 lines
+
+=== $0.0568 billed (OR-direct equiv $0.0618) · 3.0m · 50 files · 5682 lines (26.3% of the 21,565-line reference) · 37 effects kept, 0 dropped ===
