@@ -19,7 +19,7 @@ fn get_piped_input() -> String {
     match String::from_utf8(buf) {
         Ok(s) => s,
         Err(e) => {
-            println!("Error decoding input: {e}");
+            ttfx::outln!("Error decoding input: {e}");
             std::process::exit(1);
         }
     }
@@ -59,12 +59,12 @@ fn main() -> ExitCode {
                 Ok(s) => s,
                 Err(e) => {
                     // upstream prints runtime file errors to STDOUT and exits 1
-                    println!("Error reading input file: {e}");
+                    ttfx::outln!("Error reading input file: {e}");
                     return ExitCode::from(1);
                 }
             },
             Err(e) => {
-                println!("Error reading input file: {e}");
+                ttfx::outln!("Error reading input file: {e}");
                 return ExitCode::from(1);
             }
         },
@@ -72,7 +72,7 @@ fn main() -> ExitCode {
     };
 
     if input_data.trim().is_empty() {
-        println!("NO INPUT.");
+        ttfx::outln!("NO INPUT.");
         return ExitCode::from(1);
     }
 
@@ -99,14 +99,14 @@ fn main() -> ExitCode {
         }
         names.retain(|n| !cli.exclude_effects.contains(n));
         if names.is_empty() {
-            eprintln!("Error: No effects available after filtering.");
+            ttfx::errln!("Error: No effects available after filtering.");
             return ExitCode::from(1);
         }
         let name = names[rng.choice_index(names.len())].clone();
         chosen_effect = match clap::Parser::try_parse_from::<_, &str>(["ttfx", &name]) {
             Ok(cli::Cli { effect: Some(effect), .. }) => effect,
             _ => {
-                eprintln!("Error: failed to build effect '{name}'.");
+                ttfx::errln!("Error: failed to build effect '{name}'.");
                 return ExitCode::from(1);
             }
         };
@@ -115,7 +115,7 @@ fn main() -> ExitCode {
         match &cli.effect {
             Some(effect) => effect,
             None => {
-                eprintln!("Error: No effect specified.");
+                ttfx::errln!("Error: No effect specified.");
                 return ExitCode::from(1);
             }
         }
@@ -151,11 +151,11 @@ fn main() -> ExitCode {
         ) {
             Ok(ctx) => ctx,
             Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
-                eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
+                ttfx::errln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
                 return ExitCode::from(1);
             }
             Err(e) => {
-                eprintln!("Error: {e}");
+                ttfx::errln!("Error: {e}");
                 return ExitCode::from(1);
             }
         };
@@ -197,7 +197,7 @@ fn main() -> ExitCode {
             }
         }
         Err(e) => {
-            eprintln!("Error: {e}");
+            ttfx::errln!("Error: {e}");
             ExitCode::from(1)
         }
     }
@@ -210,11 +210,11 @@ fn m0_dump(input_data: &str, cli: &cli::Cli) -> ExitCode {
     let mut terminal = match Terminal::new(input_data, config) {
         Ok(t) => t,
         Err(engine::error::EngineError::UnsupportedAnsiSequence(seq)) => {
-            eprintln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
+            ttfx::errln!("Error: Unsupported ANSI sequence in input data: {seq:?}");
             return ExitCode::from(1);
         }
         Err(e) => {
-            eprintln!("Error: {e}");
+            ttfx::errln!("Error: {e}");
             return ExitCode::from(1);
         }
     };
