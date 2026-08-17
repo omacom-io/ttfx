@@ -40,7 +40,7 @@ pub mod vhstape;
 pub mod waves;
 pub mod wipe;
 
-use clap::Subcommand;
+use clap::{FromArgMatches, Subcommand};
 
 use crate::engine::effect::Effect;
 
@@ -205,5 +205,125 @@ impl EffectCommand {
             EffectCommand::Waves(_) => "waves",
             EffectCommand::Wipe(_) => "wipe",
         }
+    }
+
+    /// The registry, by name, with every option at its default — the same
+    /// effect a `--random-effect` run gets.
+    ///
+    /// Without this an embedder has to reach into the CLI and parse
+    /// `["ttfx", name]` back out of clap to obtain an [`EffectCommand`],
+    /// which is the argument parser doing a lookup table's job. The defaults
+    /// still come from the clap attributes, since that is where they are
+    /// declared, but that stays an implementation detail in here.
+    pub fn from_name(name: &str) -> Option<Self> {
+        // Only the subcommands: the global TerminalConfig args are irrelevant
+        // to a lookup and would have to be defaulted a second time.
+        let command = Self::augment_subcommands(clap::Command::new("ttfx"));
+        let matches = command.try_get_matches_from(["ttfx", name]).ok()?;
+        Self::from_arg_matches(&matches).ok()
+    }
+}
+
+/// Every effect name, alphabetical — what `--random-effect` draws from and
+/// what `--include-effects`/`--exclude-effects` are checked against.
+///
+/// Kept by hand like the rest of this file; `names_match_the_subcommands`
+/// fails the build if it drifts from what clap exposes.
+pub const EFFECT_NAMES: [&str; 37] = [
+    "beams",
+    "binarypath",
+    "blackhole",
+    "bouncyballs",
+    "bubbles",
+    "burn",
+    "colorshift",
+    "crumble",
+    "decrypt",
+    "errorcorrect",
+    "expand",
+    "fireworks",
+    "highlight",
+    "laseretch",
+    "matrix",
+    "middleout",
+    "orbittingvolley",
+    "overflow",
+    "pour",
+    "print",
+    "rain",
+    "randomsequence",
+    "rings",
+    "scattered",
+    "slice",
+    "slide",
+    "smoke",
+    "spotlights",
+    "spray",
+    "swarm",
+    "sweep",
+    "synthgrid",
+    "thunderstorm",
+    "unstable",
+    "vhstape",
+    "waves",
+    "wipe",
+];
+
+/// [`EFFECT_NAMES`] narrowed by an include list (empty means all) and then an
+/// exclude list — upstream's `--include-effects`/`--exclude-effects`
+/// semantics, shared by the CLI and by embedders so they cannot disagree.
+///
+/// `Err` names the first filter entry that is not an effect, which is a user
+/// typo worth reporting rather than silently dropping.
+pub fn filtered_names(
+    include: &[String],
+    exclude: &[String],
+) -> Result<Vec<&'static str>, String> {
+    for name in include.iter().chain(exclude) {
+        if !EFFECT_NAMES.contains(&name.as_str()) {
+            return Err(name.clone());
+        }
+    }
+    let mut names: Vec<&str> = EFFECT_NAMES.to_vec();
+    if !include.is_empty() {
+        names.retain(|name| include.iter().any(|wanted| wanted == name));
+    }
+    names.retain(|name| !exclude.iter().any(|unwanted| unwanted == name));
+    Ok(names)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn names_match_the_subcommands() {
+        let command = EffectCommand::augment_subcommands(clap::Command::new("ttfx"));
+        let subcommands: Vec<&str> = command.get_subcommands().map(|c| c.get_name()).collect();
+        assert_eq!(subcommands, EFFECT_NAMES);
+    }
+
+    #[test]
+    fn every_name_builds_its_effect() {
+        for name in EFFECT_NAMES {
+            let command = EffectCommand::from_name(name)
+                .unwrap_or_else(|| panic!("no effect named '{name}'"));
+            assert_eq!(command.name(), name);
+        }
+        assert!(EffectCommand::from_name("nosucheffect").is_none());
+    }
+
+    #[test]
+    fn filters_narrow_the_registry() {
+        assert_eq!(filtered_names(&[], &[]).unwrap().len(), EFFECT_NAMES.len());
+        assert_eq!(
+            filtered_names(&["matrix".into(), "rain".into()], &[]).unwrap(),
+            ["matrix", "rain"]
+        );
+        assert_eq!(
+            filtered_names(&["matrix".into(), "rain".into()], &["rain".into()]).unwrap(),
+            ["matrix"]
+        );
+        assert_eq!(filtered_names(&["nope".into()], &[]).unwrap_err(), "nope");
     }
 }
