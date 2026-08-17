@@ -5,6 +5,38 @@ pub mod utils;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
+/// `println!` and `eprintln!` panic when their write fails, and a release
+/// build aborts on panic — so on a terminal that has just gone away, reporting
+/// the loss is what dumps the core, not the loss itself:
+///
+/// ```text
+/// thread 'main' panicked at library/std/src/io/stdio.rs:1166:9:
+/// failed printing to stderr: Input/output error (os error 5)
+/// ```
+///
+/// Nothing ttfx says is worth dying over, so messages go out through these two
+/// and a failed write is dropped (basecamp/omarchy#6762).
+#[macro_export]
+macro_rules! outln {
+    ($($arg:tt)*) => {{
+        let _ = ::std::io::Write::write_fmt(
+            &mut ::std::io::stdout(),
+            format_args!("{}\n", format_args!($($arg)*)),
+        );
+    }};
+}
+
+/// [`outln!`] for stderr.
+#[macro_export]
+macro_rules! errln {
+    ($($arg:tt)*) => {{
+        let _ = ::std::io::Write::write_fmt(
+            &mut ::std::io::stderr(),
+            format_args!("{}\n", format_args!($($arg)*)),
+        );
+    }};
+}
+
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 static TERMINATED: AtomicBool = AtomicBool::new(false);
 static TERMINAL_RESIZED: AtomicBool = AtomicBool::new(false);
