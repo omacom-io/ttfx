@@ -31,10 +31,17 @@ pub enum RunOutcome {
 /// the top of the area so the caller can rebuild in place, and a terminal that
 /// goes away ends the run. A redirected stream gets neither: SIGWINCH there is
 /// not about our output, and a write that fails to a file is a real failure.
+///
+/// `restart` says another pass is coming (`--loop`), so a completed one tears
+/// down the way a resize does — area wiped, cursor left hidden at the top —
+/// instead of showing the cursor and printing the trailing newline that ends
+/// the run. Without it every repetition would march the animation down the
+/// screen and strobe the cursor between passes.
 pub fn run_effect(
     effect: &mut dyn Effect,
     ctx: &mut EngineCtx,
     tty_output: bool,
+    restart: bool,
 ) -> Result<RunOutcome, EngineError> {
     effect.build(ctx)?;
     let stdout = std::io::stdout();
@@ -60,7 +67,9 @@ pub fn run_effect(
         }
         Ok(())
     })();
-    let teardown = if outcome == RunOutcome::TerminalResized {
+    let teardown = if outcome == RunOutcome::TerminalResized
+        || (restart && outcome == RunOutcome::Complete)
+    {
         // Leave the cursor hidden and parked at the top of the wiped area: the
         // rebuild redraws in place, and showing the cursor here would strobe it
         // dozens of times a second through a window drag.

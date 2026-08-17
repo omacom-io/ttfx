@@ -140,6 +140,11 @@ pub struct Cli {
     #[arg(long = "exclude-effects", num_args = 1..)]
     pub exclude_effects: Vec<String>,
 
+    /// Repeat the animation until interrupted. With --random-effect every pass
+    /// draws a fresh effect.
+    #[arg(long = "loop", default_value_t = false)]
+    pub loop_forever: bool,
+
     /// M0 debug: make every canvas character visible and print the first frame
     /// (used by the parity harness; hidden from help)
     #[arg(long = "m0-dump", default_value_t = false, hide = true)]

@@ -85,40 +85,28 @@ fn main() -> ExitCode {
         None => ttfx::utils::rng::Rng::from_entropy(),
     };
 
-    // --random-effect: pick from the registry (filtered), run with pure
-    // default effect config — upstream ignores effect CLI args here too.
-    let chosen_effect;
-    let effect_command = if cli.random_effect {
-        use clap::CommandFactory;
-        let mut names: Vec<String> = cli::Cli::command()
-            .get_subcommands()
-            .map(|c| c.get_name().to_string())
-            .collect();
-        if !cli.include_effects.is_empty() {
-            names.retain(|n| cli.include_effects.contains(n));
+    // --random-effect draws from the registry (filtered) and runs with pure
+    // default effect config — upstream ignores effect CLI args here too. The
+    // pool is resolved once; the draw itself happens per pass, so a --loop run
+    // cycles effects instead of repeating one.
+    let random_pool = if cli.random_effect {
+        match ttfx::effects::filtered_names(&cli.include_effects, &cli.exclude_effects) {
+            Ok(names) if names.is_empty() => {
+                ttfx::errln!("Error: No effects available after filtering.");
+                return ExitCode::from(1);
+            }
+            Ok(names) => names,
+            Err(unknown) => {
+                ttfx::errln!("Error: No effect named '{unknown}'.");
+                return ExitCode::from(1);
+            }
         }
-        names.retain(|n| !cli.exclude_effects.contains(n));
-        if names.is_empty() {
-            ttfx::errln!("Error: No effects available after filtering.");
+    } else {
+        if cli.effect.is_none() {
+            ttfx::errln!("Error: No effect specified.");
             return ExitCode::from(1);
         }
-        let name = names[rng.choice_index(names.len())].clone();
-        chosen_effect = match clap::Parser::try_parse_from::<_, &str>(["ttfx", &name]) {
-            Ok(cli::Cli { effect: Some(effect), .. }) => effect,
-            _ => {
-                ttfx::errln!("Error: failed to build effect '{name}'.");
-                return ExitCode::from(1);
-            }
-        };
-        &chosen_effect
-    } else {
-        match &cli.effect {
-            Some(effect) => effect,
-            None => {
-                ttfx::errln!("Error: No effect specified.");
-                return ExitCode::from(1);
-            }
-        }
+        Vec::new()
     };
 
     let mut config = cli.terminal_config();
@@ -137,7 +125,28 @@ fn main() -> ExitCode {
         ttfx::install_sigwinch_handler();
     }
 
+    // --loop keeps drawing until a signal ends the run. A parity dump is a
+    // fixed-length artifact, so it never repeats.
+    let repeating = cli.loop_forever && !cli.parity_dump;
+
     let result = loop {
+        let drawn_effect;
+        let effect_command = if cli.random_effect {
+            let name = random_pool[rng.choice_index(random_pool.len())];
+            match ttfx::effects::EffectCommand::from_name(name) {
+                Some(command) => {
+                    drawn_effect = command;
+                    &drawn_effect
+                }
+                None => {
+                    ttfx::errln!("Error: failed to build effect '{name}'.");
+                    return ExitCode::from(1);
+                }
+            }
+        } else {
+            cli.effect.as_ref().expect("a missing effect already exited")
+        };
+
         let clock = if cli.parity_dump || cli.virtual_clock {
             ttfx::engine::ctx::Clock::virtual_with_frame_rate(config.frame_rate)
         } else {
@@ -165,7 +174,7 @@ fn main() -> ExitCode {
             ttfx::engine::effect::dump_effect(effect.as_mut(), &mut ctx, cli.max_frames)
                 .map(|_| ttfx::engine::effect::RunOutcome::Complete)
         } else {
-            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, tty_output)
+            ttfx::engine::effect::run_effect(effect.as_mut(), &mut ctx, tty_output, repeating)
         };
         match outcome {
             Ok(ttfx::engine::effect::RunOutcome::TerminalResized) => {
@@ -174,6 +183,14 @@ fn main() -> ExitCode {
                 // prep_canvas to a DEC anchor that no longer applies, so it only
                 // governs the first run. Dropping this engine normally is what
                 // keeps a long session of resizes from accumulating them.
+                config.reuse_canvas = false;
+                rng = ctx.rng;
+            }
+            Ok(ttfx::engine::effect::RunOutcome::Complete) if repeating => {
+                // A repeating pass tore down exactly like a resize, so the next
+                // one lays out in the wiped area for the same reason. Carrying
+                // the RNG forward is what keeps a --seed run deterministic
+                // across the whole sequence rather than only its first pass.
                 config.reuse_canvas = false;
                 rng = ctx.rng;
             }
