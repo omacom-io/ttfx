@@ -81,6 +81,24 @@ timed phase so the loop stays watchable (`matrix --rain-time 3`, `thunderstorm -
 `vhstape --total-glitch-time 250`, `spotlights --search-duration 80`, `errorcorrect
 --error-pairs 0.5`); everything else is stock.
 
+## Running it forever
+
+`--loop` repeats the animation until it is interrupted, redrawing in place rather than marching
+down the screen. With `-R` every pass draws a new effect, which is most of a screensaver:
+
+```sh
+printf 'OMARCHY' | ttfx --loop -R
+```
+
+The canvas rules are upstream's, and they catch people out: `--canvas-width` and
+`--canvas-height` default to `-1`, which means *the size of the input text*, not the size of the
+terminal. `0` means the terminal, so filling the screen is something you ask for:
+
+```sh
+printf 'OMARCHY' | ttfx --loop -R --canvas-width 0 --canvas-height 0 \
+  --anchor-canvas c --anchor-text c
+```
+
 ## Fidelity
 
 This is a *parity port*, not a reimplementation-in-spirit. Given the same input, config, and
